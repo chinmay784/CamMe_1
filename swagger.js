@@ -21,7 +21,7 @@ const swaggerDefinition = {
    
     servers: [
         {
-            url: 'http://localhost:4000/api/v1',
+            url: 'https://camme-1-1.onrender.com/api-docs',
         },
     ],
 }
