@@ -55,11 +55,15 @@ exports.register = async (req, res) => {
         const otpExpires = Date.now() + 10 * 60 * 200;
 
         // const {path} = req.file
+        const file = req.file?.path;
+        const result = await cloudinary.uploader.upload(file, {
+            folder: "profile_pics", // more appropriate than "profile_pics"
+        });
 
         user = new User({
             gender,
             theme,
-            profilePic: file ? result.secure_url : `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(fullName)}`,
+            profilePic: result ? result.secure_url : `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(fullName)}`,
             fullName,
             dateBirth,
             email,
