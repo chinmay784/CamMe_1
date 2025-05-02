@@ -79,12 +79,12 @@ exports.register = async (req, res) => {
 
         await transPorter.sendMail(mailOptions);
 
-        await twilioClient.messages.create({
-            body: `Your OTP for email verification is: ${otp}`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: phoneNo,
-        });
-        console.log(req.file)
+        // await twilioClient.messages.create({
+        //     body: `Your OTP for email verification is: ${otp}`,
+        //     from: process.env.TWILIO_PHONE_NUMBER,
+        //     to: phoneNo,
+        // });
+        // console.log(req.file)
 
         return res.status(200).json({
             sucess: true,
@@ -309,11 +309,11 @@ exports.login = async (req, res) => {
 
         await transPorter.sendMail(mailOptions)
 
-        await twilioClient.messages.create({
-            body: `Your OTP for Login verification is: ${otp}`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: user.phoneNo,
-        })
+        // await twilioClient.messages.create({
+        //     body: `Your OTP for Login verification is: ${otp}`,
+        //     from: process.env.TWILIO_PHONE_NUMBER,
+        //     to: user.phoneNo,
+        // })
 
         return res.status(200).json({
             sucess: true,
@@ -568,11 +568,11 @@ exports.addAccount = async (req, res) => {
         });
 
         // Step 8: Send SMS
-        await twilioClient.messages.create({
-            body: smsContent,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: secondaryAccount.phoneNo,
-        });
+        // await twilioClient.messages.create({
+        //     body: smsContent,
+        //     from: process.env.TWILIO_PHONE_NUMBER,
+        //     to: secondaryAccount.phoneNo,
+        // });
 
         // Step 9: Return response
         return res.status(200).json({
@@ -615,11 +615,11 @@ exports.approveLinkAccount = async (req, res) => {
         });
 
 
-        await twilioClient.messages.create({
-            body: `Your OTP for linking account: ${otp}`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: user.phoneNo,
-        });
+        // await twilioClient.messages.create({
+        //     body: `Your OTP for linking account: ${otp}`,
+        //     from: process.env.TWILIO_PHONE_NUMBER,
+        //     to: user.phoneNo,
+        // });
 
         return res.status(200).json({ message: "OTP sent. Please verify to complete linking." });
 
