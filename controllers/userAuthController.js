@@ -22,7 +22,7 @@ const transPorter = nodeMailer.createTransport({
 });
 
 
-const twilioClient = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN)
+const twilioClient = twilio("AC3b5a0ffcf57ed5420c290c45e7623e9a", "67553f9d84ce300ed02ab5e7e130dff0")
 
 
 const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
