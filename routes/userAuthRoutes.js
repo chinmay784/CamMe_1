@@ -34,7 +34,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/user/register:
+ * /user/register:
  *   post:
  *     summary: Register a new user
  *     description: Register a new user with profile image, and receive OTP via email and phone
@@ -85,7 +85,7 @@ const router = express.Router();
 router.post('/register',upload.single("file"), register);
 /**
  * @swagger
- * /api/v1/user/verifyotp:
+ * /user/verifyotp:
  *   post:
  *     summary: Verify OTP and activate user account
  *     description: Verifies the OTP sent to the user's email and activates the account
@@ -130,7 +130,7 @@ router.post('/register',upload.single("file"), register);
 router.post("/verifyotp", otpVerify);
 /**
  * @swagger
- * /api/v1/user/profileComplite:
+ * /user/profileComplite:
  *   post:
  *     summary: Complete user profile by setting username and password
  *     description: After OTP verification, user sets their username and password to complete the profile
@@ -173,7 +173,7 @@ router.post("/verifyotp", otpVerify);
 router.post("/profileComplite", ProfileCreation);
 /**
  * @swagger
- * /api/v1/user/login:
+ * /user/login:
  *   post:
  *     summary: User login with OTP verification
  *     description: Logs in a user by verifying credentials and sends OTP via email and SMS for further verification
@@ -230,7 +230,7 @@ router.post("/profileComplite", ProfileCreation);
 router.post("/login", login);
 /**
  * @swagger
- * /api/v1/user/loginOtpverify:
+ * /user/loginOtpverify:
  *   post:
  *     summary: Verify OTP during login
  *     description: Verifies the OTP sent to the user's email/phone and logs them in by issuing a JWT token.
@@ -292,7 +292,7 @@ router.post("/login", login);
 router.post("/loginOtpverify", loginOtpverify);
 /**
  * @swagger
- * /api/v1/user/connectionFilter:
+ * /user/connectionFilter:
  *   post:
  *     summary: Set or update a user's connection filter
  *     description: Allows a user to set or update their interests, hashtags, and locations for connection filtering.
@@ -351,7 +351,7 @@ router.post("/loginOtpverify", loginOtpverify);
 router.post("/connectionFilter", connectionFilter);
 /**
  * @swagger
- * /api/v1/user/getConnectionFilter:
+ * /user/getConnectionFilter:
  *   get:
  *     summary: Retrieve a user's connection filter settings
  *     description: Fetches the stored connection filter (interests, hashtags, tags, and locations) for a given user.
@@ -391,7 +391,7 @@ router.post("/connectionFilter", connectionFilter);
 router.get("/getConnectionFilter", getConnectionFilter);
 /**
  * @swagger
- * /api/v1/user/forgetPassword:
+ * /user/forgetPassword:
  *   post:
  *     summary: Request password reset link via email or phone number
  *     description: Sends a JWT-based password reset link to the user's email or phone number (Twilio SMS). The token is valid for 10 minutes.
@@ -429,7 +429,7 @@ router.get("/getConnectionFilter", getConnectionFilter);
 router.post("/forgetPassword", PasswordResetRequest);
 /**
  * @swagger
- * /api/v1/user/resetPassword:
+ * /user/resetPassword:
  *   post:
  *     summary: Reset user password using a valid JWT token
  *     description: Accepts a new password and a JWT token (from email or SMS) to reset the user's password.
@@ -468,7 +468,7 @@ router.post("/forgetPassword", PasswordResetRequest);
 router.post("/reset-password", resetPassword);
 /**
  * @swagger
- * /api/v1/user/addAccount:
+ * /user/addAccount:
  *   post:
  *     summary: Request to link a secondary account to the main account
  *     description: Authenticated users can send a request to link another user account by verifying the secondary account's password. An email and SMS will be sent to the secondary account for approval.
