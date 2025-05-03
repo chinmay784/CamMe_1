@@ -458,25 +458,16 @@ exports.PasswordResetRequest = async (req, res) => {
         const resetURL = `http://localhost:4000/api/v1/user/reset-password/${resetToken}`;
 
 
-        if (email) {
+        const mailOptions = {
+            from: process.env.SMTP_USER,
+            to: email,
+            subject: "Password Reset Link",
+            html: `<p>Click <a href="${resetURL}">here</a> to reset your password. This link expires in 15 minutes.</p>`
+        };
 
-            const mailOptions = {
-                from: process.env.SMTP_USER,
-                to: email,
-                subject: "Password Reset Link",
-                html: `<p>Click <a href="${resetURL}">here</a> to reset your password. This link expires in 15 minutes.</p>`
-            };
-
-            await transPorter.sendMail(mailOptions)
+        await transPorter.sendMail(mailOptions)
 
 
-        } else {
-            await twilioClient.messages.create({
-                body: `Click Here to Reset Password is: ${resetURL}`,
-                from: process.env.TWILIO_PHONE_NUMBER,
-                to: user.phoneNo,
-            })
-        }
 
         res.json({
             message: "Link send to Email Or Via Phone No"
@@ -1032,9 +1023,9 @@ exports.createPost = async (req, res) => {
 
         const content = {
             image: isImageContent && imageUrls.length > 0,
-            imageUrls: isImageContent ? imageUrls : [],
             description: true,
             descriptionText: description,
+            imageUrl: isImageContent ? imageUrls : [],
         };
 
         const newPost = await Postcreate.create({
@@ -1042,7 +1033,7 @@ exports.createPost = async (req, res) => {
             content,
             visibility: visibility === 'true' || visibility === true,
             hashTag: hashTag || "",
-            imageFilter: imageFilter || 'normal',
+            imageFilter: isImageContent ? imageFilter : 'normal',
             contentType: isImageContent,
         });
 
@@ -1054,7 +1045,7 @@ exports.createPost = async (req, res) => {
             createdAt: newPost.createdAt,  // <-- Add this
             newPost,
         });
-        
+
     } catch (error) {
         console.error("Error in createPost:", error);
         return res.status(500).json({
@@ -1068,110 +1059,92 @@ exports.createPost = async (req, res) => {
 
 
 
-exports.generateAndTrackShare = async (req, res) => {
+exports.getAllFriends = async (req, res) => {
     try {
-        const { postId } = req.params;
         const userId = req.user.userId;
 
-        const post = await Postcreate.findById(postId).populate("userId"); // assuming post has a userId (post owner)
-        if (!post || post.visibility !== 'public') {
+        const user = await User.findById(userId).populate('userAllFriends', 'fullName userName profilePic');
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            friends: user.userAllFriends,
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+
+
+
+
+exports.sharePostWithFriend = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { postId, friendId } = req.params;
+
+        // Step 1: Validate the post
+        const originalPost = await Postcreate.findOne({ _id: postId });
+        if (!originalPost) {
             return res.status(404).json({
                 success: false,
-                message: "Post not found or not public",
+                message: "Post not found"
             });
         }
 
-        // Check if already shared
-        if (post.shares.includes(userId)) {
-            const postUrl = `https://yourfrontenddomain.com/posts/${postId}`;
-            const encodedUrl = encodeURIComponent(postUrl);
-            return res.status(200).json({
-                success: true,
-                message: "Already shared",
-                alreadyShared: true,
-                shareLinks: {
-                    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-                    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=Check%20this%20out!`,
-                    whatsapp: `https://api.whatsapp.com/send?text=${encodedUrl}`,
-                    linkedin: `https://www.linkedin.com/shareArticle?url=${encodedUrl}&title=Awesome%20Post`,
-                    telegram: `https://t.me/share/url?url=${encodedUrl}`,
-                    email: `mailto:?subject=Check%20this%20post&body=${encodedUrl}`,
-                    copyLink: postUrl
-                }
-            });
-        }
-
-        // Update Post share
-        post.shares.push(userId);
-        post.shareCount += 1;
-        await post.save();
-
-        // Update sharing user (who shared the post)
+        // Step 2: Verify friendship
         const user = await User.findById(userId);
-        user.coinWallet.tedGold += 1;
-        user.coinWallet.tedSilver += 1;
-        user.coinWallet.tedBronze += 1;
+        const isFriend = user.userAllFriends.includes(friendId);
+        if (!isFriend) {
+            return res.status(403).json({
+                success: false,
+                message: "Not a friend, so post Not share"
+            });
+        }
 
-        // Reward the original post owner
-        const postOwner = post.userId;
-        const { tedGold, tedSilver, tedBronze } = postOwner.coinWallet;
+        // Step 3: Clone the post
+        const sharedPost = new Postcreate({
+            userId: friendId, // Save under the friend's profile
+            content: originalPost.content,
+            visibility: true, // Shared posts are visible
+            hashTag: originalPost.hashTag,
+            imageFilter: originalPost.imageFilter,
+            contentType: originalPost.contentType,
+        });
 
-        const totalTedCoin = Math.floor(
-            tedGold / 75 + tedSilver / 50 + tedBronze / 25
-        );
+        await sharedPost.save();
 
-        postOwner.coinWallet.totalTedCoin = totalTedCoin;
-        await postOwner.save();
+        // Step 4: Update post's share data
+        originalPost.shares.push(friendId);
+        originalPost.shareCount += 1;
+        await originalPost.save();
 
-        // Convert coins for current user who shared
-        const tg = user.coinWallet.tedGold;
-        const ts = user.coinWallet.tedSilver;
-        const tb = user.coinWallet.tedBronze;
-
-        const totalCoin = Math.min(
-            Math.floor(tg / 75),
-            Math.floor(ts / 50),
-            Math.floor(tb / 25)
-        );
-
-        user.coinWallet.tedGold -= totalCoin * 75;
-        user.coinWallet.tedSilver -= totalCoin * 50;
-        user.coinWallet.tedBronze -= totalCoin * 25;
-        user.coinWallet.totalTedCoin += totalCoin;
-
-        await user.save();
-
-        const postUrl = `https://yourfrontenddomain.com/posts/${postId}`;
-        const encodedUrl = encodeURIComponent(postUrl);
-
-        return res.status(200).json({
-            success: true,
-            message: "Post shared successfully, coins awarded",
-            shareLinks: {
-                facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-                twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=Check%20this%20out!`,
-                whatsapp: `https://api.whatsapp.com/send?text=${encodedUrl}`,
-                linkedin: `https://www.linkedin.com/shareArticle?url=${encodedUrl}&title=Awesome%20Post`,
-                telegram: `https://t.me/share/url?url=${encodedUrl}`,
-                email: `mailto:?subject=Check%20this%20post&body=${encodedUrl}`,
-                copyLink: postUrl
-            },
-            coins: {
-                tedGold: user.coinWallet.tedGold,
-                tedSilver: user.coinWallet.tedSilver,
-                tedBronze: user.coinWallet.tedBronze,
-                totalTedCoin: user.coinWallet.totalTedCoin
+        // Step 5: Optionally, log in friend's user profile that they received a shared post
+        await User.findByIdAndUpdate(friendId, {
+            $push: {
+                receivedShares: {
+                    from: userId,
+                    post: sharedPost._id,
+                }
             }
         });
 
-    } catch (error) {
-        console.error("Error in generateAndTrackShare:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error while sharing the post"
+        return res.status(200).json({
+            success: true,
+            message: "Post shared successfully  your friend",
+            sharedPostId: sharedPost._id,
+            originalPost,
         });
+    } catch (err) {
+        console.error("Error sharing post:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
 
 
 

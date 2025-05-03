@@ -92,11 +92,19 @@ const userSchema = new mongoose.Schema({
             type: Number,
             default: 0
         },
-        totalTedCoin:{
-            type:Number,
-            default:0,
+        totalTedCoin: {
+            type: Number,
+            default: 0,
         },
     },
+    receivedShares: [
+        {
+            from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+            post: { type: mongoose.Schema.Types.ObjectId, ref: "Postcreate" },
+            sharedAt: { type: Date, default: Date.now }
+        }
+    ],
+
 })
 
 

@@ -23,7 +23,9 @@ const {
     giveTedBlackCoinToPost,
     report,
     createMoment,
-    generateAndTrackShare
+    generateAndTrackShare,
+    getAllFriends,
+    sharePostWithFriend
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const {uploadd} = require("../middelwere/multer");
@@ -539,7 +541,6 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  * /user/createpost:
  *   post:
  *     summary: Create a new post
- *     description: Authenticated users can create a post with optional images, hashtags, image filter, and visibility. Images are uploaded to Cloudinary.
  *     tags:
  *       - Posts
  *     security:
@@ -550,23 +551,20 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required:
- *               - description
- *               - visibility
  *             properties:
  *               description:
  *                 type: string
- *                 example: "This is a new post!"
+ *                 example: "This is my first post"
  *               visibility:
  *                 type: boolean
  *                 example: true
  *               hashTag:
  *                 type: string
- *                 example: "#sunset"
+ *                 example: "#travel"
  *               imageFilter:
  *                 type: string
  *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
- *                 example: normal
+ *                 example: "normal"
  *               contentType:
  *                 type: boolean
  *                 example: true
@@ -575,7 +573,6 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Upload up to 10 image files
  *     responses:
  *       200:
  *         description: Post created successfully
@@ -590,30 +587,33 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 message:
  *                   type: string
  *                   example: Post created successfully
- *                 postUrls:
+ *                 imageUrls:
  *                   type: array
  *                   items:
  *                     type: string
- *                     example: https://res.cloudinary.com/demo/image/upload/v1234567890/sample.jpg
+ *                     example: https://cloudinary.com/image.jpg
  *                 visibility:
  *                   type: boolean
  *                   example: true
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
  *                 newPost:
- *                   type: object
+ *                   $ref: '#/components/schemas/Post'
  *       400:
- *         description: Missing required fields or invalid input
- *       401:
- *         description: Unauthorized – missing or invalid token
+ *         description: Bad request (missing or invalid fields)
  *       500:
- *         description: Server error during post creation
+ *         description: Internal server error
  */
-router.post("/createpost",authMiddelWere,upload.array("files",10),createPost);
+router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);
+
 /**
  * @swagger
- * /user/posts/{postId}/share:
+ * /user/share/{postId}/{friendId}:
  *   post:
- *     summary: Share a post on social media and earn coins
- *     description: Generates shareable links for the given post across social platforms. Rewards coins only on first share by the user.
+ *     summary: Share a post with a friend
+ *     tags:
+ *       - Posts
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -622,10 +622,16 @@ router.post("/createpost",authMiddelWere,upload.array("files",10),createPost);
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the post to be shared
+ *         description: ID of the original post to share
+ *       - in: path
+ *         name: friendId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the friend to share the post with
  *     responses:
  *       200:
- *         description: Returns social media links and coin update if first-time share
+ *         description: Post shared successfully
  *         content:
  *           application/json:
  *             schema:
@@ -636,52 +642,31 @@ router.post("/createpost",authMiddelWere,upload.array("files",10),createPost);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Post shared successfully, coins awarded
- *                 alreadyShared:
+ *                   example: Post shared successfully your friend
+ *                 sharedPostId:
+ *                   type: string
+ *                   example: 6629a314d67d72a3a0989f4e
+ *                 originalPost:
+ *                   $ref: '#/components/schemas/Post'
+ *       403:
+ *         description: User is not a friend
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
  *                   type: boolean
  *                   example: false
- *                 shareLinks:
- *                   type: object
- *                   properties:
- *                     facebook:
- *                       type: string
- *                       example: https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fyourfrontenddomain.com%2Fposts%2F123
- *                     twitter:
- *                       type: string
- *                     whatsapp:
- *                       type: string
- *                     linkedin:
- *                       type: string
- *                     telegram:
- *                       type: string
- *                     email:
- *                       type: string
- *                     copyLink:
- *                       type: string
- *                       example: https://yourfrontenddomain.com/posts/123
- *                 coins:
- *                   type: object
- *                   properties:
- *                     tedGold:
- *                       type: integer
- *                       example: 20
- *                     tedSilver:
- *                       type: integer
- *                       example: 10
- *                     tedBronze:
- *                       type: integer
- *                       example: 5
- *                     totalTedCoin:
- *                       type: integer
- *                       example: 1
+ *                 message:
+ *                   type: string
+ *                   example: Not a friend, so post Not share
  *       404:
- *         description: Post not found or not public
- *       401:
- *         description: Unauthorized – missing or invalid token
+ *         description: Post not found
  *       500:
- *         description: Server error while sharing the post
+ *         description: Internal server error
  */
-router.post("/posts/:postId/share",authMiddelWere,generateAndTrackShare);
+router.post('/share/:postId/:friendId', authMiddelWere, sharePostWithFriend);
 router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoinToPost);
 router.post("/reportPost/:postId",authMiddelWere,report);
 /**
@@ -744,5 +729,51 @@ router.post("/reportPost/:postId",authMiddelWere,report);
  *         description: Server error while creating moment
  */
 router.post("/moments",authMiddelWere,upload.single("image"),createMoment);
+/**
+ * @swagger
+ * /user/friends:
+ *   get:
+ *     summary: Get all friends of the authenticated user
+ *     tags:
+ *       - Friends
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of friends retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 friends:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "60f7ad94c2b6e4b55c1b4567"
+ *                       fullName:
+ *                         type: string
+ *                         example: "John Doe"
+ *                       userName:
+ *                         type: string
+ *                         example: "john_doe"
+ *                       profilePic:
+ *                         type: string
+ *                         example: "https://cloudinary.com/images/user.png"
+ *       401:
+ *         description: Unauthorized - JWT token required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get('/friends', authMiddelWere, getAllFriends);
 
 module.exports = router;
