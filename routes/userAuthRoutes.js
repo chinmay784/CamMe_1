@@ -608,7 +608,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
 router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);
 /**
  * @swagger
- * /post/share/{postId}/{friendId}:
+ * /user/share/{postId}/{friendId}:
  *   post:
  *     summary: Share a post with a friend
  *     tags:
