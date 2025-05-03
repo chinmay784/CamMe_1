@@ -1017,7 +1017,7 @@ exports.createPost = async (req, res) => {
         }
 
         const files = req.files;
-        let base64Images = [];
+        let imageUrls  = [];
 
         // Convert uploaded files to base64
         if (files && files.length > 0) {
@@ -1026,7 +1026,7 @@ exports.createPost = async (req, res) => {
                 const base64String = fileData.toString('base64');
                 const mimeType = file.mimetype;
                 const finalBase64 = `data:${mimeType};base64,${base64String}`;
-                base64Images.push(finalBase64);
+                imageUrls .push(finalBase64);
 
                 // Optionally delete file after converting
                 fs.unlinkSync(file.path);
@@ -1034,8 +1034,8 @@ exports.createPost = async (req, res) => {
         }
 
         const content = {
-            image: base64Images.length > 0,
-            base64Images: base64Images,
+            image: imageUrls .length > 0,
+            imageUrls : imageUrls ,
             description: true,
             descriptionText: description,
         };
@@ -1051,7 +1051,7 @@ exports.createPost = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Post created successfully",
-            base64Images: base64Images,
+            imageUrls : imageUrls ,
             visibility: newPost.visibility,
             newPost,
         });
