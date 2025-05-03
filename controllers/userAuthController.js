@@ -12,6 +12,7 @@ const Postcreate = require("../models/PostModel");
 const cloudinary = require("cloudinary")
 const mongoose = require("mongoose");
 const Moment = require("../models/momentSchema")
+const fs = require("fs");
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -994,12 +995,13 @@ exports.acceptFriendRequest = async (req, res) => {
 
 
 
+
+
 exports.createPost = async (req, res) => {
     try {
         const { description, visibility, hashTag, imageFilter } = req.body;
         const userId = req.user.userId;
 
-        // Validate required fields
         if (!description || typeof visibility === 'undefined') {
             return res.status(400).json({
                 success: false,
@@ -1014,41 +1016,42 @@ exports.createPost = async (req, res) => {
             });
         }
 
-        let imageUrls = [];
-        const files = req.files; // Assuming multer is handling multiple files
+        const images = req.files;
+        let base64Images = [];
 
-        // Upload images to Cloudinary
-        if (files && files.length > 0) {
-            for (let file of files) {
-                const result = await cloudinary.uploader.upload(file.path, {
-                    folder: "profile_pics", // Folder name for images
-                });
-                imageUrls.push(result.secure_url); // Push the image URL to the array
+        // Convert uploaded files to base64
+        if (images && images.length > 0) {
+            for (let file of images) {
+                const fileData = fs.readFileSync(file.path);
+                const base64String = fileData.toString('base64');
+                const mimeType = file.mimetype;
+                const finalBase64 = `data:${mimeType};base64,${base64String}`;
+                base64Images.push(finalBase64);
+
+                // Optionally delete file after converting
+                fs.unlinkSync(file.path);
             }
         }
 
-        // Construct content object
         const content = {
-            image: files && files.length > 0 ? true : false,  // Set to true if images are uploaded
-            imageUrls: imageUrls,  // Array of image URLs
-            description: true,  // Description is always true
-            descriptionText: description,  // Store the description text
+            image: base64Images.length > 0,
+            base64Images: base64Images,
+            description: true,
+            descriptionText: description,
         };
 
-
-        // Create the post
         const newPost = await Postcreate.create({
             userId,
-            content,  // Save the constructed content object
-            visibility: visibility,  // Ensure visibility is stored as a boolean
-            hashTag: hashTag || [],  // Store hashtags if provided  
+            content,
+            visibility: visibility === 'true' || visibility === true,
+            hashTag: hashTag || [],
             imageFilter: imageFilter,
         });
 
         return res.status(200).json({
             success: true,
-            message: "Post created  successfully",
-            postUrls: imageUrls,  // Return an array of image URLs
+            message: "Post created successfully",
+            base64Images: base64Images,
             visibility: newPost.visibility,
             newPost,
         });

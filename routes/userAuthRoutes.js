@@ -566,7 +566,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 type: string
  *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
  *                 example: clarendon
- *               files:
+ *               images:
  *                 type: array
  *                 items:
  *                   type: string
@@ -605,7 +605,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *         description: Server error during post creation
  */
 
-router.post("/createpost",authMiddelWere,upload.array("files",10),createPost);
+router.post("/createpost",authMiddelWere,upload.array("images",10),createPost);
 /**
  * @swagger
  * /user/posts/{postId}/share:
