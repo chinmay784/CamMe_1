@@ -998,7 +998,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, imageFilter ,contentType } = req.body;
+        const { description, visibility, hashTag, imageFilter, contentType } = req.body;
         const userId = req.user.userId;
 
         if (!description || typeof visibility === 'undefined') {
@@ -1015,39 +1015,27 @@ exports.createPost = async (req, res) => {
             });
         }
 
+        const isImageContent = contentType === 'true' || contentType === true;
+
         let imageUrls = [];
-        const files = req.files
-
-        // Convert files to base64 and upload to Cloudinary
-        if (files && files.length > 0) {
-            for (let file of files) {
-                const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-                
-                const result = await cloudinary.uploader.upload(base64Image, {
-                    folder: "profile_pics", // optional: folder name
-                });
-
-                imageUrls.push(result.secure_url);
+        if (isImageContent) {
+            const files = req.files;
+            if (files && files.length > 0) {
+                for (let file of files) {
+                    const result = await cloudinary.uploader.upload(file.path, {
+                        folder: "profile_pics",
+                    });
+                    imageUrls.push(result.secure_url);
+                }
             }
         }
-        const content = {}
 
-        if(contentType === false){
-             content = {
-                image: imageUrls.length > 0,
-                imageUrls: [],
-                description: true,
-                descriptionText: description,
-            };
-        }else{
-            content = {
-                image: imageUrls.length > 0,
-                imageUrls: imageUrls,
-                description: true,
-                descriptionText: description,
-            };
-        }
-        
+        const content = {
+            image: isImageContent && imageUrls.length > 0,
+            imageUrls: isImageContent ? imageUrls : [],
+            description: true,
+            descriptionText: description,
+        };
 
         const newPost = await Postcreate.create({
             userId,
@@ -1055,6 +1043,7 @@ exports.createPost = async (req, res) => {
             visibility: visibility === 'true' || visibility === true,
             hashTag: hashTag || "",
             imageFilter: imageFilter || 'normal',
+            contentType: isImageContent,
         });
 
         return res.status(200).json({
@@ -1062,8 +1051,10 @@ exports.createPost = async (req, res) => {
             message: "Post created successfully",
             postUrls: imageUrls,
             visibility: newPost.visibility,
+            createdAt: newPost.createdAt,  // <-- Add this
             newPost,
         });
+        
     } catch (error) {
         console.error("Error in createPost:", error);
         return res.status(500).json({
