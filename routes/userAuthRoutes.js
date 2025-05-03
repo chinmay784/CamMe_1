@@ -536,10 +536,12 @@ router.post("/inviteAFriend/:reciverId",authMiddelWere,sendFriendRequest);
 router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest);
 /**
  * @swagger
- * /user/createpost:
+ * /createpost:
  *   post:
  *     summary: Create a new post
- *     description: Authenticated users can create a post with optional images and set its visibility. Requires Bearer token in the Authorization header.
+ *     description: Authenticated users can create a post with optional images, hashtags, image filter, and visibility. Images are uploaded to Cloudinary.
+ *     tags:
+ *       - Posts
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -554,21 +556,20 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *             properties:
  *               description:
  *                 type: string
- *                 example: "Enjoying the sunset with friends!"
+ *                 example: "This is a new post!"
  *               visibility:
  *                 type: boolean
- *                 description: true = public, false = private
  *                 example: true
  *               hashTag:
  *                 type: string
  *                 example: "#sunset"
- *               contentType:
- *                  type: boolean
- *                 example: false
  *               imageFilter:
  *                 type: string
  *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
- *                 example: clarendon
+ *                 example: normal
+ *               contentType:
+ *                 type: boolean
+ *                 example: true
  *               files:
  *                 type: array
  *                 items:
@@ -599,15 +600,13 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                   example: true
  *                 newPost:
  *                   type: object
- *                   description: Full post object from the database
  *       400:
- *         description: Missing required fields or invalid visibility
+ *         description: Missing required fields or invalid input
  *       401:
  *         description: Unauthorized – missing or invalid token
  *       500:
  *         description: Server error during post creation
  */
-
 router.post("/createpost",authMiddelWere,upload.array("files",10),createPost);
 /**
  * @swagger

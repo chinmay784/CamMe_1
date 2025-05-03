@@ -1,3 +1,4 @@
+const { contentType, type } = require("express/lib/response");
 const mongoose = require("mongoose");
 
 const postSchema = new mongoose.Schema({
@@ -31,6 +32,11 @@ const postSchema = new mongoose.Schema({
         type: Boolean,
         enum: [true, false],
         default: true, // false = private, true = public
+    },
+    contentType:{
+        type:Boolean,
+        enum: [true, false],
+        default: false, // false = text, true = image
     },
     hashTag: {
         type: String,
