@@ -543,8 +543,8 @@ exports.addAccount = async (req, res) => {
 
 
         // Step 6: Generate approve/reject URLs
-        const approveLink = `http://localhost:4000/api/v1/user/account-link/approve/${secondaryAccount._id}/${mainUserId}`;
-        const rejectLink = `http://localhost:4000/api/v1/user/account-link/reject/${secondaryAccount._id}/${mainUserId}`;
+        const approveLink = `https://camme-1-1.onrender.com/api/v1/user/account-link/approve/${secondaryAccount._id}/${mainUserId}`;
+        const rejectLink = `https://camme-1-1.onrender.com/api/v1/user/account-link/reject/${secondaryAccount._id}/${mainUserId}`;
 
         const emailContent = `
       <p><strong>${req.user.fullName}</strong> is trying to link your account.</p>
