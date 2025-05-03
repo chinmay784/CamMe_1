@@ -1,17 +1,45 @@
 const mongoose = require("mongoose");
 
-const postSchemsa = new mongoose.Schema({
+const postSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
-    image: {
+    content: {
+        image: {
+            type: Boolean,
+            default: false,
+        },
+        imageUrl: {
+            type: [String],
+            required: function () {
+                return this.content?.image === true;
+            },
+        },
+        description: {
+            type: Boolean,
+            default: true,
+        },
+        descriptionText: {
+            type: String,
+            required: function () {
+                return this.content?.description === true;
+            },
+        },
+    },
+    visibility: {
+        type: Boolean,
+        enum: [true, false],
+        default: true, // false = private, true = public
+    },
+    hashTag: {
         type: String,
         required: false,
     },
-    description: {
+    imageFilter: {
         type: String,
-        required: true,
+        enum: ['normal', 'clarendon', 'sepia', 'grayscale', 'lark', 'moon', 'aden', 'perpetua'],
+        default: 'normal',
     },
     comments: [
         {
@@ -43,12 +71,6 @@ const postSchemsa = new mongoose.Schema({
             ref: "User",
         }
     ],
-    visibility: {
-        type: String,
-        enum: ['public', 'private'],
-        default: 'public'
-    },
 });
 
-module.exports = mongoose.model("Postcreate", postSchemsa);
-
+module.exports = mongoose.model("Postcreate", postSchema);

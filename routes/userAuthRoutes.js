@@ -539,7 +539,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  * /user/createpost:
  *   post:
  *     summary: Create a new post
- *     description: Authenticated users can create a post with an optional image and set its visibility. Coins are awarded on post creation.
+ *     description: Authenticated users can create a post with optional images and set its visibility. Requires Bearer token in the Authorization header.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -554,18 +554,27 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *             properties:
  *               description:
  *                 type: string
- *                 example: "Enjoying the sunset!"
+ *                 example: "Enjoying the sunset with friends!"
  *               visibility:
+ *                 type: boolean
+ *                 description: true = public, false = private
+ *                 example: true
+ *               hashTag:
  *                 type: string
- *                 enum: [public, private]
- *                 example: public
- *               image:
+ *                 example: "#sunset"
+ *               imageFilter:
  *                 type: string
- *                 format: binary
- *                 description: Optional image file for the post
+ *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
+ *                 example: clarendon
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Upload up to 10 image files
  *     responses:
  *       200:
- *         description: Post created and coins awarded successfully
+ *         description: Post created successfully
  *         content:
  *           application/json:
  *             schema:
@@ -576,28 +585,18 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Post created and coins awarded successfully
- *                 postUrl:
- *                   type: string
- *                   example: https://res.cloudinary.com/demo/image/upload/v1234567890/sample.jpg
+ *                   example: Post created successfully
+ *                 postUrls:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     example: https://res.cloudinary.com/demo/image/upload/v1234567890/sample.jpg
  *                 visibility:
- *                   type: string
- *                   example: public
- *                 coins:
+ *                   type: boolean
+ *                   example: true
+ *                 newPost:
  *                   type: object
- *                   properties:
- *                     tedGold:
- *                       type: integer
- *                       example: 25
- *                     tedSilver:
- *                       type: integer
- *                       example: 10
- *                     tedBronze:
- *                       type: integer
- *                       example: 5
- *                     totalTedCoin:
- *                       type: integer
- *                       example: 1
+ *                   description: Full post object from the database
  *       400:
  *         description: Missing required fields or invalid visibility
  *       401:
@@ -605,7 +604,8 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *       500:
  *         description: Server error during post creation
  */
-router.post("/createpost",authMiddelWere,upload.single("image"),createPost);
+
+router.post("/createpost",authMiddelWere,upload.array("files",10),createPost);
 /**
  * @swagger
  * /user/posts/{postId}/share:

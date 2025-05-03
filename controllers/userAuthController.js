@@ -993,76 +993,64 @@ exports.acceptFriendRequest = async (req, res) => {
 
 
 
+
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility } = req.body;  // Fixed spelling
+        const { description, visibility, hashTag, imageFilter } = req.body;
         const userId = req.user.userId;
-        const image = req.file?.path;
 
         // Validate required fields
-        if (!description || !visibility) {
+        if (!description || typeof visibility === 'undefined') {
             return res.status(400).json({
                 success: false,
                 message: "Description and visibility are required.",
             });
         }
 
-        if (!['public', 'private'].includes(visibility)) {
+        if (!['true', 'false', true, false].includes(visibility)) {
             return res.status(400).json({
                 success: false,
-                message: "Visibility must be either 'public' or 'private'.",
+                message: "Visibility must be true or false.",
             });
         }
 
-        let imageUrl = null;
+        let imageUrls = [];
+        const files = req.files; // Assuming multer is handling multiple files
 
-        // Upload image if present
-        if (image) {
-            const result = await cloudinary.uploader.upload(image, {
-                folder: "profile_pics", // more appropriate than "profile_pics"
-            });
-            imageUrl = result.secure_url;
+        // Upload images to Cloudinary
+        if (files && files.length > 0) {
+            for (let file of files) {
+                const result = await cloudinary.uploader.upload(file.path, {
+                    folder: "profile_pics", // Folder name for images
+                });
+                imageUrls.push(result.secure_url); // Push the image URL to the array
+            }
         }
 
-        // Create post
+        // Construct content object
+        const content = {
+            image: files && files.length > 0 ? true : false,  // Set to true if images are uploaded
+            imageUrls: imageUrls,  // Array of image URLs
+            description: true,  // Description is always true
+            descriptionText: description,  // Store the description text
+        };
+
+
+        // Create the post
         const newPost = await Postcreate.create({
             userId,
-            image: imageUrl,
-            description,
-            visibility,
+            content,  // Save the constructed content object
+            visibility: visibility,  // Ensure visibility is stored as a boolean
+            hashTag: hashTag || [],  // Store hashtags if provided  
+            imageFilter: imageFilter,
         });
-
-        // Update coins
-        const user = await User.findById(userId);
-        user.coinWallet.tedGold += 1;
-        user.coinWallet.tedSilver += 1;
-        user.coinWallet.tedBronze += 1;
-
-        const { tedGold, tedSilver, tedBronze } = user.coinWallet;
-        const totalCoin = Math.min(
-            Math.floor(tedGold / 75),
-            Math.floor(tedSilver / 50),
-            Math.floor(tedBronze / 25)
-        );
-
-        user.coinWallet.tedGold -= totalCoin * 75;
-        user.coinWallet.tedSilver -= totalCoin * 50;
-        user.coinWallet.tedBronze -= totalCoin * 25;
-        user.coinWallet.totalTedCoin += totalCoin;
-
-        await user.save();
 
         return res.status(200).json({
             success: true,
-            message: "Post created and coins awarded successfully",
-            postUrl: newPost.image,
+            message: "Post created  successfully",
+            postUrls: imageUrls,  // Return an array of image URLs
             visibility: newPost.visibility,
-            coins: {
-                tedGold: user.coinWallet.tedGold,
-                tedSilver: user.coinWallet.tedSilver,
-                tedBronze: user.coinWallet.tedBronze,
-                totalTedCoin: user.coinWallet.totalTedCoin,
-            },
+            newPost,
         });
     } catch (error) {
         console.error("Error in createPost:", error);
@@ -1072,6 +1060,7 @@ exports.createPost = async (req, res) => {
         });
     }
 };
+
 
 
 
