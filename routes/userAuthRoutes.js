@@ -606,10 +606,9 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *         description: Internal server error
  */
 router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);
-
 /**
  * @swagger
- * /user/share/{postId}/{friendId}:
+ * /post/share/{postId}/{friendId}:
  *   post:
  *     summary: Share a post with a friend
  *     tags:
@@ -647,9 +646,10 @@ router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost
  *                   type: string
  *                   example: 6629a314d67d72a3a0989f4e
  *                 originalPost:
- *                   $ref: '#/components/schemas/Post'
+ *                   type: object
+ *                   description: Original post data
  *       403:
- *         description: User is not a friend
+ *         description: Not a friend, sharing not allowed
  *         content:
  *           application/json:
  *             schema:
@@ -663,8 +663,30 @@ router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost
  *                   example: Not a friend, so post Not share
  *       404:
  *         description: Post not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Post not found
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
  */
 router.post('/share/:postId/:friendId', authMiddelWere, sharePostWithFriend);
 router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoinToPost);
