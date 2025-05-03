@@ -996,10 +996,9 @@ exports.acceptFriendRequest = async (req, res) => {
 
 
 
-
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, imageFilter } = req.body;
+        const { description, visibility, hashTag, imageFilter ,contentType } = req.body;
         const userId = req.user.userId;
 
         if (!description || typeof visibility === 'undefined') {
@@ -1016,42 +1015,52 @@ exports.createPost = async (req, res) => {
             });
         }
 
-        const files = req.files;
-        let imageUrls  = [];
+        let imageUrls = [];
+        const files = req.files
 
-        // Convert uploaded files to base64
+        // Convert files to base64 and upload to Cloudinary
         if (files && files.length > 0) {
             for (let file of files) {
-                const fileData = fs.readFileSync(file.path);
-                const base64String = fileData.toString('base64');
-                const mimeType = file.mimetype;
-                const finalBase64 = `data:${mimeType};base64,${base64String}`;
-                imageUrls .push(finalBase64);
+                const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+                
+                const result = await cloudinary.uploader.upload(base64Image, {
+                    folder: "profile_pics", // optional: folder name
+                });
 
-                // Optionally delete file after converting
-                fs.unlinkSync(file.path);
+                imageUrls.push(result.secure_url);
             }
         }
+        const content = {}
 
-        const content = {
-            image: imageUrls .length > 0,
-            imageUrls : imageUrls ,
-            description: true,
-            descriptionText: description,
-        };
+        if(contentType === false){
+             content = {
+                image: imageUrls.length > 0,
+                imageUrls: [],
+                description: true,
+                descriptionText: description,
+            };
+        }else{
+            content = {
+                image: imageUrls.length > 0,
+                imageUrls: imageUrls,
+                description: true,
+                descriptionText: description,
+            };
+        }
+        
 
         const newPost = await Postcreate.create({
             userId,
             content,
             visibility: visibility === 'true' || visibility === true,
-            hashTag: hashTag || [],
-            imageFilter: imageFilter,
+            hashTag: hashTag || "",
+            imageFilter: imageFilter || 'normal',
         });
 
         return res.status(200).json({
             success: true,
             message: "Post created successfully",
-            imageUrls : imageUrls ,
+            postUrls: imageUrls,
             visibility: newPost.visibility,
             newPost,
         });
@@ -1063,6 +1072,7 @@ exports.createPost = async (req, res) => {
         });
     }
 };
+
 
 
 
