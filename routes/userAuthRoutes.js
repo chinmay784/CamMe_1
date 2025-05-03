@@ -564,7 +564,6 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 example: "#sunset"
  *               contentType:
  *                  type: boolean
- *                 description: true = both, false = description only
  *                 example: false
  *               imageFilter:
  *                 type: string
