@@ -1049,7 +1049,7 @@ exports.createPost = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Post created successfully",
-            postUrls: imageUrls,
+            imageUrls,
             visibility: newPost.visibility,
             createdAt: newPost.createdAt,  // <-- Add this
             newPost,

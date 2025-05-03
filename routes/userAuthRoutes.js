@@ -536,7 +536,7 @@ router.post("/inviteAFriend/:reciverId",authMiddelWere,sendFriendRequest);
 router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest);
 /**
  * @swagger
- * /createpost:
+ * /user/createpost:
  *   post:
  *     summary: Create a new post
  *     description: Authenticated users can create a post with optional images, hashtags, image filter, and visibility. Images are uploaded to Cloudinary.
