@@ -1016,12 +1016,12 @@ exports.createPost = async (req, res) => {
             });
         }
 
-        const images = req.files;
+        const files = req.files;
         let base64Images = [];
 
         // Convert uploaded files to base64
-        if (images && images.length > 0) {
-            for (let file of images) {
+        if (files && files.length > 0) {
+            for (let file of files) {
                 const fileData = fs.readFileSync(file.path);
                 const base64String = fileData.toString('base64');
                 const mimeType = file.mimetype;
