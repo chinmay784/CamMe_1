@@ -562,6 +562,10 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *               hashTag:
  *                 type: string
  *                 example: "#sunset"
+ *               contentType:
+ *                  type: boolean
+ *                 description: true = both, false = description only
+ *                 example: false
  *               imageFilter:
  *                 type: string
  *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
