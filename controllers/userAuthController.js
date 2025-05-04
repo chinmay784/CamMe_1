@@ -159,7 +159,7 @@ exports.otpVerify = async (req, res) => {
 
 exports.ProfileCreation = async (req, res) => {
     try {
-        const { email, password, userName } = req.body;
+        const { email, password, userName,confirmPassword } = req.body;
 
         if (!userName || !email || !password) {
             return res.status(400).json({
@@ -174,6 +174,13 @@ exports.ProfileCreation = async (req, res) => {
             return res.status(400).json({
                 sucess: false,
                 message: "User Not Found"
+            })
+        }
+
+        if(pass !== confirmPassword){
+            return res.status(400).json({
+                sucess:false,
+                message:"Password and confirmPassword are not match"
             })
         }
 
