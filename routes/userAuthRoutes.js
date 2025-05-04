@@ -106,7 +106,7 @@ router.post('/register',upload.single("file"), register);
  *                 example: johndoe@example.com
  *               otp:
  *                 type: string
- *                 example: 123456
+ *                 example: 1234
  *     responses:
  *       200:
  *         description: OTP verified. Account Activated
@@ -251,7 +251,7 @@ router.post("/login", login);
  *                 example: johndoe@example.com
  *               otp:
  *                 type: string
- *                 example: 123456
+ *                 example: 1234
  *     responses:
  *       200:
  *         description: OTP verified successfully, user logged in
