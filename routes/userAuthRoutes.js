@@ -146,6 +146,7 @@ router.post("/verifyotp", otpVerify);
  *               - email
  *               - password
  *               - userName
+ *               - confirmPassword
  *             properties:
  *               email:
  *                 type: string
@@ -156,6 +157,9 @@ router.post("/verifyotp", otpVerify);
  *               userName:
  *                 type: string
  *                 example: johnny98
+ *               confirmPassword:
+ *                 type: string
+ *                 example: MySecurePass123
  *     responses:
  *       200:
  *         description: Profile completed successfully
