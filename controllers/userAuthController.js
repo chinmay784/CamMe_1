@@ -73,7 +73,7 @@ exports.register = async (req, res) => {
             otp,
             otpExpires: otpExpires,
         });
-        user.username = ""
+        user.userName = ""
 
         await user.save();
 
@@ -161,9 +161,9 @@ exports.otpVerify = async (req, res) => {
 
 exports.ProfileCreation = async (req, res) => {
     try {
-        const { email, password, username } = req.body;
+        const { email, password, userName } = req.body;
 
-        if (!username || !email || !password) {
+        if (!userName || !email || !password) {
             return res.status(400).json({
                 sucess: false,
                 message: 'Please provide all details'
@@ -184,7 +184,7 @@ exports.ProfileCreation = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
 
-        user.username = username;
+        user.userName = userName;
         user.password = hashedPassword
 
         await user.save();
