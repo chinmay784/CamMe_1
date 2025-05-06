@@ -183,6 +183,7 @@ exports.ProfileCreation = async (req, res) => {
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
+        
 
         user.userName = userName;
         user.password = hashedPassword
