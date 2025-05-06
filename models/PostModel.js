@@ -33,8 +33,8 @@ const postSchema = new mongoose.Schema({
         enum: [true, false],
         default: true, // false = private, true = public
     },
-    contentType:{
-        type:Boolean,
+    contentType: {
+        type: Boolean,
         enum: [true, false],
         default: false, // false = text, true = image
     },
@@ -67,16 +67,54 @@ const postSchema = new mongoose.Schema({
             },
         },
     ],
+    tedGoldGivers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    tedGoldCount: {
+        type: Number,
+        default: 0
+    },
+    tedSilverGivers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    tedSilverCount: {
+        type: Number,
+        default: 0
+    },
+    tedBronzeGivers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    tedBlackCoinData: {
+        givenBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        },
+        reason: String,
+        givenAt: Date,
+        votingEndsAt: Date,
+        votes: [{
+            user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            vote: { type: String, enum: ['agree', 'disagree'] }
+        }],
+        status: {
+            type: String,
+            enum: ['pending', 'resolved'],
+            default: 'pending'
+        }
+    },
     shareCount: {
         type: Number,
         default: 0,
     },
-    shares: [ 
+    shares: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         }
     ],
-},{ timestamps: true });
+}, { timestamps: true });
 
 module.exports = mongoose.model("Postcreate", postSchema);
