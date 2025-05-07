@@ -64,6 +64,10 @@ exports.register = async (req, res) => {
 
         let userName = "first"
 
+        // const randomSuffix = Math.floor(1000 + Math.random() * 9000); // e.g. 4-digit
+        // const userName = `${fullName.split(" ")[0].toLowerCase()}${randomSuffix}`;
+
+
         user = new User({
             gender,
             theme,
@@ -74,9 +78,8 @@ exports.register = async (req, res) => {
             phoneNo,
             otp,
             otpExpires: otpExpires,
-            userName,
+            userName: userName,
         });
-        user.userName = ""
 
         await user.save();
 
@@ -143,6 +146,7 @@ exports.otpVerify = async (req, res) => {
         user.isVerified = true;
         user.otp = undefined;
         user.otpExpires = undefined;
+        
 
         await user.save()
 
@@ -168,41 +172,42 @@ exports.ProfileCreation = async (req, res) => {
 
         if (!userName || !email || !password) {
             return res.status(400).json({
-                sucess: false,
+                success: false,
                 message: 'Please provide all details'
-            })
+            });
         }
 
         const user = await User.findOne({ email });
-
         if (!user) {
-            return res.status(400).json({
-                sucess: false,
-                message: "User Not Found"
-            })
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
         }
 
+        user.userName = ""
+       
 
-
+        // ✅ hash and update password
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt)
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-
-        user.userName = userName;
-        user.password = hashedPassword
+        user.userName = userName
+        user.password = hashedPassword;
 
         await user.save();
 
         return res.status(200).json({
-            sucess: true,
-        })
+            success: true,
+            message: 'Profile updated successfully'
+        });
 
     } catch (error) {
-        console.log(error);
+        console.error('Profile Creation Error:', error);
         return res.status(500).json({
-            sucess: false,
-            message: "Error in Profile Creation controller"
-        })
+            success: false,
+            message: 'Error in Profile Creation controller'
+        });
     }
 }
 
@@ -1575,7 +1580,7 @@ exports.createMoment = async (req, res) => {
     try {
         const { descripition } = req.body;
         const userId = req.user.userId;
-        const image =  req.files;
+        const image = req.files;
 
         if (!image || !descripition) {
             return res.status(400).json({
@@ -1618,32 +1623,32 @@ exports.createMoment = async (req, res) => {
 
 
 
-exports.viewYourPosts = async (req,res) =>{
+exports.viewYourPosts = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const {postId} = req.params;
+        const { postId } = req.params;
 
-        if(!postId){
+        if (!postId) {
             return res.status(404).json({
-                sucess:false,
-                message:"please provide postId"
+                sucess: false,
+                message: "please provide postId"
             })
         }
 
 
-        const viewApost = await Postcreate.findOne({_id:postId})
+        const viewApost = await Postcreate.findOne({ _id: postId })
 
         return res.status(200).json({
-            sucess:true,
+            sucess: true,
             viewApost,
-            message:"single post fetched SucessFully"
+            message: "single post fetched SucessFully"
         })
 
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            sucess:false,
-            message:"Error in viewPost controller"
+            sucess: false,
+            message: "Error in viewPost controller"
         })
     }
 };
@@ -1651,45 +1656,45 @@ exports.viewYourPosts = async (req,res) =>{
 
 
 
-exports.viweAllPosts = async (req,res) => {
+exports.viweAllPosts = async (req, res) => {
     try {
         const userId = req.user.userId;
 
         const viewAllpost = await Postcreate.find();
 
         return res.status(200).json({
-            sucess:true,
+            sucess: true,
             viewAllpost,
-            message:"Allpost Fetched SucessFully"
+            message: "Allpost Fetched SucessFully"
         })
-        
+
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            sucess:false,
-            message:"Error in viewAllPosts controller"
+            sucess: false,
+            message: "Error in viewAllPosts controller"
         })
     }
 }
 
 
 
-exports.viewYourMoment = async (req,res) => {
+exports.viewYourMoment = async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const yourMoment = await Moment.find({userId})
+        const yourMoment = await Moment.find({ userId })
 
         return res.status(200).json({
-            sucess:false,
-            message:"Fetched your moments",
+            sucess: false,
+            message: "Fetched your moments",
             yourMoment,
         })
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            sucess:false,
-            message:"error in viewYourMoment controller"
+            sucess: false,
+            message: "error in viewYourMoment controller"
         })
     }
 }
@@ -1697,19 +1702,19 @@ exports.viewYourMoment = async (req,res) => {
 
 
 
-exports.viewAllMoments = async (req,res) =>{
+exports.viewAllMoments = async (req, res) => {
     try {
         const allMoments = await Moment.find();
 
         return res.status(200).json({
-            sucess:true,
+            sucess: true,
             allMoments,
         })
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            sucess:false,
-            message:"error in viewAllMoments controller"
+            sucess: false,
+            message: "error in viewAllMoments controller"
         })
     }
 }
