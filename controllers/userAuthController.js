@@ -62,6 +62,8 @@ exports.register = async (req, res) => {
             folder: "profile_pics", // more appropriate than "profile_pics"
         });
 
+        let userName = "first"
+
         user = new User({
             gender,
             theme,
@@ -72,6 +74,7 @@ exports.register = async (req, res) => {
             phoneNo,
             otp,
             otpExpires: otpExpires,
+            userName,
         });
         user.userName = ""
 
@@ -179,11 +182,11 @@ exports.ProfileCreation = async (req, res) => {
             })
         }
 
-        
+
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
-        
+
 
         user.userName = userName;
         user.password = hashedPassword
@@ -204,7 +207,7 @@ exports.ProfileCreation = async (req, res) => {
 }
 
 
-
+// Here some work will be pending in hasTag field and location field
 exports.connectionFilter = async (req, res) => {
     try {
         const { email, intrest, hashtag, tag, location } = req.body;
@@ -991,10 +994,10 @@ exports.acceptFriendRequest = async (req, res) => {
 
 
 
-
+// Here some work is pemding on hasTag 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, imageFilter, contentType } = req.body;
+        const { description, visibility, hashTag, imageFilter, is_photography } = req.body;
         const userId = req.user.userId;
 
         if (!description || typeof visibility === 'undefined') {
@@ -1011,7 +1014,7 @@ exports.createPost = async (req, res) => {
             });
         }
 
-        const isImageContent = contentType === 'true' || contentType === true;
+        const isImageContent = is_photography === 'true' || is_photography === true;
 
         let imageUrls = [];
         if (isImageContent) {
@@ -1039,7 +1042,7 @@ exports.createPost = async (req, res) => {
             visibility: visibility === 'true' || visibility === true,
             hashTag: hashTag || "",
             imageFilter: isImageContent ? imageFilter : 'normal',
-            contentType: isImageContent,
+            is_photography: isImageContent,
         });
 
         return res.status(200).json({
@@ -1068,7 +1071,7 @@ exports.getAllFriends = async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const user = await User.findById(userId).populate('userAllFriends', 'fullName userName profilePic');
+        const user = await User.findById(userId).populate('userAllFriends', '_id,fullName userName profilePic');
 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
@@ -1572,7 +1575,7 @@ exports.createMoment = async (req, res) => {
     try {
         const { descripition } = req.body;
         const userId = req.user.userId;
-        const image = req.file?.path;
+        const image =  req.files;
 
         if (!image || !descripition) {
             return res.status(400).json({
@@ -1581,13 +1584,19 @@ exports.createMoment = async (req, res) => {
             });
         }
 
-        const result = await cloudinary.uploader.upload(image, {
-            folder: "profile_pics",
-        });
+        let imageUrls = []
+        if (image && image.length > 0) {
+            for (let file of image) {
+                const result = await cloudinary.uploader.upload(file.path, {
+                    folder: "profile_pics",
+                });
+                imageUrls.push(result.secure_url);
+            }
+        }
 
         const newMoment = await Moment.create({
             userId,
-            image: result.secure_url,
+            image: imageUrls,
             descripition,
         });
 
@@ -1604,3 +1613,103 @@ exports.createMoment = async (req, res) => {
         });
     }
 };
+
+
+
+
+
+exports.viewYourPosts = async (req,res) =>{
+    try {
+        const userId = req.user.userId;
+        const {postId} = req.params;
+
+        if(!postId){
+            return res.status(404).json({
+                sucess:false,
+                message:"please provide postId"
+            })
+        }
+
+
+        const viewApost = await Postcreate.findOne({_id:postId})
+
+        return res.status(200).json({
+            sucess:true,
+            viewApost,
+            message:"single post fetched SucessFully"
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess:false,
+            message:"Error in viewPost controller"
+        })
+    }
+};
+
+
+
+
+exports.viweAllPosts = async (req,res) => {
+    try {
+        const userId = req.user.userId;
+
+        const viewAllpost = await Postcreate.find();
+
+        return res.status(200).json({
+            sucess:true,
+            viewAllpost,
+            message:"Allpost Fetched SucessFully"
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess:false,
+            message:"Error in viewAllPosts controller"
+        })
+    }
+}
+
+
+
+exports.viewYourMoment = async (req,res) => {
+    try {
+        const userId = req.user.userId;
+
+        const yourMoment = await Moment.find({userId})
+
+        return res.status(200).json({
+            sucess:false,
+            message:"Fetched your moments",
+            yourMoment,
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess:false,
+            message:"error in viewYourMoment controller"
+        })
+    }
+}
+
+
+
+
+exports.viewAllMoments = async (req,res) =>{
+    try {
+        const allMoments = await Moment.find();
+
+        return res.status(200).json({
+            sucess:true,
+            allMoments,
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess:false,
+            message:"error in viewAllMoments controller"
+        })
+    }
+}

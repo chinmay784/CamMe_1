@@ -33,7 +33,7 @@ const postSchema = new mongoose.Schema({
         enum: [true, false],
         default: true, // false = private, true = public
     },
-    contentType: {
+    is_photography: {
         type: Boolean,
         enum: [true, false],
         default: false, // false = text, true = image
