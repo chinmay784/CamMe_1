@@ -20,8 +20,11 @@ const userSchema = new mongoose.Schema({
     userName: {
         type: String,
         trim: true,
-        default: null, // optional
-    },
+        unique: true,     // ✅ ensure it's unique
+        sparse: true,     // ✅ avoid unique error if it's null for some users
+        default: null,
+    }
+    ,
     email: {
         type: String,
         required: true,
