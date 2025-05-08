@@ -130,11 +130,11 @@ exports.resendOtp = async (req, res) => {
             })
         }
 
-        const user = await User.findOne({email});
-        if(!user){
+        const user = await User.findOne({ email });
+        if (!user) {
             return res.status(404).json({
-                sucess:false,
-                message:"User Not Found!"
+                sucess: false,
+                message: "User Not Found!"
             })
         }
 
@@ -157,8 +157,8 @@ exports.resendOtp = async (req, res) => {
         await transPorter.sendMail(mailOptions);
 
         return res.status(200).json({
-            sucess:true,
-            message:"Otp Resend SucessFully"
+            sucess: true,
+            message: "Otp Resend SucessFully"
         })
 
     } catch (error) {
@@ -269,7 +269,7 @@ exports.ProfileCreation = async (req, res) => {
 
 
 
-//Here some work will be pending in hasTag field and location field - Done
+
 exports.connectionFilter = async (req, res) => {
     try {
         const { email, intrest, hashTag, lattitude, longitude } = req.body;
@@ -303,7 +303,7 @@ exports.connectionFilter = async (req, res) => {
             connection = new ConnectionFilter({
                 userId,
                 intrestedFiled: intrest ? [{ intrested: intrest }] : [],
-                hashTag: hashTag ? [hashTag] : [],
+                hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
                 location: locationData,
             });
         } else {
@@ -315,8 +315,13 @@ exports.connectionFilter = async (req, res) => {
                 }
             }
 
-            if (hashTag && !connection.hashTag.includes(hashTag)) {
-                connection.hashTag.push(hashTag);
+            if (hashTag) {
+                const tags = Array.isArray(hashTag) ? hashTag : [hashTag];
+                tags.forEach(tag => {
+                    if (!connection.hashTag.includes(tag)) {
+                        connection.hashTag.push(tag);
+                    }
+                });
             }
 
             if (locationData) {
@@ -340,6 +345,7 @@ exports.connectionFilter = async (req, res) => {
         });
     }
 };
+
 
 
 
