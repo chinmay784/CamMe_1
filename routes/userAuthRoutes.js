@@ -32,7 +32,8 @@ const {
     giveTedBronzePost,
     giveTedBlackCoin,
     viewYourMoment,
-    viewAllMoments
+    viewAllMoments,
+    resendOtp
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const {uploadd} = require("../middelwere/multer");
@@ -1060,10 +1061,9 @@ router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
  *         description: Internal Server Error
  */
 router.post("/giveTedBronzeCoin/:postId",authMiddelWere,giveTedBronzePost);
-
 router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
-
 router.get("/getYourMoment",authMiddelWere,viewYourMoment);
-router.get("/getallmomets",authMiddelWere,viewAllMoments)
+router.get("/getallmomets",authMiddelWere,viewAllMoments);
+router.post("/resendOtp",resendOtp)
 
 module.exports = router;

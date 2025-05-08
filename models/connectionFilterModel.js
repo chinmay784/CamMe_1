@@ -14,26 +14,20 @@ const connectionFilterSchema = new mongoose.Schema({
             },
         },
     ],
-    hashTagFiled: [
-        {
-            hashTag: {
-                type: String,
-                required: true,
-            },
-            tag:{
-                type: String,
-                required: true,
-            },
+    hashTag: [{
+        type: String,
+        required: true,
+    }],
+    location: {
+        lattitude: {
+            type: Number,
+            required: true,
         },
-    ],
-    locationFiled: [
-        {
-            location: {
-                type: String,
-                required: true,
-            },
+        longitude: {
+            type: Number,
+            required: true,
         },
-    ],
+    }
 }, {
     timestamps: true
 });

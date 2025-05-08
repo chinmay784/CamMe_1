@@ -51,7 +51,6 @@ exports.register = async (req, res) => {
             });
         }
 
-        console.log(req.file?.filename)
 
         const otp = generateOtp();
         const otpExpires = Date.now() + 10 * 60 * 200;
@@ -59,7 +58,7 @@ exports.register = async (req, res) => {
         // const {path} = req.file
         const file = req.file?.path;
         const result = await cloudinary.uploader.upload(file, {
-            folder: "profile_pics", 
+            folder: "profile_pics",
         });
 
         // let userName = "first"
@@ -120,6 +119,59 @@ exports.register = async (req, res) => {
 
 
 
+exports.resendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                sucess: false,
+                message: "please provide email"
+            })
+        }
+
+        const user = await User.findOne({email});
+        if(!user){
+            return res.status(404).json({
+                sucess:false,
+                message:"User Not Found!"
+            })
+        }
+
+        const otp = generateOtp();
+        const otpExpires = Date.now() + 10 * 60 * 200;
+
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+
+
+        await user.save();
+
+        const mailOptions = {
+            from: process.env.SMTP_USER,
+            to: email,
+            subject: "Resend - OTP",
+            text: `Your OTP for Resend Otp  is: ${otp}`,
+        };
+
+        await transPorter.sendMail(mailOptions);
+
+        return res.status(200).json({
+            sucess:true,
+            message:"Otp Resend SucessFully"
+        })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            sucess: false,
+            message: "error in resend-Otp Controller"
+        })
+    }
+}
+
+
+
 exports.otpVerify = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -150,7 +202,7 @@ exports.otpVerify = async (req, res) => {
         user.isVerified = true;
         user.otp = undefined;
         user.otpExpires = undefined;
-        
+
 
         await user.save()
 
@@ -190,7 +242,7 @@ exports.ProfileCreation = async (req, res) => {
         }
 
         user.userName = ""
-       
+
 
         // ✅ hash and update password
         const salt = await bcrypt.genSalt(10);
@@ -216,10 +268,11 @@ exports.ProfileCreation = async (req, res) => {
 }
 
 
-// Here some work will be pending in hasTag field and location field
+
+//Here some work will be pending in hasTag field and location field - Done
 exports.connectionFilter = async (req, res) => {
     try {
-        const { email, intrest, hashtag, tag, location } = req.body;
+        const { email, intrest, hashTag, lattitude, longitude } = req.body;
 
         if (!email) {
             return res.status(400).json({
@@ -240,19 +293,35 @@ exports.connectionFilter = async (req, res) => {
 
         let connection = await ConnectionFilter.findOne({ userId });
 
+        const locationData =
+            typeof lattitude === 'number' && typeof longitude === 'number'
+                ? { lattitude, longitude }
+                : undefined;
+
         if (!connection) {
-            // Create a new connection filter
+            // Create new filter
             connection = new ConnectionFilter({
                 userId,
                 intrestedFiled: intrest ? [{ intrested: intrest }] : [],
-                hashTagFiled: (hashtag && tag) ? [{ hashTag: hashtag, tag }] : [],
-                locationFiled: location ? [{ location }] : [],
+                hashTag: hashTag ? [hashTag] : [],
+                location: locationData,
             });
         } else {
             // Update existing filter
-            if (intrest) connection.intrestedFiled.push({ intrested: intrest });
-            if (hashtag && tag) connection.hashTagFiled.push({ hashTag: hashtag, tag });
-            if (location) connection.locationFiled.push({ location });
+            if (intrest) {
+                const alreadyExists = connection.intrestedFiled.some(i => i.intrested === intrest);
+                if (!alreadyExists) {
+                    connection.intrestedFiled.push({ intrested: intrest });
+                }
+            }
+
+            if (hashTag && !connection.hashTag.includes(hashTag)) {
+                connection.hashTag.push(hashTag);
+            }
+
+            if (locationData) {
+                connection.location = locationData; // Overwrite location
+            }
         }
 
         await connection.save();
@@ -271,6 +340,7 @@ exports.connectionFilter = async (req, res) => {
         });
     }
 };
+
 
 
 
@@ -796,6 +866,7 @@ exports.getHashTagContent = async (req, res) => {
             });
         }
 
+        // Get the logged-in user's filter
         const userFilter = await ConnectionFilter.findOne({ userId: user._id });
         if (!userFilter) {
             return res.status(400).json({
@@ -804,11 +875,9 @@ exports.getHashTagContent = async (req, res) => {
             });
         }
 
-        const userHashTags = userFilter.hashTagFiled
-            .filter(field => field.hashTag)
-            .map(field => field.hashTag);
+        const userHashTags = userFilter.hashTag; // this is already an array of strings
 
-        if (userHashTags.length === 0) {
+        if (!userHashTags || userHashTags.length === 0) {
             return res.status(200).json({
                 success: true,
                 message: "No hashtags found for this user",
@@ -816,15 +885,15 @@ exports.getHashTagContent = async (req, res) => {
             });
         }
 
+        // Find other users who have at least one matching hashtag
         const matchedFilters = await ConnectionFilter.find({
             userId: { $ne: user._id },
-            "hashTagFiled.hashTag": { $in: userHashTags },
+            hashTag: { $in: userHashTags },
         });
 
+        // Collect all matching hashtags from those users
         const matchedTags = matchedFilters.flatMap(filter =>
-            filter.hashTagFiled
-                .filter(field => userHashTags.includes(field.hashTag))
-                .map(field => field.tag)
+            filter.hashTag.filter(tag => userHashTags.includes(tag))
         );
 
         const uniqueTags = [...new Set(matchedTags)];
@@ -846,10 +915,10 @@ exports.getHashTagContent = async (req, res) => {
 
 
 
+
 exports.getAllowLocation = async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
-
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -861,32 +930,31 @@ exports.getAllowLocation = async (req, res) => {
         if (!userFilter) {
             return res.status(400).json({
                 success: false,
-                message: "User's Location filter not found",
+                message: "User's location filter not found",
             });
         }
 
-        const userLocation = userFilter.locationFiled.filter(field => field.location).map(field => field.location);
-
+        const userLocation = userFilter.location;
 
         const matchedFilters = await ConnectionFilter.find({
             userId: { $ne: user._id },
-            "locationFiled.location": { $in: userLocation },
-        }).populate("userId")
-
+            "location.lattitude": userLocation.lattitude,
+            "location.longitude": userLocation.longitude,
+        }).populate("userId");
 
         return res.status(200).json({
-            sucess: true,
+            success: true,
             matchedFilters,
-        })
-
+        });
     } catch (error) {
-        console.log(error);
+        console.error("Error in getAllowLocation:", error);
         return res.status(500).json({
-            sucess: false,
-            message: "Error in getAllowLocations"
-        })
+            success: false,
+            message: "Server error in getAllowLocation",
+        });
     }
-}
+};
+
 
 
 
@@ -1003,12 +1071,13 @@ exports.acceptFriendRequest = async (req, res) => {
 
 
 
-// Here some work is pemding on hasTag 
+// Here some work is pemding on hasTag - Done
 exports.createPost = async (req, res) => {
     try {
         const { description, visibility, hashTag, imageFilter, is_photography } = req.body;
         const userId = req.user.userId;
 
+        // Validate required fields
         if (!description || typeof visibility === 'undefined') {
             return res.status(400).json({
                 success: false,
@@ -1016,28 +1085,22 @@ exports.createPost = async (req, res) => {
             });
         }
 
-        if (!['true', 'false', true, false].includes(visibility)) {
-            return res.status(400).json({
-                success: false,
-                message: "Visibility must be true or false.",
-            });
-        }
+        // Normalize boolean values
+        const visibilityBoolean = (visibility === 'true' || visibility === true);
+        const isImageContent = (is_photography === 'true' || is_photography === true);
 
-        const isImageContent = is_photography === 'true' || is_photography === true;
-
+        // Upload images if applicable
         let imageUrls = [];
-        if (isImageContent) {
-            const files = req.files;
-            if (files && files.length > 0) {
-                for (let file of files) {
-                    const result = await cloudinary.uploader.upload(file.path, {
-                        folder: "profile_pics",
-                    });
-                    imageUrls.push(result.secure_url);
-                }
+        if (isImageContent && req.files?.length > 0) {
+            for (const file of req.files) {
+                const result = await cloudinary.uploader.upload(file.path, {
+                    folder: "profile_pics",
+                });
+                imageUrls.push(result.secure_url);
             }
         }
 
+        // Build content object
         const content = {
             image: isImageContent && imageUrls.length > 0,
             description: true,
@@ -1045,32 +1108,38 @@ exports.createPost = async (req, res) => {
             imageUrl: isImageContent ? imageUrls : [],
         };
 
+        // Create post document
         const newPost = await Postcreate.create({
             userId,
             content,
-            visibility: visibility === 'true' || visibility === true,
-            hashTag: hashTag || "",
-            imageFilter: isImageContent ? imageFilter : 'normal',
+            visibility: visibilityBoolean,
+            hashTag: Array.isArray(hashTag) ? hashTag : [hashTag],
+            imageFilter: isImageContent ? (imageFilter || 'normal') : 'normal',
             is_photography: isImageContent,
         });
 
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
             message: "Post created successfully",
-            imageUrls,
-            visibility: newPost.visibility,
-            createdAt: newPost.createdAt,  // <-- Add this
-            newPost,
+            post: {
+                _id: newPost._id,
+                createdAt: newPost.createdAt,
+                visibility: newPost.visibility,
+                content: newPost.content,
+                hashTag: newPost.hashTag,
+                imageUrls,
+            },
         });
 
     } catch (error) {
         console.error("Error in createPost:", error);
         return res.status(500).json({
             success: false,
-            message: "Error occurred in createPost",
+            message: "Server error occurred while creating the post",
         });
     }
 };
+
 
 
 
@@ -1626,7 +1695,7 @@ exports.createMoment = async (req, res) => {
 
 
 
-
+// ?? !!
 exports.viewYourPosts = async (req, res) => {
     try {
         const userId = req.user.userId;
