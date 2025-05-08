@@ -308,32 +308,35 @@ router.post("/loginOtpverify", loginOtpverify);
  * @swagger
  * /user/connectionFilter:
  *   post:
- *     summary: Set or update a user's connection filter
- *     description: Allows a user to set or update their interests, hashtags, and locations for connection filtering.
+ *     summary: Save or update a connection filter for a user
+ *     tags:
+ *       - Connection
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - email
  *             properties:
  *               email:
  *                 type: string
- *                 example: johndoe@example.com
+ *                 example: user@example.com
  *               intrest:
  *                 type: string
- *                 example: Technology
- *               hashtag:
- *                 type: string
- *                 example: #AI
- *               tag:
- *                 type: string
- *                 example: artificial-intelligence
- *               location:
- *                 type: string
- *                 example: New York
+ *                 example: Programming
+ *               hashTag:
+ *                 oneOf:
+ *                   - type: string
+ *                   - type: array
+ *                     items:
+ *                       type: string
+ *                 example: ["NodeJS", "React", "MongoDB"]
+ *               lattitude:
+ *                 type: number
+ *                 example: 28.6139
+ *               longitude:
+ *                 type: number
+ *                 example: 77.2090
  *     responses:
  *       200:
  *         description: Connection filter saved successfully
@@ -350,18 +353,14 @@ router.post("/loginOtpverify", loginOtpverify);
  *                   example: Connection filter saved successfully
  *                 connection:
  *                   type: object
- *                   example:
- *                     userId: 609e125a5d1f4a1d3cfa7e3d
- *                     intrestedFiled: [{ intrested: "Technology" }]
- *                     hashTagFiled: [{ hashTag: "#AI", tag: "artificial-intelligence" }]
- *                     locationFiled: [{ location: "New York" }]
  *       400:
- *         description: Email not provided
+ *         description: Missing email in request
  *       404:
  *         description: User not found
  *       500:
- *         description: Server error in connection filter controller
+ *         description: Server error
  */
+
 router.post("/connectionFilter", connectionFilter);
 /**
  * @swagger
@@ -552,7 +551,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  * @swagger
  * /user/createpost:
  *   post:
- *     summary: Create a new post
+ *     summary: Create a new post with optional image upload
  *     tags:
  *       - Posts
  *     security:
@@ -566,18 +565,21 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *             properties:
  *               description:
  *                 type: string
- *                 example: "This is my first post"
+ *                 example: "Exploring nature through my lens"
  *               visibility:
  *                 type: boolean
  *                 example: true
  *               hashTag:
- *                 type: string
- *                 example: "#travel"
+ *                 oneOf:
+ *                   - type: string
+ *                   - type: array
+ *                     items:
+ *                       type: string
+ *                 example: ["Nature", "Photography"]
  *               imageFilter:
  *                 type: string
- *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
- *                 example: "normal"
- *               contentType:
+ *                 example: "vintage"
+ *               is_photography:
  *                 type: boolean
  *                 example: true
  *               files:
@@ -586,7 +588,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                   type: string
  *                   format: binary
  *     responses:
- *       200:
+ *       201:
  *         description: Post created successfully
  *         content:
  *           application/json:
@@ -599,23 +601,29 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 message:
  *                   type: string
  *                   example: Post created successfully
- *                 imageUrls:
- *                   type: array
- *                   items:
- *                     type: string
- *                     example: https://cloudinary.com/image.jpg
- *                 visibility:
- *                   type: boolean
- *                   example: true
- *                 createdAt:
- *                   type: string
- *                   format: date-time
- *                 newPost:
- *                   $ref: '#/components/schemas/Post'
+ *                 post:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                     visibility:
+ *                       type: boolean
+ *                     content:
+ *                       type: object
+ *                     hashTag:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     imageUrls:
+ *                       type: array
+ *                       items:
+ *                         type: string
  *       400:
- *         description: Bad request (missing or invalid fields)
+ *         description: Missing required fields
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);
 /**
@@ -1064,6 +1072,80 @@ router.post("/giveTedBronzeCoin/:postId",authMiddelWere,giveTedBronzePost);
 router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
 router.get("/getYourMoment",authMiddelWere,viewYourMoment);
 router.get("/getallmomets",authMiddelWere,viewAllMoments);
+/**
+ * @swagger
+ * /user/resendOtp:
+ *   post:
+ *     summary: Resend OTP to a user's email
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: OTP resent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Otp Resend SucessFully
+ *       400:
+ *         description: Email not provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: please provide email
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: User Not Found!
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: error in resend-Otp Controller
+ */
 router.post("/resendOtp",resendOtp)
 
 module.exports = router;
