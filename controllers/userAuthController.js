@@ -59,13 +59,13 @@ exports.register = async (req, res) => {
         // const {path} = req.file
         const file = req.file?.path;
         const result = await cloudinary.uploader.upload(file, {
-            folder: "profile_pics", // more appropriate than "profile_pics"
+            folder: "profile_pics", 
         });
 
-        let userName = "first"
+        // let userName = "first"
 
-        // const randomSuffix = Math.floor(1000 + Math.random() * 9000); // e.g. 4-digit
-        // const userName = `${fullName.split(" ")[0].toLowerCase()}${randomSuffix}`;
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000); // e.g. 4-digit
+        const userName = `${fullName.split(" ")[0].toLowerCase()}${randomSuffix}`;
 
 
         user = new User({
@@ -82,6 +82,10 @@ exports.register = async (req, res) => {
         });
 
         await user.save();
+
+
+
+        // User.updateOne({ email }, { userName: "myNewName" }, { strict: false });
 
         const mailOptions = {
             from: process.env.SMTP_USER,

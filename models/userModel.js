@@ -106,9 +106,8 @@ const userSchema = new mongoose.Schema({
             post: { type: mongoose.Schema.Types.ObjectId, ref: "Postcreate" },
             sharedAt: { type: Date, default: Date.now }
         }
-    ],
+    ], 
+},)
 
-})
-
-
+// { strict: false }
 module.exports = mongoose.model('User', userSchema);
