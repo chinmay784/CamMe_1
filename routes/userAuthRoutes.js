@@ -208,11 +208,9 @@ router.post("/profileComplite", ProfileCreation);
  *                 description: User's email address.
  *                 example: "example@gmail.com"
  *               intrest:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: List of interests to be added.
- *                 example: ["Technology", "AI", "Music"]
+ *                 type: string
+ *                 description: Interest to be added.
+ *                 example: "Technology"
  *               hashTag:
  *                 type: array
  *                 items:
@@ -250,6 +248,50 @@ router.post("/profileComplite", ProfileCreation);
  *       500:
  *         description: Server error.
  */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ConnectionFilter:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: "6639c9b9fcb8a0b93f3f6a45"
+ *         userId:
+ *           type: string
+ *           description: User's MongoDB ID
+ *           example: "6629aab5df1e8f1234567890"
+ *         intrestedFiled:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example: ["Technology", "AI", "Music"]
+ *         hashTag:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example: ["#AI", "#Startups"]
+ *         location:
+ *           type: object
+ *           properties:
+ *             lattitude:
+ *               type: number
+ *               example: 22.5726
+ *             longitude:
+ *               type: number
+ *               example: 88.3639
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-05-07T10:15:30Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-05-07T11:20:45Z"
+ */
+
 router.post("/connectionFilter", connectionFilter);
 /**
  * @swagger
