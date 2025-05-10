@@ -33,7 +33,8 @@ const {
     giveTedBlackCoin,
     viewYourMoment,
     viewAllMoments,
-    resendOtp
+    resendOtp,
+    getViewYourMoment
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const {uploadd} = require("../middelwere/multer");
@@ -1078,7 +1079,7 @@ router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
  */
 router.post("/giveTedBronzeCoin/:postId",authMiddelWere,giveTedBronzePost);
 router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
-router.get("/getYourMoment",authMiddelWere,viewYourMoment);
+router.get("/getYourMoment",authMiddelWere,getViewYourMoment);
 router.get("/getallmomets",authMiddelWere,viewAllMoments);
 /**
  * @swagger

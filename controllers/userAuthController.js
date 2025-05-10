@@ -1758,7 +1758,7 @@ exports.viweAllPosts = async (req, res) => {
 
 
 
-exports.viewYourMoment = async (req, res) => {
+exports.getViewYourMoment = async (req, res) => {
     try {
         const userId = req.user.userId;
 
@@ -1773,10 +1773,58 @@ exports.viewYourMoment = async (req, res) => {
         console.log(error);
         return res.status(500).json({
             sucess: false,
-            message: "error in viewYourMoment controller"
+            message: "error getting in viewYourMoment "
         })
     }
 }
+
+
+// Add Last and route will not implement
+exports.viewMoment = async (req, res) => {
+    try {
+        const viewerId = req.user.userId;
+        const { userId } = req.params; // ID of the moment's owner
+
+        if (!userId) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment owner ID is required"
+            });
+        }
+
+        const moments = await Moment.find({ userId });
+
+        if (!moments.length) {
+            return res.status(200).json({
+                success: false,
+                message: "No moments found for this user"
+            });
+        }
+
+        // Add viewer only if not the owner
+        if (viewerId !== userId) {
+            for (let moment of moments) {
+                if (!moment.viewers.includes(viewerId)) {
+                    moment.viewers.push(viewerId);
+                    await moment.save();
+                }
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched user's moments",
+            moments,
+        });
+
+    } catch (error) {
+        console.error("Error in viewMoment:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error in viewMoment",
+        });
+    }
+};
 
 
 
@@ -1814,3 +1862,7 @@ exports.viewAllMoments = async (req, res) => {
         });
     }
 };
+
+
+
+
