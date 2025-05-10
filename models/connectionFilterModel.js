@@ -6,14 +6,10 @@ const connectionFilterSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
-    intrestedFiled: [
-        {
-            intrested: {
-                type: String,
-                required: true,
-            },
-        },
-    ],
+    intrestedFiled: [{
+        type: String,
+        required: true,
+    }],
     hashTag: [{
         type: String,
         required: true,

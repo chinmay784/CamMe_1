@@ -138,6 +138,7 @@ router.post('/register',upload.single("file"), register);
  *         description: Internal server error
  */
 router.post("/verifyotp", otpVerify);
+
 /**
  * @swagger
  * /user/profileComplite:
@@ -185,6 +186,70 @@ router.post("/verifyotp", otpVerify);
  *         description: Internal server error
  */
 router.post("/profileComplite", ProfileCreation);
+/**
+ * @swagger
+ * /api/connectionFilter:
+ *   post:
+ *     summary: Create or update a user's connection filter.
+ *     tags:
+ *       - Connection Filter
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: User's email address.
+ *                 example: "example@gmail.com"
+ *               intrest:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: List of interests to be added.
+ *                 example: ["Technology", "AI", "Music"]
+ *               hashTag:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: List of hashtags to be added.
+ *                 example: ["#AI", "#Startups"]
+ *               lattitude:
+ *                 type: number
+ *                 description: User's current latitude.
+ *                 example: 22.5726
+ *               longitude:
+ *                 type: number
+ *                 description: User's current longitude.
+ *                 example: 88.3639
+ *     responses:
+ *       200:
+ *         description: Connection filter saved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Connection filter saved successfully
+ *                 connection:
+ *                   $ref: '#/components/schemas/ConnectionFilter'
+ *       400:
+ *         description: Missing required fields like email.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post("/connectionFilter", connectionFilter);
 /**
  * @swagger
  * /user/login:
@@ -304,64 +369,7 @@ router.post("/login", login);
  *         description: Internal server error
  */
 router.post("/loginOtpverify", loginOtpverify);
-/**
- * @swagger
- * /user/connectionFilter:
- *   post:
- *     summary: Save or update a connection filter for a user
- *     tags:
- *       - Connection
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: user@example.com
- *               intrest:
- *                 type: string
- *                 example: Programming
- *               hashTag:
- *                 oneOf:
- *                   - type: string
- *                   - type: array
- *                     items:
- *                       type: string
- *                 example: ["NodeJS", "React", "MongoDB"]
- *               lattitude:
- *                 type: number
- *                 example: 28.6139
- *               longitude:
- *                 type: number
- *                 example: 77.2090
- *     responses:
- *       200:
- *         description: Connection filter saved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Connection filter saved successfully
- *                 connection:
- *                   type: object
- *       400:
- *         description: Missing email in request
- *       404:
- *         description: User not found
- *       500:
- *         description: Server error
- */
 
-router.post("/connectionFilter", connectionFilter);
 /**
  * @swagger
  * /user/getConnectionFilter:

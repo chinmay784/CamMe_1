@@ -35,7 +35,7 @@ exports.register = async (req, res) => {
         const { gender, theme, dateBirth, fullName, email, phoneNo } = req.body;
 
         if (!gender || !theme || !dateBirth || !fullName || !email || !phoneNo) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "All fields are required"
             });
@@ -45,7 +45,7 @@ exports.register = async (req, res) => {
 
         let user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "User already exists"
             });
@@ -124,7 +124,7 @@ exports.resendOtp = async (req, res) => {
         const { email } = req.body;
 
         if (!email) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "please provide email"
             })
@@ -132,7 +132,7 @@ exports.resendOtp = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "User Not Found!"
             })
@@ -177,7 +177,7 @@ exports.otpVerify = async (req, res) => {
         const { email, otp } = req.body;
 
         if (!email || !otp) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: 'Please provide all details'
             })
@@ -186,14 +186,14 @@ exports.otpVerify = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "User Not Found"
             })
         }
 
         if (user.otp !== otp || user.otpExpires < Date.now()) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "Invalid Or  Expired OTP"
             })
@@ -227,7 +227,7 @@ exports.ProfileCreation = async (req, res) => {
         const { email, password, userName } = req.body;
 
         if (!userName || !email || !password) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: 'Please provide all details'
             });
@@ -235,7 +235,7 @@ exports.ProfileCreation = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: 'User not found'
             });
@@ -275,7 +275,7 @@ exports.connectionFilter = async (req, res) => {
         const { email, intrest, hashTag, lattitude, longitude } = req.body;
 
         if (!email) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "Please enter an email",
             });
@@ -283,7 +283,7 @@ exports.connectionFilter = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "User not found",
             });
@@ -293,26 +293,26 @@ exports.connectionFilter = async (req, res) => {
 
         let connection = await ConnectionFilter.findOne({ userId });
 
-        const locationData =
-            typeof lattitude === 'number' && typeof longitude === 'number'
-                ? { lattitude, longitude }
-                : undefined;
+        const locationData = (
+            typeof lattitude === 'number' &&
+            typeof longitude === 'number'
+        ) ? {
+            lattitude,
+            longitude
+        } : undefined;
 
         if (!connection) {
             // Create new filter
             connection = new ConnectionFilter({
                 userId,
-                intrestedFiled: intrest ? [{ intrested: intrest }] : [],
+                intrestedFiled: intrest ? [intrest] : [],
                 hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
                 location: locationData,
             });
         } else {
             // Update existing filter
-            if (intrest) {
-                const alreadyExists = connection.intrestedFiled.some(i => i.intrested === intrest);
-                if (!alreadyExists) {
-                    connection.intrestedFiled.push({ intrested: intrest });
-                }
+            if (intrest && !connection.intrestedFiled.includes(intrest)) {
+                connection.intrestedFiled.push(intrest);
             }
 
             if (hashTag) {
@@ -350,13 +350,12 @@ exports.connectionFilter = async (req, res) => {
 
 
 
-
 exports.login = async (req, res) => {
     try {
         const { userName, email, password } = req.body;
 
         if (!userName || !email || !password) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "Please provide all details",
             })
@@ -365,7 +364,7 @@ exports.login = async (req, res) => {
         let user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: "false",
                 message: "User is not register"
             })
@@ -373,7 +372,7 @@ exports.login = async (req, res) => {
 
 
         if (!user.isVerified) {
-            return res.status(400).json({
+            return res.status(200).json({
                 message: "Please verify your email first"
             });
         }
@@ -381,7 +380,7 @@ exports.login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(400).json({
+            return res.status(200).json({
                 message: "Please Enter Correct password",
             })
         }
@@ -434,7 +433,7 @@ exports.loginOtpverify = async (req, res) => {
         const { email, otp } = req.body;
 
         if (!email || !otp) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "Please provide all details"
             })
@@ -443,14 +442,14 @@ exports.loginOtpverify = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "User Not Found"
             })
         }
 
         if (user.otp !== otp || user.otpExpires < Date.now()) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "Invalid Or  Expired OTP"
             })
@@ -486,7 +485,7 @@ exports.getConnectionFilter = async (req, res) => {
         const { email } = req.body;
 
         if (!email) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "Email is required",
             });
@@ -495,7 +494,7 @@ exports.getConnectionFilter = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "User not found",
             });
@@ -506,7 +505,7 @@ exports.getConnectionFilter = async (req, res) => {
         const getData = await ConnectionFilter.findOne({ userId });
 
         if (!getData) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "No connection filter found for this user",
             });
@@ -535,7 +534,7 @@ exports.PasswordResetRequest = async (req, res) => {
         let user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "User Not Found ! using email"
             })
@@ -584,7 +583,7 @@ exports.resetPassword = async (req, res) => {
 
         const user = await User.findById(decoded.id);
         if (!user) {
-            return res.status(400).json({ message: "Invalid token or user not found" });
+            return res.status(200).json({ message: "Invalid token or user not found" });
         }
 
         user.password = await bcrypt.hash(newPassword, 10);
@@ -613,25 +612,25 @@ exports.addAccount = async (req, res) => {
 
         const secondaryAccount = await User.findOne({ $or: [{ email }, { phoneNo }] });
         if (!secondaryAccount) {
-            return res.status(404).json({ message: "Secondary account not found." });
+            return res.status(200).json({ message: "Secondary account not found." });
         }
 
 
         if (secondaryAccount._id.toString() === mainUserId) {
-            return res.status(400).json({ message: "You cannot link your own account." });
+            return res.status(200).json({ message: "You cannot link your own account." });
         }
 
 
         const isMatch = await bcrypt.compare(password, secondaryAccount.password);
         if (!isMatch) {
-            return res.status(401).json({ message: "Invalid password for the secondary account." });
+            return res.status(200).json({ message: "Invalid password for the secondary account." });
         }
 
         const existingRequest = secondaryAccount.linkRequests.find(
             (r) => r.requesterId.toString() === mainUserId && r.status === 'pending'
         );
         if (existingRequest) {
-            return res.status(400).json({ message: "A link request has already been sent." });
+            return res.status(200).json({ message: "A link request has already been sent." });
         }
 
 
@@ -728,7 +727,7 @@ exports.finalizeLinkAccount = async (req, res) => {
 
 
         if (user.otp !== otp || Date.now() > user.otpExpires) {
-            return res.status(400).json({ message: "Invalid or expired OTP." });
+            return res.status(200).json({ message: "Invalid or expired OTP." });
         }
 
 
@@ -763,7 +762,7 @@ exports.rejectLinkAccount = async (req, res) => {
             (r) => r.requesterId.toString() === requesterId && r.status === 'pending'
         );
 
-        if (!request) return res.status(404).json({ message: "No pending request found." });
+        if (!request) return res.status(200).json({ message: "No pending request found." });
 
         request.status = 'rejected';
         await user.save();
@@ -782,7 +781,7 @@ exports.rejectLinkAccount = async (req, res) => {
 exports.logoutUser = async (req, res) => {
     try {
         const token = req.header("Authorization"); // Bearer <token>
-        if (!token) return res.status(400).json({ message: "Token not provided." });
+        if (!token) return res.status(200).json({ message: "Token not provided." });
 
         const decoded = jwt.decode(token);
         const expiresAt = new Date(decoded.exp * 1000); // JWT exp is in seconds
@@ -796,7 +795,7 @@ exports.logoutUser = async (req, res) => {
         const isMatch = bcrypt.compare(user.password, password);
 
         if (!isMatch) {
-            return re.status(400).json({
+            return re.status(200).json({
                 sucess: false,
                 message: "user Password and input password is not match"
             })
@@ -811,28 +810,28 @@ exports.logoutUser = async (req, res) => {
 };
 
 
+
 exports.getMatchedIntrested = async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
         if (!user) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "User not found",
             });
         }
 
-
         const userFilter = await ConnectionFilter.findOne({ userId: user._id });
         if (!userFilter) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "User's interest filter not found",
             });
         }
 
-        const userInterestedFields = userFilter.intrestedFiled.filter(field => field.intrested).map(field => field.intrested);
+        const userInterestedFields = userFilter.intrestedFiled; // Already an array of strings
 
-        if (userInterestedFields.length === 0) {
+        if (!userInterestedFields || userInterestedFields.length === 0) {
             return res.status(200).json({
                 success: true,
                 message: "No interests found for this user",
@@ -841,9 +840,9 @@ exports.getMatchedIntrested = async (req, res) => {
         }
 
         const matchedFilters = await ConnectionFilter.find({
-            userId: { $ne: user._id },
-            "intrestedFiled.intrested": { $in: userInterestedFields },
-        }).populate("userId"); // Populate full user details
+            userId: { $ne: user._id }, // Exclude current user
+            intrestedFiled: { $in: userInterestedFields },
+        }).populate("userId"); // Populate user details
 
         return res.status(200).json({
             success: true,
@@ -862,11 +861,12 @@ exports.getMatchedIntrested = async (req, res) => {
 
 
 
+
 exports.getHashTagContent = async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
         if (!user) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "User not found",
             });
@@ -875,7 +875,7 @@ exports.getHashTagContent = async (req, res) => {
         // Get the logged-in user's filter
         const userFilter = await ConnectionFilter.findOne({ userId: user._id });
         if (!userFilter) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "User's hashtag filter not found",
             });
@@ -926,7 +926,7 @@ exports.getAllowLocation = async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
         if (!user) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "User not found",
             });
@@ -934,7 +934,7 @@ exports.getAllowLocation = async (req, res) => {
 
         const userFilter = await ConnectionFilter.findOne({ userId: user._id });
         if (!userFilter) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "User's location filter not found",
             });
@@ -971,7 +971,7 @@ exports.sendFriendRequest = async (req, res) => {
         const { reciverId } = req.params;
 
         if (!reciverId) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "Please Provid InviteUserId"
             })
@@ -984,7 +984,7 @@ exports.sendFriendRequest = async (req, res) => {
         })
 
         if (isExistingRequest) {
-            return res.status(400).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "Friend Request Already Send"
             })
@@ -1025,7 +1025,7 @@ exports.acceptFriendRequest = async (req, res) => {
         const user = req.user.userId;
 
         if (!requestId) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "Please provide requestId"
             });
@@ -1034,7 +1034,7 @@ exports.acceptFriendRequest = async (req, res) => {
         const request = await FriendRequest.findOne({ sender: requestId });
 
         if (!request) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Friend request not found"
             });
@@ -1077,7 +1077,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 
 
-// Here some work is pemding on hasTag - Done
+
 exports.createPost = async (req, res) => {
     try {
         const { description, visibility, hashTag, imageFilter, is_photography } = req.body;
@@ -1085,7 +1085,7 @@ exports.createPost = async (req, res) => {
 
         // Validate required fields
         if (!description || typeof visibility === 'undefined') {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "Description and visibility are required.",
             });
@@ -1155,10 +1155,10 @@ exports.getAllFriends = async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const user = await User.findById(userId).populate('userAllFriends', '_id,fullName userName profilePic');
+        const user = await User.findById(userId).populate('userAllFriends', '_id fullName userName profilePic');
 
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(200).json({ success: false, message: "User not found" });
         }
 
         res.status(200).json({
@@ -1182,7 +1182,7 @@ exports.sharePostWithFriend = async (req, res) => {
         // Step 1: Validate the post
         const originalPost = await Postcreate.findOne({ _id: postId });
         if (!originalPost) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Post not found"
             });
@@ -1192,7 +1192,7 @@ exports.sharePostWithFriend = async (req, res) => {
         const user = await User.findById(userId);
         const isFriend = user.userAllFriends.includes(friendId);
         if (!isFriend) {
-            return res.status(403).json({
+            return res.status(200).json({
                 success: false,
                 message: "Not a friend, so post Not share"
             });
@@ -1246,14 +1246,14 @@ exports.getAllPosts = async (req, res) => {
         const posts = await Postcreate.find({ userId }).populate("userId", "fullName userName profilePic").sort({ createdAt: -1 });
 
         if (!userId) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "User Not found",
             })
         }
 
         if (!posts) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "No posts found",
             });
@@ -1281,7 +1281,7 @@ exports.giveTedGoldToPost = async (req, res) => {
 
         const post = await Postcreate.findOne({ _id: postId });
         if (!post) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Post not found"
             });
@@ -1292,7 +1292,7 @@ exports.giveTedGoldToPost = async (req, res) => {
             (post.tedSilverGivers?.includes(giverId)) ||
             (post.tedBronzeGivers?.includes(giverId))
         ) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "You have already given a coin to this post"
             });
@@ -1300,7 +1300,7 @@ exports.giveTedGoldToPost = async (req, res) => {
 
         const receiver = await User.findOne({ _id: post.userId });
         if (!receiver) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Post owner not found"
             });
@@ -1350,7 +1350,7 @@ exports.giveTedSilverPost = async (req, res) => {
 
         const post = await Postcreate.findOne({ _id: postId });
         if (!post) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Post not found"
             });
@@ -1362,7 +1362,7 @@ exports.giveTedSilverPost = async (req, res) => {
             (post.tedSilverGivers?.includes(giverId)) ||
             (post.tedBronzeGivers?.includes(giverId))
         ) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "You have already given a coin to this post"
             });
@@ -1370,7 +1370,7 @@ exports.giveTedSilverPost = async (req, res) => {
 
         const receiver = await User.findOne({ _id: post.userId });
         if (!receiver) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Post owner not found"
             });
@@ -1426,7 +1426,7 @@ exports.giveTedBronzePost = async (req, res) => {
 
         const post = await Postcreate.findOne({ _id: postId });
         if (!post) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Post not found"
             });
@@ -1437,7 +1437,7 @@ exports.giveTedBronzePost = async (req, res) => {
             (post.tedSilverGivers?.includes(giverId)) ||
             (post.tedBronzeGivers?.includes(giverId))
         ) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "You have already given a coin to this post"
             });
@@ -1446,7 +1446,7 @@ exports.giveTedBronzePost = async (req, res) => {
         const receiver = await User.findOne({ _id: post.userId });
 
         if (!receiver) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Post owner not found"
             });
@@ -1495,7 +1495,7 @@ exports.giveTedBronzePost = async (req, res) => {
 
 
 
-
+// Lot of work pending is here
 exports.giveTedBlackCoin = async (req, res) => {
     try {
         const giverId = req.user.userId;  // Authorized user
@@ -1589,7 +1589,7 @@ exports.report = async (req, res) => {
         const post = await Postcreate.findOne({ _id: postId });
 
         if (!post) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "Post not found",
             });
@@ -1599,7 +1599,7 @@ exports.report = async (req, res) => {
         const receiver = await User.findById(post.userId);
 
         if (!giver || !receiver) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 message: "User not found",
             });
@@ -1610,7 +1610,7 @@ exports.report = async (req, res) => {
             giver.coinWallet.tedSilver < 2 ||
             giver.coinWallet.tedBronze < 3
         ) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "Insufficient coins to give TedBlack coin",
             });
@@ -1662,7 +1662,7 @@ exports.createMoment = async (req, res) => {
         const image = req.files;
 
         if (!image || !descripition) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "Image and description are required",
             });
@@ -1708,7 +1708,7 @@ exports.viewYourPosts = async (req, res) => {
         const { postId } = req.params;
 
         if (!postId) {
-            return res.status(404).json({
+            return res.status(200).json({
                 sucess: false,
                 message: "please provide postId"
             })
@@ -1783,17 +1783,34 @@ exports.viewYourMoment = async (req, res) => {
 
 exports.viewAllMoments = async (req, res) => {
     try {
-        const allMoments = await Moment.find();
+        const userId = req.user.userId;
+
+        // Get current user's friends
+        const user = await User.findById(userId).populate('userAllFriends', '_id');
+        if (!user) {
+            return res.status(200).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const friendIds = user.userAllFriends.map(friend => friend._id);
+
+        // Fetch only friends' moments
+        const allMoments = await Moment.find({ user: { $in: friendIds } })
+            .sort({ createdAt: -1 })
+            .populate('user', 'userName profilePic');
 
         return res.status(200).json({
-            sucess: true,
+            success: true,
             allMoments,
-        })
+        });
+
     } catch (error) {
-        console.log(error);
+        console.log("Error in viewAllMoments:", error);
         return res.status(500).json({
-            sucess: false,
-            message: "error in viewAllMoments controller"
-        })
+            success: false,
+            message: "Error in viewAllMoments controller"
+        });
     }
-}
+};

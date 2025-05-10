@@ -14,6 +14,30 @@ const momentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    comments: [
+        {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+            comment: {
+                type: String,
+                required: true,
+            },
+        },
+    ],
+    expressions: [
+        {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        },
+    ],
+    viewers:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"User",
+    }],
     createdAt: {
         type: Date,
         default: Date.now,
