@@ -310,7 +310,14 @@ exports.connectionFilter = async (req, res) => {
                 location: locationData,
             });
         } else {
-            // Update existing filter
+            // Ensure arrays exist before pushing
+            if (!Array.isArray(connection.intrestedFiled)) {
+                connection.intrestedFiled = [];
+            }
+            if (!Array.isArray(connection.hashTag)) {
+                connection.hashTag = [];
+            }
+
             if (intrest && !connection.intrestedFiled.includes(intrest)) {
                 connection.intrestedFiled.push(intrest);
             }
@@ -345,6 +352,7 @@ exports.connectionFilter = async (req, res) => {
         });
     }
 };
+
 
 
 
