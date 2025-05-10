@@ -42,15 +42,13 @@ const checkBlacklist = require('../middelwere/BlackListToken');
 const {upload} = require("../config/cloudinary")
 
 const router = express.Router();
-
 /**
  * @swagger
  * /user/register:
  *   post:
- *     summary: Register a new user
- *     description: Register a new user with profile image, and receive OTP via email and phone
- *     consumes:
- *       - multipart/form-data
+ *     summary: Register a new user with profile picture and theme image
+ *     tags:
+ *       - User
  *     requestBody:
  *       required: true
  *       content:
@@ -59,7 +57,6 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - gender
- *               - theme
  *               - dateBirth
  *               - fullName
  *               - email
@@ -67,33 +64,60 @@ const router = express.Router();
  *             properties:
  *               gender:
  *                 type: string
- *                 example: male
- *               theme:
- *                 type: string
- *                 example: dark
+ *                 example: "male"
  *               dateBirth:
  *                 type: string
  *                 format: date
- *                 example: 1998-01-01
+ *                 example: "1990-01-01"
  *               fullName:
  *                 type: string
- *                 example: John Doe
+ *                 example: "John Doe"
  *               email:
  *                 type: string
- *                 example: johndoe@example.com
+ *                 format: email
+ *                 example: "john@example.com"
  *               phoneNo:
  *                 type: string
- *                 example: +1234567890
- *               file:
+ *                 example: "+1234567890"
+ *               profilePic:
+ *                 type: string
+ *                 format: binary
+ *               theme:
  *                 type: string
  *                 format: binary
  *     responses:
  *       200:
- *         description: OTP sent to email and phone number
- *       400:
- *         description: Bad request
+ *         description: OTP sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: OTP sent to your email and phone number
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error in register User controller
  */
-router.post('/register',upload.single("file"), register);
+
+router.post('/register', upload.fields([
+    { name: 'profilePic', maxCount: 1 },
+    { name: 'theme', maxCount: 1 },
+  ]),register)
 /**
  * @swagger
  * /user/verifyotp:

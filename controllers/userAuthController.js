@@ -32,90 +32,84 @@ const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
 
 exports.register = async (req, res) => {
     try {
-        const { gender, theme, dateBirth, fullName, email, phoneNo } = req.body;
+        const { gender, dateBirth, fullName, email, phoneNo } = req.body;
 
-        if (!gender || !theme || !dateBirth || !fullName || !email || !phoneNo) {
+        if (!gender || !dateBirth || !fullName || !email || !phoneNo) {
             return res.status(200).json({
-                sucess: false,
-                message: "All fields are required"
+                success: false,
+                message: 'All fields are required',
             });
         }
-
-
 
         let user = await User.findOne({ email });
         if (user) {
             return res.status(200).json({
-                sucess: false,
-                message: "User already exists"
+                success: false,
+                message: 'User already exists',
             });
         }
 
-
         const otp = generateOtp();
-        const otpExpires = Date.now() + 10 * 60 * 200;
+        const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-        // const {path} = req.file
-        const file = req.file?.path;
-        const result = await cloudinary.uploader.upload(file, {
-            folder: "profile_pics",
-        });
+        // Upload profilePic
+        let profilePicUrl = `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(fullName)}`;
+        if (req.files.profilePic) {
+            const profileUpload = await cloudinary.uploader.upload(req.files.profilePic[0].path, {
+                folder: 'profile_pics',
+            });
+            profilePicUrl = profileUpload.secure_url;
+        }
 
-        // let userName = "first"
+        // Upload theme image
+        let themeUrl = '';
+        if (req.files.theme) {
+            const themeUpload = await cloudinary.uploader.upload(req.files.theme[0].path, {
+                folder: 'profile_pics'
+            });
+            themeUrl = themeUpload.secure_url;
+        }
 
-        const randomSuffix = Math.floor(1000 + Math.random() * 9000); // e.g. 4-digit
-        const userName = `${fullName.split(" ")[0].toLowerCase()}${randomSuffix}`;
-
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000); // 4-digit
+        const userName = `${fullName.split(' ')[0].toLowerCase()}${randomSuffix}`;
 
         user = new User({
             gender,
-            theme,
-            profilePic: result ? result.secure_url : `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(fullName)}`,
+            theme: themeUrl,
+            profilePic: profilePicUrl,
             fullName,
             dateBirth,
             email,
             phoneNo,
             otp,
-            otpExpires: otpExpires,
-            userName: userName,
+            otpExpires,
+            userName,
         });
 
         await user.save();
 
-
-
-        // User.updateOne({ email }, { userName: "myNewName" }, { strict: false });
-
         const mailOptions = {
             from: process.env.SMTP_USER,
             to: email,
-            subject: "Verify your email - OTP",
+            subject: 'Verify your email - OTP',
             text: `Your OTP for email verification is: ${otp}`,
         };
 
         await transPorter.sendMail(mailOptions);
 
-        // await twilioClient.messages.create({
-        //     body: `Your OTP for email verification is: ${otp}`,
-        //     from: process.env.TWILIO_PHONE_NUMBER,
-        //     to: phoneNo,
-        // });
-        // console.log(req.file)
-
         return res.status(200).json({
-            sucess: true,
-            message: "OTP sent to your email and phone number",
-        })
-
+            success: true,
+            message: 'OTP sent to your email and phone number',
+        });
 
     } catch (error) {
-        console.error("Error in register:", error);
+        console.error('Error in register:', error);
         res.status(500).json({
-            sucess: false,
-            message: "error in register User controller"
+            success: false,
+            message: 'Error in register User controller',
         });
     }
-}
+};
 
 
 
@@ -537,7 +531,7 @@ exports.getConnectionFilter = async (req, res) => {
 
 exports.PasswordResetRequest = async (req, res) => {
     try {
-        const { email, phoneNo } = req.body;
+        const { email } = req.body;
 
         let user = await User.findOne({ email });
 
@@ -549,20 +543,25 @@ exports.PasswordResetRequest = async (req, res) => {
         }
 
 
-        const resetToken = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "10m" } // valid for 10 mins
-        );
+        const otp = generateOtp();
+        const expiry = Date.now() + 60 * 60 * 1000; // 1hour 
 
-        const resetURL = `http://localhost:4000/api/v1/user/reset-password/${resetToken}`;
+
+        user.otp = otp;
+        user.resetTokenExpiry = expiry;
+        await user.save();
+
+        const resetLink = `http://localhost:4000/reset-window?email=${email}`;
 
 
         const mailOptions = {
             from: process.env.SMTP_USER,
             to: email,
-            subject: "Password Reset Link",
-            html: `<p>Click <a href="${resetURL}">here</a> to reset your password. This link expires in 15 minutes.</p>`
+            subject: 'Password Reset Request',
+            html: `
+              <p>Your OTP is: <strong>${otp}</strong></p>
+              <p>Or click <a href="${resetLink}" target="_blank">here to reset your password</a>.</p>
+            `,
         };
 
         await transPorter.sendMail(mailOptions)
@@ -570,7 +569,8 @@ exports.PasswordResetRequest = async (req, res) => {
 
 
         res.json({
-            message: "Link send to Email Or Via Phone No"
+            sucess: true,
+            message: 'OTP and reset link sent to email '
         });
     } catch (error) {
         console.log(error)
@@ -585,16 +585,23 @@ exports.PasswordResetRequest = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
     try {
-        const { newPassword, token } = req.body;
+        const { newPassword, otp, email } = req.body;
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findOne({ email })
 
-        const user = await User.findById(decoded.id);
-        if (!user) {
-            return res.status(200).json({ message: "Invalid token or user not found" });
+        if (!user || user.otp !== Number(otp) || user.resetTokenExpiry < Date.now()) {
+            return res.status(400).json({ message: 'Invalid OTP or expired' });
         }
 
-        user.password = await bcrypt.hash(newPassword, 10);
+        // ✅ hash and update password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+
+        user.password = await bcrypt.hash(newPassword, salt)
+        user.otp = undefined;
+        user.resetTokenExpiry = undefined;
+
         await user.save();
 
         res.status(200).json({ message: "Password reset successful" });

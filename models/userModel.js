@@ -100,6 +100,7 @@ const userSchema = new mongoose.Schema({
             default: 0,
         },
     },
+    resetTokenExpiry: Date,
     receivedShares: [
         {
             from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
