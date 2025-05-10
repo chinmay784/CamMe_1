@@ -189,7 +189,7 @@ router.post("/verifyotp", otpVerify);
 router.post("/profileComplite", ProfileCreation);
 /**
  * @swagger
- * /api/connectionFilter:
+ * /user/connectionFilter:
  *   post:
  *     summary: Create or update a user's connection filter.
  *     tags:
