@@ -74,11 +74,14 @@ exports.register = async (req, res) => {
         const randomSuffix = Math.floor(1000 + Math.random() * 9000); // 4-digit
         const userName = `${fullName.split(' ')[0].toLowerCase()}${randomSuffix}`;
 
+        let genderval = gender.toLowerCase()
+        let fullNameval = fullNameval.toLowerCase()
+
         user = new User({
-            gender,
+            gender:genderval,
             theme: themeUrl,
             profilePic: profilePicUrl,
-            fullName,
+            fullName:fullNameval,
             dateBirth,
             email,
             phoneNo,
