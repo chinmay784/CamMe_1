@@ -75,7 +75,7 @@ exports.register = async (req, res) => {
         const userName = `${fullName.split(' ')[0].toLowerCase()}${randomSuffix}`;
 
         let genderval = gender.toLowerCase()
-        let fullNameval = fullNameval.toLowerCase()
+        let fullNameval = fullName.toLowerCase()
 
         user = new User({
             gender,
