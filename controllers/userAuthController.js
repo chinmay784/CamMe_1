@@ -316,8 +316,17 @@ exports.connectionFilter = async (req, res) => {
                 connection.hashTag = [];
             }
 
-            if (intrest && !connection.intrestedFiled.includes(intrest)) {
-                connection.intrestedFiled.push(intrest);
+            // if (intrest && !connection.intrestedFiled.includes(intrest)) {
+            //     connection.intrestedFiled.push(intrest);
+            // }
+
+            if(intrest){
+                const int = Array.isArray(intrest) ? intrest:[intrest];
+                int.forEach((i) =>{
+                    if(!connection.intrestedFiled.includes(i)){
+                        connection.intrestedFiled.push(i)
+                    }
+                })
             }
 
             if (hashTag) {
