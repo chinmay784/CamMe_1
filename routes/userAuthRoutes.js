@@ -172,9 +172,6 @@ router.post("/verifyotp", otpVerify);
  *               userName:
  *                 type: string
  *                 example: johnny98
- *               confirmPassword:
- *                 type: string
- *                 example: MySecurePass123
  *     responses:
  *       200:
  *         description: Profile completed successfully
@@ -213,9 +210,11 @@ router.post("/profileComplite", ProfileCreation);
  *                 description: User's email address.
  *                 example: "example@gmail.com"
  *               intrest:
- *                 type: string
- *                 description: Interest to be added.
- *                 example: "Technology"
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: List of hashtags to be added.
+ *                 example: ["AI", "Startups"]
  *               hashTag:
  *                 type: array
  *                 items:

@@ -303,7 +303,7 @@ exports.connectionFilter = async (req, res) => {
             // Create new filter
             connection = new ConnectionFilter({
                 userId,
-                intrestedFiled: intrest ? [intrest] : [],
+                intrestedFiled: Array.isArray(intrest) ? intrest : intrest ? [intrest] : [],
                 hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
                 location: locationData,
             });
