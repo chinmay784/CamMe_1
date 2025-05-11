@@ -44,11 +44,9 @@ const {upload} = require("../config/cloudinary")
 const router = express.Router();
 /**
  * @swagger
- * /register:
+ * /user/register:
  *   post:
- *     summary: Register a new user with optional profilePic and theme image uploads.
- *     consumes:
- *       - multipart/form-data
+ *     summary: Register a new user with profile and theme image upload.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -84,7 +82,7 @@ const router = express.Router();
  *                 format: binary
  *     responses:
  *       200:
- *         description: OTP sent and user registration successful (pending verification).
+ *         description: User registered, OTP sent
  *         content:
  *           application/json:
  *             schema:
@@ -95,7 +93,7 @@ const router = express.Router();
  *                 message:
  *                   type: string
  *       500:
- *         description: Server error during registration.
+ *         description: Server error
  */
 router.post('/register', upload.fields([
     { name: 'profilePic', maxCount: 1 },

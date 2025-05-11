@@ -552,8 +552,8 @@ exports.PasswordResetRequest = async (req, res) => {
         user.resetTokenExpiry = expiry;
         await user.save();
 
-        const resetLink = `http://localhost:4000/reset-window?email=${email}`;
-
+        const resetLink = `https://camme-1-1.onrender.com/reset-window?email=${email}`;
+        // `http://localhost:4000/reset-window?email=${email}`;
 
         const mailOptions = {
             from: process.env.SMTP_USER,
