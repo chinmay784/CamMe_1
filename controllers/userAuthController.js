@@ -50,7 +50,8 @@ exports.register = async (req, res) => {
         }
 
         const otp = generateOtp();
-        const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        const otpExpires = Date.now() + 2 * 60 * 1000; // 2 minutes
+
 
         // Upload profilePic
         let profilePicUrl = `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(fullName)}`;

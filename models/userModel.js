@@ -54,8 +54,7 @@ const userSchema = new mongoose.Schema({
         default: Date.now,
     },
     theme: {
-        type: String,
-        default: "light",
+        type: String,required: true,
     },
     isVerified: {
         type: Boolean,

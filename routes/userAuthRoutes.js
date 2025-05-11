@@ -44,13 +44,13 @@ const {upload} = require("../config/cloudinary")
 const router = express.Router();
 /**
  * @swagger
- * /user/register:
+ * /register:
  *   post:
- *     summary: Register a new user with profile picture and theme image
- *     tags:
- *       - User
+ *     summary: Register a new user with optional profilePic and theme image uploads.
  *     consumes:
  *       - multipart/form-data
+ *     tags:
+ *       - Auth
  *     requestBody:
  *       required: true
  *       content:
@@ -66,20 +66,16 @@ const router = express.Router();
  *             properties:
  *               gender:
  *                 type: string
- *                 example: Male
  *               dateBirth:
  *                 type: string
  *                 format: date
- *                 example: 2000-01-01
  *               fullName:
  *                 type: string
- *                 example: Chinmay Puhan
  *               email:
  *                 type: string
- *                 example: chinmay@example.com
+ *                 format: email
  *               phoneNo:
  *                 type: string
- *                 example: 9876543210
  *               profilePic:
  *                 type: string
  *                 format: binary
@@ -88,7 +84,7 @@ const router = express.Router();
  *                 format: binary
  *     responses:
  *       200:
- *         description: Registration success or failure message
+ *         description: OTP sent and user registration successful (pending verification).
  *         content:
  *           application/json:
  *             schema:
@@ -96,12 +92,11 @@ const router = express.Router();
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
  *                 message:
  *                   type: string
- *                   example: OTP sent to your email and phone number
+ *       500:
+ *         description: Server error during registration.
  */
-
 router.post('/register', upload.fields([
     { name: 'profilePic', maxCount: 1 },
     { name: 'theme', maxCount: 1 },
