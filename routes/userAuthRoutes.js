@@ -49,6 +49,8 @@ const router = express.Router();
  *     summary: Register a new user with profile picture and theme image
  *     tags:
  *       - User
+ *     consumes:
+ *       - multipart/form-data
  *     requestBody:
  *       required: true
  *       content:
@@ -64,21 +66,20 @@ const router = express.Router();
  *             properties:
  *               gender:
  *                 type: string
- *                 example: "male"
+ *                 example: Male
  *               dateBirth:
  *                 type: string
  *                 format: date
- *                 example: "1990-01-01"
+ *                 example: 2000-01-01
  *               fullName:
  *                 type: string
- *                 example: "John Doe"
+ *                 example: Chinmay Puhan
  *               email:
  *                 type: string
- *                 format: email
- *                 example: "john@example.com"
+ *                 example: chinmay@example.com
  *               phoneNo:
  *                 type: string
- *                 example: "+1234567890"
+ *                 example: 9876543210
  *               profilePic:
  *                 type: string
  *                 format: binary
@@ -87,7 +88,7 @@ const router = express.Router();
  *                 format: binary
  *     responses:
  *       200:
- *         description: OTP sent successfully
+ *         description: Registration success or failure message
  *         content:
  *           application/json:
  *             schema:
@@ -99,19 +100,6 @@ const router = express.Router();
  *                 message:
  *                   type: string
  *                   example: OTP sent to your email and phone number
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Error in register User controller
  */
 
 router.post('/register', upload.fields([
@@ -481,8 +469,10 @@ router.get("/getConnectionFilter", getConnectionFilter);
  * @swagger
  * /user/forgetPassword:
  *   post:
- *     summary: Request password reset link via email or phone number
- *     description: Sends a JWT-based password reset link to the user's email or phone number (Twilio SMS). The token is valid for 10 minutes.
+ *     summary: Request password reset
+ *     description: Sends an OTP and a reset link to the user's email if the user exists.
+ *     tags:
+ *       - User
  *     requestBody:
  *       required: true
  *       content:
@@ -494,33 +484,33 @@ router.get("/getConnectionFilter", getConnectionFilter);
  *             properties:
  *               email:
  *                 type: string
- *                 example: johndoe@example.com
- *               phoneNo:
- *                 type: string
- *                 example: +1234567890
+ *                 format: email
+ *                 example: user@example.com
  *     responses:
  *       200:
- *         description: Password reset link sent successfully
+ *         description: OTP and reset link sent to email
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 sucess:
+ *                   type: boolean
  *                 message:
  *                   type: string
- *                   example: Link send to Email Or Via Phone No
- *       400:
- *         description: User not found using provided email
  *       500:
- *         description: Error in PasswordResetRequest controller
+ *         description: Server error
  */
+
 router.post("/forgetPassword", PasswordResetRequest);
 /**
  * @swagger
- * /user/resetPassword:
+ * /user/reset-password:
  *   post:
- *     summary: Reset user password using a valid JWT token
- *     description: Accepts a new password and a JWT token (from email or SMS) to reset the user's password.
+ *     summary: Reset user password
+ *     description: Resets the user's password using a valid OTP sent to their email.
+ *     tags:
+ *       - User
  *     requestBody:
  *       required: true
  *       content:
@@ -528,15 +518,21 @@ router.post("/forgetPassword", PasswordResetRequest);
  *           schema:
  *             type: object
  *             required:
+ *               - email
+ *               - otp
  *               - newPassword
- *               - token
  *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               otp:
+ *                 type: integer
+ *                 example: 123456
  *               newPassword:
  *                 type: string
- *                 example: NewStrongPassword123!
- *               token:
- *                 type: string
- *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 format: password
+ *                 example: newSecurePassword123
  *     responses:
  *       200:
  *         description: Password reset successful
@@ -547,11 +543,10 @@ router.post("/forgetPassword", PasswordResetRequest);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Password reset successful
  *       400:
- *         description: Invalid token or user not found
+ *         description: Invalid OTP or expired
  *       500:
- *         description: Error in resetPassword controller
+ *         description: Server error
  */
 router.post("/reset-password", resetPassword);
 /**

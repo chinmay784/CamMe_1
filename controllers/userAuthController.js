@@ -589,13 +589,13 @@ exports.resetPassword = async (req, res) => {
 
         const user = await User.findOne({ email })
 
-        if (!user || user.otp !== Number(otp) || user.resetTokenExpiry < Date.now()) {
+        if (user.otp !== otp || user.resetTokenExpiry < Date.now()) {
             return res.status(400).json({ message: 'Invalid OTP or expired' });
         }
 
         // ✅ hash and update password
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+
 
 
         user.password = await bcrypt.hash(newPassword, salt)
@@ -604,7 +604,10 @@ exports.resetPassword = async (req, res) => {
 
         await user.save();
 
-        res.status(200).json({ message: "Password reset successful" });
+        res.status(200).json({
+            sucess: true,
+            message: "Password reset successful"
+        });
     } catch (error) {
         console.log(error)
         return res.status(500).json({

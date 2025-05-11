@@ -89,14 +89,14 @@ app.get('/reset-window', (req, res) => {
               const otp = document.getElementById('otp').value;
               const newPassword = document.getElementById('newPassword').value;
   
-              const res = await fetch('/api/auth/reset-direct', {
+              const res = await fetch('/api/v1/user/reset-password',{
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, otp, newPassword })
               });
   
               const data = await res.json();
-              if (data.success) {
+              if (data.sucess) {
                 alert("Password reset successful!");
                 window.close();
               } else {
