@@ -78,10 +78,10 @@ exports.register = async (req, res) => {
         let fullNameval = fullNameval.toLowerCase()
 
         user = new User({
-            gender:genderval,
+            gender,
             theme: themeUrl,
             profilePic: profilePicUrl,
-            fullName:fullNameval,
+            fullName,
             dateBirth,
             email,
             phoneNo,
