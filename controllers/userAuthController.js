@@ -1114,22 +1114,24 @@ exports.createPost = async (req, res) => {
         const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email } = req.body;
         const userId = req.user.userId;
 
-        const authHeader = req.headers.authorization;
+        // const authHeader = req.headers.authorization;
 
-        const authorizedToken = authHeader.split(" ")[1];
+        // const authorizedToken = authHeader.split(" ")[1];
+
+        const tokenn = req.header("Authorization");
 
         const userEmail = await User.findById(userId).select("email");
 
         // Compare provided token with authorized token
-        if (token !== authorizedToken) {
+        if (token !== tokenn) {
             return res.status(403).json({
                 success: false,
                 message: "Provided token does not match authorized token",
             });
         }
-        
 
-        if( userEmail.email !== email) {
+
+        if (userEmail.email !== email) {
             return res.status(200).json({
                 success: false,
                 message: "Provided email does not match authorized email",
@@ -1716,9 +1718,32 @@ exports.report = async (req, res) => {
 
 exports.createMoment = async (req, res) => {
     try {
-        const { descripition, is_closeFriends } = req.body;
+        const { descripition, is_closeFriends, token, email } = req.body;
         const userId = req.user.userId;
         const image = req.files;
+
+
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
 
         if (!image || !descripition) {
             return res.status(200).json({
