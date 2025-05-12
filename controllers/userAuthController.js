@@ -1111,7 +1111,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email } = req.body;
+        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email ,colorMatrix} = req.body;
         const userId = req.user.userId;
 
         const authHeader = req.headers.authorization;
@@ -1173,6 +1173,7 @@ exports.createPost = async (req, res) => {
             content,
             visibility: visibilityBoolean,
             hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
+            colorMatrix:Array.isArray(colorMatrix) ? colorMatrix : colorMatrix ? [colorMatrix] : [],
             appliedFilter: isImageContent ? (appliedFilter || 'normal') : 'normal',
             filteredImageUrl: isImageContent ? filteredImageUrl : " ",
             is_photography: isImageContent,

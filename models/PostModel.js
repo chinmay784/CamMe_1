@@ -56,7 +56,12 @@ const postSchema = new mongoose.Schema({
         enum: ['normal', 'clarendon', 'sepia', 'grayscale', 'lark', 'moon', 'aden', 'perpetua'],
         default: 'normal'
     }
-,
+    ,
+    colorMatrix: {
+        type: [Number], // Array of numbers
+        required: false,
+        default: undefined
+    },
     comments: [
         {
             userId: {

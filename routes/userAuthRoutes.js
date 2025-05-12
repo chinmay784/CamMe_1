@@ -614,11 +614,8 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  * /user/createpost:
  *   post:
  *     summary: Create a new post
- *     description: Allows a logged-in user to create a post with optional image upload and metadata. Requires token and email validation.
  *     tags:
  *       - Posts
- *     consumes:
- *       - multipart/form-data
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -627,39 +624,39 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required:
- *               - description
- *               - visibility
- *               - token
- *               - email
  *             properties:
  *               description:
  *                 type: string
- *                 example: "Sunset over the hills"
+ *                 example: "This is a post description"
  *               visibility:
+ *                 type: boolean
+ *                 example: true
+ *               is_photography:
  *                 type: boolean
  *                 example: true
  *               hashTag:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["sunset", "nature"]
+ *                 example: ["nature", "sunset"]
  *               appliedFilter:
  *                 type: string
  *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
- *                 example: "sepia"
+ *                 example: "clarendon"
  *               filteredImageUrl:
  *                 type: string
- *                 example: "https://res.cloudinary.com/demo/image/upload/sample.jpg"
- *               is_photography:
- *                 type: boolean
- *                 example: true
+ *                 example: "https://cloudinary.com/filtered-image.jpg"
  *               token:
  *                 type: string
- *                 example: "eyJhbGciOiJIUzI1NiIsInR5..."
+ *                 example: "your_jwt_token"
  *               email:
  *                 type: string
  *                 example: "user@example.com"
+ *               colorMatrix:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *                 example: [0.55, 0.3, 0.3, 0.0, 0.0, 0.3, 0.55, 0.3, 0.0, 0.0, 0.3, 0.3, 0.625, 0.0, 0.0375, 0.0, 0.0, 0.0, 1.0, 0.0]
  *               files:
  *                 type: array
  *                 items:
@@ -668,41 +665,10 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *     responses:
  *       201:
  *         description: Post created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Post created successfully"
- *                 post:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                     visibility:
- *                       type: boolean
- *                     content:
- *                       type: object
- *                     hashTag:
- *                       type: array
- *                       items:
- *                         type: string
- *                     imageUrls:
- *                       type: array
- *                       items:
- *                         type: string
  *       403:
- *         description: Provided token or email is invalid
+ *         description: Token mismatch or unauthorized
  *       500:
- *         description: Server error occurred while creating the post
+ *         description: Server error
  */
 
 router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);
