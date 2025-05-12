@@ -613,7 +613,8 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  * @swagger
  * /user/createpost:
  *   post:
- *     summary: Create a new post with optional images and hashtags
+ *     summary: Create a new post
+ *     description: Create a post with optional images, hashtags, filters, and visibility settings. Requires token in both header and body for double verification.
  *     tags:
  *       - Posts
  *     security:
@@ -624,30 +625,35 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - description
+ *               - visibility
+ *               - token
  *             properties:
  *               description:
  *                 type: string
- *                 example: "Sunset at the beach"
+ *                 example: "This is my travel photo."
  *               visibility:
- *                 type: string
- *                 enum: ["true", "false"]
- *                 example: "true"
+ *                 type: boolean
+ *                 example: true
  *               hashTag:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["#sunset", "#beach"]
+ *                 example: ["#travel", "#photography"]
  *               appliedFilter:
  *                 type: string
- *                 enum: [normal, sepia, blackwhite, vivid]
- *                 example: "vivid"
+ *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
+ *                 example: "vintage"
  *               filteredImageUrl:
  *                 type: string
- *                 example: "https://res.cloudinary.com/demo/image/upload/sample.jpg"
+ *                 example: "https://example.com/filtered-image.jpg"
  *               is_photography:
+ *                 type: boolean
+ *                 example: true
+ *               token:
  *                 type: string
- *                 enum: ["true", "false"]
- *                 example: "false"
+ *                 description: Must match the Bearer token in Authorization header
  *               files:
  *                 type: array
  *                 items:
@@ -663,8 +669,10 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *               properties:
  *                 success:
  *                   type: boolean
+ *                   example: true
  *                 message:
  *                   type: string
+ *                   example: Post created successfully
  *                 post:
  *                   type: object
  *                   properties:
@@ -672,6 +680,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                       type: string
  *                     createdAt:
  *                       type: string
+ *                       format: date-time
  *                     visibility:
  *                       type: boolean
  *                     content:
@@ -684,8 +693,12 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                       type: array
  *                       items:
  *                         type: string
+ *                 newPost:
+ *                   $ref: '#/components/schemas/Postcreate'
  *       400:
- *         description: Validation failed or missing fields
+ *         description: Bad request
+ *       403:
+ *         description: Token mismatch
  *       500:
  *         description: Server error
  */

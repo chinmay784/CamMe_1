@@ -1111,8 +1111,20 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography } = req.body;
+        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token } = req.body;
         const userId = req.user.userId;
+
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
 
         // Validate required fields
         if (!description || typeof visibility === 'undefined') {
