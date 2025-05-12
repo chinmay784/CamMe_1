@@ -613,7 +613,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  * @swagger
  * /user/createpost:
  *   post:
- *     summary: Create a new post with optional image upload
+ *     summary: Create a new post with optional images and hashtags
  *     tags:
  *       - Posts
  *     security:
@@ -627,23 +627,27 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *             properties:
  *               description:
  *                 type: string
- *                 example: "Exploring nature through my lens"
+ *                 example: "Sunset at the beach"
  *               visibility:
- *                 type: boolean
- *                 example: true
- *               hashTag:
- *                 oneOf:
- *                   - type: string
- *                   - type: array
- *                     items:
- *                       type: string
- *                 example: ["Nature", "Photography"]
- *               imageFilter:
  *                 type: string
- *                 example: "vintage"
+ *                 enum: ["true", "false"]
+ *                 example: "true"
+ *               hashTag:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["#sunset", "#beach"]
+ *               appliedFilter:
+ *                 type: string
+ *                 enum: [normal, sepia, blackwhite, vivid]
+ *                 example: "vivid"
+ *               filteredImageUrl:
+ *                 type: string
+ *                 example: "https://res.cloudinary.com/demo/image/upload/sample.jpg"
  *               is_photography:
- *                 type: boolean
- *                 example: true
+ *                 type: string
+ *                 enum: ["true", "false"]
+ *                 example: "false"
  *               files:
  *                 type: array
  *                 items:
@@ -659,10 +663,8 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
  *                 message:
  *                   type: string
- *                   example: Post created successfully
  *                 post:
  *                   type: object
  *                   properties:
@@ -683,10 +685,11 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                       items:
  *                         type: string
  *       400:
- *         description: Missing required fields
+ *         description: Validation failed or missing fields
  *       500:
  *         description: Server error
  */
+
 router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);
 /**
  * @swagger
@@ -776,8 +779,7 @@ router.post("/reportPost/:postId",authMiddelWere,report);
  * @swagger
  * /user/moments:
  *   post:
- *     summary: Upload a new moment
- *     description: Authenticated users can create a moment with an image and description. The moment will expire in 24 hours.
+ *     summary: Create a new moment with image(s) and description
  *     tags:
  *       - Moments
  *     security:
@@ -788,17 +790,21 @@ router.post("/reportPost/:postId",authMiddelWere,report);
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required:
- *               - image
- *               - descripition
  *             properties:
- *               image:
- *                 type: string
- *                 format: binary
- *                 description: The image file to upload
  *               descripition:
  *                 type: string
- *                 example: Enjoying the sunset!
+ *                 description: Description for the moment
+ *                 example: "Beautiful sunset by the lake"
+ *               is_closeFriends:
+ *                 type: boolean
+ *                 description: Is this moment for close friends only?
+ *                 example: false
+ *               image:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Upload up to 10 images
  *     responses:
  *       201:
  *         description: Moment created successfully
@@ -815,23 +821,36 @@ router.post("/reportPost/:postId",authMiddelWere,report);
  *                   example: Moment created successfully and will expire in 24 hours
  *                 moment:
  *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     userId:
- *                       type: string
- *                     image:
- *                       type: string
- *                     descripition:
- *                       type: string
- *       400:
- *         description: Missing image or description
- *       401:
- *         description: Unauthorized (missing or invalid token)
+ *                   description: The created moment data
+ *       200:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Image and description are required
  *       500:
  *         description: Server error while creating moment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Server error while creating moment
  */
-router.post("/moments",authMiddelWere,upload.single("image"),createMoment);
+
+router.post("/moments",authMiddelWere,upload.array('image',10),createMoment);
 /**
  * @swagger
  * /user/friends:

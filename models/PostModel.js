@@ -39,14 +39,24 @@ const postSchema = new mongoose.Schema({
         default: false, // false = text, true = image
     },
     hashTag: {
-        type: String,
+        type: [String],
         required: false,
     },
-    imageFilter: {
+    // imageFilter: {
+    //     type: String,
+    //     enum: ['normal', 'clarendon', 'sepia', 'grayscale', 'lark', 'moon', 'aden', 'perpetua'],
+    //     default: 'normal',
+    // },
+    filteredImageUrl: {
+        type: String,
+        required: false
+    },
+    appliedFilter: {
         type: String,
         enum: ['normal', 'clarendon', 'sepia', 'grayscale', 'lark', 'moon', 'aden', 'perpetua'],
-        default: 'normal',
-    },
+        default: 'normal'
+    }
+,
     comments: [
         {
             userId: {

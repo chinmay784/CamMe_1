@@ -1111,7 +1111,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, imageFilter, is_photography } = req.body;
+        const { description, visibility, hashTag, appliedFilter,filteredImageUrl, is_photography } = req.body;
         const userId = req.user.userId;
 
         // Validate required fields
@@ -1128,7 +1128,7 @@ exports.createPost = async (req, res) => {
 
         // Upload images if applicable
         let imageUrls = [];
-        if (isImageContent && req.files?.length > 0) {
+        if ( req.files?.length > 0) {
             for (const file of req.files) {
                 const result = await cloudinary.uploader.upload(file.path, {
                     folder: "profile_pics",
@@ -1139,10 +1139,10 @@ exports.createPost = async (req, res) => {
 
         // Build content object
         const content = {
-            image: isImageContent && imageUrls.length > 0,
+            image:  imageUrls.length > 0,
             description: true,
             descriptionText: description,
-            imageUrl: isImageContent ? imageUrls : [],
+            imageUrl: imageUrls,
         };
 
         // Create post document
@@ -1150,8 +1150,9 @@ exports.createPost = async (req, res) => {
             userId,
             content,
             visibility: visibilityBoolean,
-            hashTag: Array.isArray(hashTag) ? hashTag : [hashTag],
-            imageFilter: isImageContent ? (imageFilter || 'normal') : 'normal',
+            hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
+            appliedFilter: isImageContent ? (appliedFilter || 'normal') : 'normal',
+            filteredImageUrl:isImageContent ? filteredImageUrl : " ",
             is_photography: isImageContent,
         });
 
@@ -1166,6 +1167,7 @@ exports.createPost = async (req, res) => {
                 hashTag: newPost.hashTag,
                 imageUrls,
             },
+            newPost,
         });
 
     } catch (error) {
@@ -1688,7 +1690,7 @@ exports.report = async (req, res) => {
 
 exports.createMoment = async (req, res) => {
     try {
-        const { descripition } = req.body;
+        const { descripition, is_closeFriends } = req.body;
         const userId = req.user.userId;
         const image = req.files;
 
@@ -1699,7 +1701,7 @@ exports.createMoment = async (req, res) => {
             });
         }
 
-        let imageUrls = []
+        let imageUrls = [];
         if (image && image.length > 0) {
             for (let file of image) {
                 const result = await cloudinary.uploader.upload(file.path, {
@@ -1713,12 +1715,13 @@ exports.createMoment = async (req, res) => {
             userId,
             image: imageUrls,
             descripition,
+            is_closeFriends: is_closeFriends || false,
         });
 
         return res.status(201).json({
             success: true,
             message: "Moment created successfully and will expire in 24 hours",
-            moment: newMoment
+            moment: newMoment,
         });
     } catch (error) {
         console.error("Error in createMoment:", error);
@@ -1728,6 +1731,7 @@ exports.createMoment = async (req, res) => {
         });
     }
 };
+
 
 
 

@@ -14,6 +14,10 @@ const momentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    is_closeFriends: {
+        type: Boolean,
+        default: false
+    },
     comments: [
         {
             userId: {
@@ -34,10 +38,12 @@ const momentSchema = new mongoose.Schema({
             },
         },
     ],
-    viewers:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:"User",
-    }],
+    viewers: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        }
+    ],
     createdAt: {
         type: Date,
         default: Date.now,
