@@ -646,7 +646,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 example: ["sunset", "nature"]
  *               appliedFilter:
  *                 type: string
- *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua],
+ *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
  *                 example: "sepia"
  *               filteredImageUrl:
  *                 type: string
@@ -704,7 +704,6 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *       500:
  *         description: Server error occurred while creating the post
  */
-
 
 router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);
 /**
