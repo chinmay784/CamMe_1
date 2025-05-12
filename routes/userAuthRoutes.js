@@ -760,7 +760,7 @@ router.post("/reportPost/:postId",authMiddelWere,report);
  * @swagger
  * /user/moments:
  *   post:
- *     summary: Create a new moment with image(s) and description
+ *     summary: Create a new moment (story-like content that expires in 24 hours)
  *     tags:
  *       - Moments
  *     security:
@@ -771,21 +771,31 @@ router.post("/reportPost/:postId",authMiddelWere,report);
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - image
+ *               - descripition
+ *               - token
+ *               - email
  *             properties:
- *               descripition:
- *                 type: string
- *                 description: Description for the moment
- *                 example: "Beautiful sunset by the lake"
- *               is_closeFriends:
- *                 type: boolean
- *                 description: Is this moment for close friends only?
- *                 example: false
  *               image:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Upload up to 10 images
+ *                 description: Upload one or more image files
+ *               descripition:
+ *                 type: string
+ *                 description: Text description for the moment
+ *               is_closeFriends:
+ *                 type: boolean
+ *                 description: Optional flag to show moment only to close friends
+ *               token:
+ *                 type: string
+ *                 description: JWT token to validate against authorization header
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User email to validate identity
  *     responses:
  *       201:
  *         description: Moment created successfully
@@ -801,35 +811,15 @@ router.post("/reportPost/:postId",authMiddelWere,report);
  *                   type: string
  *                   example: Moment created successfully and will expire in 24 hours
  *                 moment:
- *                   type: object
- *                   description: The created moment data
+ *                   $ref: '#/components/schemas/Moment'
+ *       403:
+ *         description: Token mismatch error
  *       200:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Image and description are required
+ *         description: Email mismatch or missing fields
  *       500:
  *         description: Server error while creating moment
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Server error while creating moment
  */
+
 
 router.post("/moments",authMiddelWere,upload.array('image',10),createMoment);
 /**

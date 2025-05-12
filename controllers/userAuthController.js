@@ -1111,7 +1111,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email ,colorMatrix} = req.body;
+        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email, colorMatrix } = req.body;
         const userId = req.user.userId;
 
         const authHeader = req.headers.authorization;
@@ -1167,13 +1167,29 @@ exports.createPost = async (req, res) => {
             imageUrl: imageUrls,
         };
 
+
+        let parsedColorMatrix = [];
+
+        if (isImageContent) {
+            try {
+                if (typeof colorMatrix === 'string') {
+                    parsedColorMatrix = JSON.parse(colorMatrix);
+                } else if (Array.isArray(colorMatrix)) {
+                    parsedColorMatrix = colorMatrix;
+                }
+            } catch (err) {
+                console.warn("Invalid colorMatrix format:", colorMatrix);
+                parsedColorMatrix = [];
+            }
+        }
+
         // Create post document
         const newPost = await Postcreate.create({
             userId,
             content,
             visibility: visibilityBoolean,
             hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
-            colorMatrix:Array.isArray(colorMatrix) ? colorMatrix : colorMatrix ? [colorMatrix] : [],
+            colorMatrix: parsedColorMatrix,
             appliedFilter: isImageContent ? (appliedFilter || 'normal') : 'normal',
             filteredImageUrl: isImageContent ? filteredImageUrl : " ",
             is_photography: isImageContent,
