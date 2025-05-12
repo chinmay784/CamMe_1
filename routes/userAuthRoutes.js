@@ -629,6 +629,7 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *               - description
  *               - visibility
  *               - token
+ *               - email
  *             properties:
  *               description:
  *                 type: string
@@ -654,6 +655,9 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *               token:
  *                 type: string
  *                 description: Must match the Bearer token in Authorization header
+ *               email:
+ *                type: string
+ *                 description: Must match the email in the request body
  *               files:
  *                 type: array
  *                 items:
