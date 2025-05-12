@@ -1169,19 +1169,13 @@ exports.createPost = async (req, res) => {
 
 
         let parsedColorMatrix = [];
-
-        if (isImageContent) {
-            try {
-                if (typeof colorMatrix === 'string') {
-                    parsedColorMatrix = JSON.parse(colorMatrix);
-                } else if (Array.isArray(colorMatrix)) {
-                    parsedColorMatrix = colorMatrix;
-                }
-            } catch (err) {
-                console.warn("Invalid colorMatrix format:", colorMatrix);
-                parsedColorMatrix = [];
-            }
+        try {
+            parsedColorMatrix = JSON.parse(colorMatrix);
+            if (!Array.isArray(parsedColorMatrix)) parsedColorMatrix = [];
+        } catch (err) {
+            console.warn("Invalid colorMatrix format:", colorMatrix);
         }
+
 
         // Create post document
         const newPost = await Postcreate.create({

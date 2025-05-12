@@ -58,10 +58,10 @@ const postSchema = new mongoose.Schema({
     }
     ,
     colorMatrix: {
-        type: [Number], // Array of numbers
-        required: false,
-        default: undefined
+        type: [Number],
+        default: [],
     },
+
     comments: [
         {
             userId: {
