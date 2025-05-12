@@ -18,8 +18,8 @@ const userSchema = new mongoose.Schema({
         trim: true
     },
     userName: {
-        type: String,  
-        required: false  
+        type: String,
+        required: false
     },
     email: {
         type: String,
@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
         default: Date.now,
     },
     theme: {
-        type: String,required: true,
+        type: String, required: true,
     },
     isVerified: {
         type: Boolean,
@@ -77,6 +77,11 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     }],
+    posts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Postcreate"
+    }],
+
     coinWallet: {
         tedGold: {
             type: Number,
@@ -106,7 +111,7 @@ const userSchema = new mongoose.Schema({
             post: { type: mongoose.Schema.Types.ObjectId, ref: "Postcreate" },
             sharedAt: { type: Date, default: Date.now }
         }
-    ], 
+    ],
 },)
 
 // { strict: false }

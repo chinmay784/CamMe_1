@@ -320,10 +320,10 @@ exports.connectionFilter = async (req, res) => {
             //     connection.intrestedFiled.push(intrest);
             // }
 
-            if(intrest){
-                const int = Array.isArray(intrest) ? intrest:[intrest];
-                int.forEach((i) =>{
-                    if(!connection.intrestedFiled.includes(i)){
+            if (intrest) {
+                const int = Array.isArray(intrest) ? intrest : [intrest];
+                int.forEach((i) => {
+                    if (!connection.intrestedFiled.includes(i)) {
                         connection.intrestedFiled.push(i)
                     }
                 })
@@ -1111,7 +1111,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, appliedFilter,filteredImageUrl, is_photography } = req.body;
+        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography } = req.body;
         const userId = req.user.userId;
 
         // Validate required fields
@@ -1128,7 +1128,7 @@ exports.createPost = async (req, res) => {
 
         // Upload images if applicable
         let imageUrls = [];
-        if ( req.files?.length > 0) {
+        if (req.files?.length > 0) {
             for (const file of req.files) {
                 const result = await cloudinary.uploader.upload(file.path, {
                     folder: "profile_pics",
@@ -1139,7 +1139,7 @@ exports.createPost = async (req, res) => {
 
         // Build content object
         const content = {
-            image:  imageUrls.length > 0,
+            image: imageUrls.length > 0,
             description: true,
             descriptionText: description,
             imageUrl: imageUrls,
@@ -1152,8 +1152,12 @@ exports.createPost = async (req, res) => {
             visibility: visibilityBoolean,
             hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
             appliedFilter: isImageContent ? (appliedFilter || 'normal') : 'normal',
-            filteredImageUrl:isImageContent ? filteredImageUrl : " ",
+            filteredImageUrl: isImageContent ? filteredImageUrl : " ",
             is_photography: isImageContent,
+        });
+
+        await User.findByIdAndUpdate(userId, {
+            $push: { posts: newPost._id }
         });
 
         return res.status(201).json({
