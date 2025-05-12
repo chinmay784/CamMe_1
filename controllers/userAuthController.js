@@ -1114,16 +1114,14 @@ exports.createPost = async (req, res) => {
         const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email } = req.body;
         const userId = req.user.userId;
 
-        // const authHeader = req.headers.authorization;
+        const authHeader = req.headers.authorization;
 
-        // const authorizedToken = authHeader.split(" ")[1];
-
-        const tokenn = req.header("Authorization");
+        const authorizedToken = authHeader.split(" ")[1];
 
         const userEmail = await User.findById(userId).select("email");
 
         // Compare provided token with authorized token
-        if (token !== tokenn) {
+        if (token !== authorizedToken) {
             return res.status(403).json({
                 success: false,
                 message: "Provided token does not match authorized token",
