@@ -1210,7 +1210,7 @@ exports.createPost = async (req, res) => {
             $push: { posts: newPost._id }
         });
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: "Post created successfully",
             post: {
