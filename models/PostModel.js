@@ -53,7 +53,6 @@ const postSchema = new mongoose.Schema({
     },
     appliedFilter: {
         type: String,
-        enum: ['normal', 'clarendon', 'sepia', 'grayscale', 'lark', 'moon', 'aden', 'perpetua'],
         default: 'normal'
     }
     ,

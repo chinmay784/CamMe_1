@@ -1199,7 +1199,7 @@ exports.createPost = async (req, res) => {
             visibility: visibilityBoolean,
             hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
             //colorMatrix: parsedColorMatrix, // ✅ This is your Decimal128 array
-            appliedFilter: isImageContent ? (appliedFilter || 'normal') : 'normal',
+            appliedFilter: isImageContent ? appliedFilter : 'normal',
             filteredImageUrl: isImageContent ? filteredImageUrl : " ",
             is_photography: isImageContent,
         });
