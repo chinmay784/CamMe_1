@@ -1111,7 +1111,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email } = req.body;
+        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email,colorMatrix } = req.body;
         const userId = req.user.userId;
 
         const authHeader = req.headers.authorization;
@@ -1167,30 +1167,30 @@ exports.createPost = async (req, res) => {
             imageUrl: imageUrls,
         };
 
-        // let parsedColorMatrix = [];
+        let parsedColorMatrix = [];
 
-        // if (isImageContent && colorMatrix) {
-        //     let matrixArray = [];
+        if (isImageContent && colorMatrix) {
+            let matrixArray = [];
 
-        //     if (typeof colorMatrix === 'string') {
-        //         try {
-        //             matrixArray = JSON.parse(colorMatrix);
-        //         } catch (error) {
-        //             console.warn("Invalid colorMatrix JSON string", error);
-        //         }
-        //     } else if (Array.isArray(colorMatrix)) {
-        //         matrixArray = colorMatrix;
-        //     }
+            if (typeof colorMatrix === 'string') {
+                try {
+                    matrixArray = JSON.parse(colorMatrix);
+                } catch (error) {
+                    console.warn("Invalid colorMatrix JSON string", error);
+                }
+            } else if (Array.isArray(colorMatrix)) {
+                matrixArray = colorMatrix;
+            }
 
-        //     if (Array.isArray(matrixArray)) {
-        //         parsedColorMatrix = matrixArray.map(val =>
-        //             mongoose.Types.Decimal128.fromString(parseFloat(val).toString())
-        //         );
-        //     }
-        // }
+            if (Array.isArray(matrixArray)) {
+                parsedColorMatrix = matrixArray.map(val =>
+                    mongoose.Types.Decimal128.fromString(parseFloat(val).toString())
+                );
+            }
+        }
 
-        // console.log("Raw colorMatrix from req.body:", colorMatrix);
-        // console.log("Parsed colorMatrix:", parsedColorMatrix);
+        console.log("Raw colorMatrix from req.body:", colorMatrix);
+        console.log("Parsed colorMatrix:", parsedColorMatrix);
 
         // Create post document
         const newPost = await Postcreate.create({
@@ -1198,7 +1198,7 @@ exports.createPost = async (req, res) => {
             content,
             visibility: visibilityBoolean,
             hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
-            //colorMatrix: parsedColorMatrix, // ✅ This is your Decimal128 array
+            colorMatrix: parsedColorMatrix, // ✅ This is your Decimal128 array
             appliedFilter: isImageContent ? appliedFilter : 'normal',
             filteredImageUrl: isImageContent ? filteredImageUrl : " ",
             is_photography: isImageContent,

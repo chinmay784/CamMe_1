@@ -56,11 +56,11 @@ const postSchema = new mongoose.Schema({
         default: 'normal'
     }
     ,
-    // colorMatrix: {
-    //     type: [mongoose.Schema.Types.Decimal128],
-    //     required: false,
-    //     default: [],
-    // }
+    colorMatrix: {
+        type: [mongoose.Schema.Types.Decimal128],
+        required: false,
+        default: [],
+    },
     
     comments: [
         {
