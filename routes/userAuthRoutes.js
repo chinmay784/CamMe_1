@@ -614,26 +614,33 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  * /user/createpost:
  *   post:
  *     summary: Create a new post
- *     tags:
- *       - Posts
+ *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - bearerAuth: []  # if you're using JWT auth
  *     requestBody:
  *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - description
+ *               - visibility
+ *               - token
+ *               - email
  *             properties:
  *               description:
  *                 type: string
- *                 example: "This is a post description"
  *               visibility:
  *                 type: boolean
  *                 example: true
  *               is_photography:
  *                 type: boolean
  *                 example: true
+ *               token:
+ *                 type: string
+ *               email:
+ *                 type: string
  *               hashTag:
  *                 type: array
  *                 items:
@@ -641,22 +648,13 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 example: ["nature", "sunset"]
  *               appliedFilter:
  *                 type: string
- *                 enum: [normal, clarendon, sepia, grayscale, lark, moon, aden, perpetua]
- *                 example: "clarendon"
+ *                 example: grayscale
  *               filteredImageUrl:
  *                 type: string
- *                 example: "https://cloudinary.com/filtered-image.jpg"
- *               token:
- *                 type: string
- *                 example: "your_jwt_token"
- *               email:
- *                 type: string
- *                 example: "user@example.com"
  *               colorMatrix:
- *                 type: array
- *                 items:
- *                   type: number
- *                 example: [0.55, 0.3, 0.3, 0.0, 0.0, 0.3, 0.55, 0.3, 0.0, 0.0, 0.3, 0.3, 0.625, 0.0, 0.0375, 0.0, 0.0, 0.0, 1.0, 0.0]
+ *                 type: string
+ *                 description: JSON stringified array of numbers. E.g. "[0.3, 0.6, 0.9]"
+ *                 example: "[0.3, 0.6, 0.9]"
  *               files:
  *                 type: array
  *                 items:
@@ -665,10 +663,10 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *     responses:
  *       201:
  *         description: Post created successfully
- *       403:
- *         description: Token mismatch or unauthorized
+ *       400:
+ *         description: Bad Request
  *       500:
- *         description: Server error
+ *         description: Server Error
  */
 
 router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);

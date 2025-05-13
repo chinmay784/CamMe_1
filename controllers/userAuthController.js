@@ -1114,14 +1114,13 @@ exports.createPost = async (req, res) => {
         const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email, colorMatrix } = req.body;
         const userId = req.user.userId;
 
-        const authHeader = req.headers.authorization;
-
-        const authorizedToken = authHeader.split(" ")[1];
+        const authHeader = req.headers["authorization"];
+        console.log(authHeader, "authHeader");
 
         const userEmail = await User.findById(userId).select("email");
 
         // Compare provided token with authorized token
-        if (token !== authorizedToken) {
+        if (token !== authHeader) {
             return res.status(403).json({
                 success: false,
                 message: "Provided token does not match authorized token",
@@ -1167,15 +1166,30 @@ exports.createPost = async (req, res) => {
             imageUrl: imageUrls,
         };
 
-
         let parsedColorMatrix = [];
-        try {
-            parsedColorMatrix = JSON.parse(colorMatrix);
-            if (!Array.isArray(parsedColorMatrix)) parsedColorMatrix = [];
-        } catch (err) {
-            console.warn("Invalid colorMatrix format:", colorMatrix);
+
+        if (isImageContent && colorMatrix) {
+            let matrixArray = [];
+
+            if (typeof colorMatrix === 'string') {
+                try {
+                    matrixArray = JSON.parse(colorMatrix);
+                } catch (error) {
+                    console.warn("Invalid colorMatrix JSON string", error);
+                }
+            } else if (Array.isArray(colorMatrix)) {
+                matrixArray = colorMatrix;
+            }
+
+            if (Array.isArray(matrixArray)) {
+                parsedColorMatrix = matrixArray.map(val =>
+                    mongoose.Types.Decimal128.fromString(parseFloat(val).toString())
+                );
+            }
         }
 
+        console.log("Raw colorMatrix from req.body:", colorMatrix);
+        console.log("Parsed colorMatrix:", parsedColorMatrix);
 
         // Create post document
         const newPost = await Postcreate.create({
@@ -1183,11 +1197,13 @@ exports.createPost = async (req, res) => {
             content,
             visibility: visibilityBoolean,
             hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
-            colorMatrix: parsedColorMatrix,
+            colorMatrix: parsedColorMatrix, // ✅ This is your Decimal128 array
             appliedFilter: isImageContent ? (appliedFilter || 'normal') : 'normal',
             filteredImageUrl: isImageContent ? filteredImageUrl : " ",
             is_photography: isImageContent,
         });
+
+
 
         await User.findByIdAndUpdate(userId, {
             $push: { posts: newPost._id }
