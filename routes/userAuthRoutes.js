@@ -1296,35 +1296,36 @@ router.post("/getYourMoment",authMiddelWere,getYourMoment);
  * @swagger
  * /user/getallmomets:
  *   post:
- *     summary: Retrieve all moments (only if token and email are valid)
- *     description: This endpoint fetches all moments from the database, 
- *                  after verifying the user's token and email for security.
- *     tags:
- *       - Moments
+ *     summary: Fetch all moments (currently fetching all users' moments, not just friends)
+ *     tags: [Moments]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 description: "JWT token from Authorization header"
  *     parameters:
  *       - in: header
  *         name: Authorization
  *         required: true
- *         description: Bearer token for authentication. Format: Bearer <token>
  *         schema:
  *           type: string
- *       - in: query
- *         name: email
- *         required: true
- *         description: Email of the logged-in user
- *         schema:
- *           type: string
- *       - in: query
- *         name: token
- *         required: true
- *         description: Token of the logged-in user (should match the Authorization token)
- *         schema:
- *           type: string
+ *         description: "Bearer token for authentication. Format: Bearer <token>"
  *     responses:
  *       200:
- *         description: Successfully retrieved all moments
+ *         description: Successfully fetched all moments
  *         content:
  *           application/json:
  *             schema:
@@ -1332,38 +1333,16 @@ router.post("/getYourMoment",authMiddelWere,getYourMoment);
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
  *                 allMoments:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Moment'
  *       403:
- *         description: Token mismatch
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Provided token does not match authorized token
+ *         description: Provided token does not match the authorized token
  *       500:
- *         description: Server error while retrieving moments
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Error in viewAllMoments controller
+ *         description: Server error in viewAllMoments controller
  */
+
 router.post("/getallmomets",authMiddelWere,getAllMoments);
 /**
  * @swagger
