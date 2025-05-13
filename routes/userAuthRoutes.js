@@ -654,6 +654,10 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 example: grayscale
  *               filteredImageUrl:
  *                 type: string
+ *               colorMatrix:
+ *                 type: string
+ *                 description: JSON stringified array of numbers. E.g. "[0.3, 0.6, 0.9]"
+ *                 example: "[0.3, 0.6, 0.9]"
  *               files:
  *                 type: array
  *                 items:
