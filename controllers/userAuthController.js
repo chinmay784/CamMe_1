@@ -1111,7 +1111,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email,colorMatrix } = req.body;
+        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email, colorMatrix } = req.body;
         const userId = req.user.userId;
 
         const authHeader = req.headers.authorization;
@@ -1795,7 +1795,7 @@ exports.createMoment = async (req, res) => {
             is_closeFriends: is_closeFriends || false,
         });
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: "Moment created successfully and will expire in 24 hours",
             moment: newMoment,
@@ -1874,6 +1874,31 @@ exports.getYourMoment = async (req, res) => {
     try {
         const userId = req.user.userId;
 
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
         const yourMoment = await Moment.find({ userId })
 
         return res.status(200).json({
@@ -1896,6 +1921,30 @@ exports.viewAMoment = async (req, res) => {
     try {
         const viewerId = req.user.userId;
         const { userId, momentId } = req.params;
+        const { email, token } = req.body;
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+
+        const userEmail = await User.findById(viewerId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
 
         if (!userId) {
             return res.status(200).json({
@@ -1993,6 +2042,32 @@ exports.getAllMoments = async (req, res) => {
 
 
         // Fetch only friends' moments
+
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
         const allMoments = await Moment.find()
 
         return res.status(200).json({
@@ -2017,6 +2092,31 @@ exports.authorizedUserMomentsViewersCount = async (req, res) => {
     try {
         const userId = req.user.userId; // Authorized user
         const { momentId } = req.params;
+
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
 
         // If specific momentId is provided
         if (momentId) {
@@ -2077,6 +2177,32 @@ exports.authorizedUserMomentsViewers = async (req, res) => {
     try {
         const userId = req.user.userId; // Authorized user
         const { momentId } = req.params;
+
+
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
 
         // If specific momentId is provided
         if (momentId) {
@@ -2147,6 +2273,31 @@ exports.deleteMoment = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { momentId } = req.params;
+
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
 
         if (!momentId) {
             return res.status(200).json({
