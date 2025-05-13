@@ -1294,31 +1294,37 @@ router.post("/resendOtp",resendOtp)
 router.post("/getYourMoment",authMiddelWere,getYourMoment);
 /**
  * @swagger
- * /user/getallmoments:
- *   get:
- *     summary: Fetch all moments of all users
- *     description: Retrieves all moments in the system, only accessible to authorized users with valid tokens.
+ * /user/getallmomets:
+ *   post:
+ *     summary: Retrieve all moments (only if token and email are valid)
+ *     description: This endpoint fetches all moments from the database, 
+ *                  after verifying the user's token and email for security.
  *     tags:
  *       - Moments
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: body
- *         name: body
- *         description: The email and token to verify against the authorized user's credentials.
+ *       - in: header
+ *         name: Authorization
  *         required: true
+ *         description: Bearer token for authentication. Format: Bearer <token>
  *         schema:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *               example: "user@example.com"
- *             token:
- *               type: string
- *               example: "abcdef12345"
+ *           type: string
+ *       - in: query
+ *         name: email
+ *         required: true
+ *         description: Email of the logged-in user
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         description: Token of the logged-in user (should match the Authorization token)
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Successfully fetched all moments
+ *         description: Successfully retrieved all moments
  *         content:
  *           application/json:
  *             schema:
@@ -1330,32 +1336,9 @@ router.post("/getYourMoment",authMiddelWere,getYourMoment);
  *                 allMoments:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                         example: "60d3b41abdacab002f3c6b80"
- *                       title:
- *                         type: string
- *                         example: "Sunset at the beach"
- *                       description:
- *                         type: string
- *                         example: "A beautiful sunset view from the beach"
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: "2021-05-12T10:00:00Z"
- *                       updatedAt:
- *                         type: string
- *                         format: date-time
- *                         example: "2021-05-12T11:00:00Z"
- *                       viewers:
- *                         type: array
- *                         items:
- *                           type: string
- *                           example: "60d3b41abdacab002f3c6b81"
+ *                     $ref: '#/components/schemas/Moment'
  *       403:
- *         description: Provided token does not match the authorized token
+ *         description: Token mismatch
  *         content:
  *           application/json:
  *             schema:
@@ -1366,22 +1349,9 @@ router.post("/getYourMoment",authMiddelWere,getYourMoment);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Provided token does not match authorized token"
- *       400:
- *         description: Provided email does not match authorized email
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Provided email does not match authorized email"
+ *                   example: Provided token does not match authorized token
  *       500:
- *         description: Internal server error while processing the request
+ *         description: Server error while retrieving moments
  *         content:
  *           application/json:
  *             schema:
@@ -1392,15 +1362,15 @@ router.post("/getYourMoment",authMiddelWere,getYourMoment);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Error in viewAllMoments controller"
+ *                   example: Error in viewAllMoments controller
  */
-router.get("/getallmomets",authMiddelWere,getAllMoments);
+router.post("/getallmomets",authMiddelWere,getAllMoments);
 /**
  * @swagger
  * /user/viewMoment/{userId}/{momentId}:
- *   get:
- *     summary: View a specific moment of a user
- *     description: Allows an authorized user to view a specific moment of another user, adding the user as a viewer if not already added.
+ *   post:
+ *     summary: View a specific moment by a user
+ *     description: Allows a user to view another user's moment. If the viewer is not the owner and hasn't viewed the moment before, their userId is added to the moment's viewers.
  *     tags:
  *       - Moments
  *     security:
@@ -1409,33 +1379,31 @@ router.get("/getallmomets",authMiddelWere,getAllMoments);
  *       - in: path
  *         name: userId
  *         required: true
- *         description: The user ID of the moment owner.
+ *         description: ID of the user who owns the moment
  *         schema:
  *           type: string
- *           example: "60d3b41abdacab002f3c6b80"
  *       - in: path
  *         name: momentId
  *         required: true
- *         description: The ID of the moment to view.
+ *         description: ID of the moment to be viewed
  *         schema:
  *           type: string
- *           example: "60d3b41abdacab002f3c6b80"
- *       - in: body
- *         name: body
- *         description: The email and token to verify against the authorized user's credentials.
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *               example: "user@example.com"
- *             token:
- *               type: string
- *               example: "abcdef12345"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: viewer@example.com
+ *               token:
+ *                 type: string
+ *                 example: your-auth-token
  *     responses:
  *       200:
- *         description: Successfully fetched the moment and viewer details
+ *         description: Moment fetched successfully or with validation errors
  *         content:
  *           application/json:
  *             schema:
@@ -1446,42 +1414,19 @@ router.get("/getallmomets",authMiddelWere,getAllMoments);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Fetched single moment"
+ *                   example: Fetched single moment
  *                 viewersCount:
  *                   type: integer
- *                   example: 15
+ *                   example: 3
  *                 viewers:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                         example: "60d3b41abdacab002f3c6b80"
- *                       userName:
- *                         type: string
- *                         example: "John Doe"
- *                       profilePic:
- *                         type: string
- *                         example: "https://example.com/profile.jpg"
+ *                     type: string
+ *                   example: ["userId1", "userId2"]
  *                 moment:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                       example: "60d3b41abdacab002f3c6b80"
- *                     title:
- *                       type: string
- *                       example: "My vacation moment"
- *                     description:
- *                       type: string
- *                       example: "A beautiful picture from my vacation"
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2021-05-12T10:00:00Z"
+ *                   $ref: '#/components/schemas/Moment'
  *       403:
- *         description: Provided token does not match the authorized token
+ *         description: Token mismatch error
  *         content:
  *           application/json:
  *             schema:
@@ -1492,22 +1437,9 @@ router.get("/getallmomets",authMiddelWere,getAllMoments);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Provided token does not match authorized token"
- *       400:
- *         description: Provided email does not match authorized email
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Provided email does not match authorized email"
+ *                   example: Provided token does not match authorized token
  *       404:
- *         description: Moment not found for the given user
+ *         description: Moment not found
  *         content:
  *           application/json:
  *             schema:
@@ -1518,9 +1450,9 @@ router.get("/getallmomets",authMiddelWere,getAllMoments);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Moment not found for the given user"
+ *                   example: Moment not found for the given user
  *       500:
- *         description: Internal server error while processing the request
+ *         description: Server error while viewing the moment
  *         content:
  *           application/json:
  *             schema:
@@ -1531,15 +1463,20 @@ router.get("/getallmomets",authMiddelWere,getAllMoments);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Internal server error in viewAMoment"
+ *                   example: Internal server error in viewAMoment
  */
-router.get("/viewMoment/:userId/:momentId",authMiddelWere,viewAMoment);
+router.post("/viewMoment/:userId/:momentId",authMiddelWere,viewAMoment);
 /**
  * @swagger
- * /user/authorizedUserMomentsViewers/{momentId}:
- *   get:
- *     summary: Fetch viewers for a specific moment or all moments of the authorized user
- *     description: Fetches the list of viewers for a specific moment (if momentId is provided) or all unique viewers across all moments of the authorized user. Ensures token and email validation.
+ * /user/authorizedUserMomentsViewersCount/{momentId}:
+ *   post:
+ *     summary: Get viewer count for a specific moment or all moments owned by the authorized user
+ *     description: |
+ *       Returns the total number of viewers for:
+ *       - A specific moment (if `momentId` is provided in the path)
+ *       - All moments owned by the authorized user (if no `momentId` is provided)
+ *       
+ *       Validates the email and token of the authorized user before returning viewer data.
  *     tags:
  *       - Moments
  *     security:
@@ -1547,27 +1484,26 @@ router.get("/viewMoment/:userId/:momentId",authMiddelWere,viewAMoment);
  *     parameters:
  *       - in: path
  *         name: momentId
- *         required: true
- *         description: The ID of the moment to fetch viewers for. If omitted, viewers for all moments will be fetched.
+ *         required: false
+ *         description: ID of a specific moment (optional). If not provided, returns data for all moments.
  *         schema:
  *           type: string
- *           example: "665f4970dbd1f0153fc6e788"
- *       - in: body
- *         name: body
- *         description: The email and token to verify against the authorized user's credentials.
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *               example: "user@example.com"
- *             token:
- *               type: string
- *               example: "abcdef12345"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: your-auth-token
  *     responses:
  *       200:
- *         description: Successfully fetched viewers for the moment(s)
+ *         description: Viewer count retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -1578,26 +1514,18 @@ router.get("/viewMoment/:userId/:momentId",authMiddelWere,viewAMoment);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Fetched viewers for the specific moment"
- *                 viewers:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                         example: "5f9c8efc6d5e4a22d3f41a8e"
- *                       userName:
- *                         type: string
- *                         example: "John Doe"
- *                       profilePic:
- *                         type: string
- *                         example: "https://example.com/profile-pic.jpg"
+ *                   example: Fetched viewer count for the specific moment
+ *                 totalViewers:
+ *                   type: integer
+ *                   example: 5
  *                 momentId:
  *                   type: string
- *                   example: "665f4970dbd1f0153fc6e788"
+ *                   example: 663dfedb5f7a4b001f17ec81
+ *                 momentsCount:
+ *                   type: integer
+ *                   example: 3
  *       403:
- *         description: Provided token does not match the authorized token
+ *         description: Token mismatch
  *         content:
  *           application/json:
  *             schema:
@@ -1608,22 +1536,9 @@ router.get("/viewMoment/:userId/:momentId",authMiddelWere,viewAMoment);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Provided token does not match authorized token"
- *       400:
- *         description: Provided email does not match authorized email
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Provided email does not match authorized email"
+ *                   example: Provided token does not match authorized token
  *       404:
- *         description: Moment not found or not owned by the authorized user
+ *         description: Moment not found or not owned by the user
  *         content:
  *           application/json:
  *             schema:
@@ -1634,9 +1549,9 @@ router.get("/viewMoment/:userId/:momentId",authMiddelWere,viewAMoment);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Moment not found or not owned by the authorized user"
+ *                   example: Moment not found or not owned by the authorized user
  *       500:
- *         description: Server error in fetching viewers for the moment(s)
+ *         description: Server error while fetching viewers count
  *         content:
  *           application/json:
  *             schema:
@@ -1647,15 +1562,20 @@ router.get("/viewMoment/:userId/:momentId",authMiddelWere,viewAMoment);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Server error in authorizedUserMomentsViewers"
+ *                   example: Server error in authorizedUserMomentsViewersCount
  */
-router.get("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authorizedUserMomentsViewersCount);
+router.post("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authorizedUserMomentsViewersCount);
 /**
  * @swagger
  * /user/authorizedUserMomentsViewers/{momentId}:
- *   get:
- *     summary: Fetch viewers for a specific moment or all moments of the authorized user
- *     description: Fetches the list of viewers for a specific moment (if momentId is provided) or all unique viewers across all moments of the authorized user. Ensures token and email validation.
+ *   post:
+ *     summary: Get viewers for a specific moment or all moments owned by the authorized user
+ *     description: |
+ *       Fetches all viewers:
+ *       - For a specific moment (if `momentId` is provided in the path), or
+ *       - Across all moments owned by the authorized user (if no `momentId` is provided)
+ *       
+ *       Viewers are populated with `userName` and `profilePic`. Email and token are validated against the authenticated user.
  *     tags:
  *       - Moments
  *     security:
@@ -1663,27 +1583,26 @@ router.get("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authori
  *     parameters:
  *       - in: path
  *         name: momentId
- *         required: true
- *         description: The ID of the moment to fetch viewers for. If omitted, viewers for all moments will be fetched.
+ *         required: false
+ *         description: ID of a specific moment (optional). If not provided, returns viewers for all moments.
  *         schema:
  *           type: string
- *           example: "665f4970dbd1f0153fc6e788"
- *       - in: body
- *         name: body
- *         description: The email and token to verify against the authorized user's credentials.
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *               example: "user@example.com"
- *             token:
- *               type: string
- *               example: "abcdef12345"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: your-auth-token
  *     responses:
  *       200:
- *         description: Successfully fetched viewers for the moment(s)
+ *         description: Successfully retrieved moment viewers
  *         content:
  *           application/json:
  *             schema:
@@ -1694,7 +1613,7 @@ router.get("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authori
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Fetched viewers for the specific moment"
+ *                   example: Fetched viewers for the specific moment
  *                 viewers:
  *                   type: array
  *                   items:
@@ -1702,18 +1621,21 @@ router.get("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authori
  *                     properties:
  *                       _id:
  *                         type: string
- *                         example: "5f9c8efc6d5e4a22d3f41a8e"
+ *                         example: 663dfedb5f7a4b001f17ec81
  *                       userName:
  *                         type: string
- *                         example: "John Doe"
+ *                         example: johndoe
  *                       profilePic:
  *                         type: string
- *                         example: "https://example.com/profile-pic.jpg"
+ *                         example: https://example.com/avatar.jpg
  *                 momentId:
  *                   type: string
- *                   example: "665f4970dbd1f0153fc6e788"
+ *                   example: 663dfedb5f7a4b001f17ec81
+ *                 momentsCount:
+ *                   type: integer
+ *                   example: 3
  *       403:
- *         description: Provided token does not match the authorized token
+ *         description: Token mismatch
  *         content:
  *           application/json:
  *             schema:
@@ -1724,22 +1646,9 @@ router.get("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authori
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Provided token does not match authorized token"
- *       400:
- *         description: Provided email does not match authorized email
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Provided email does not match authorized email"
+ *                   example: Provided token does not match authorized token
  *       404:
- *         description: Moment not found or not owned by the authorized user
+ *         description: Moment not found or not owned by user
  *         content:
  *           application/json:
  *             schema:
@@ -1750,9 +1659,9 @@ router.get("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authori
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Moment not found or not owned by the authorized user"
+ *                   example: Moment not found or not owned by the authorized user
  *       500:
- *         description: Server error in fetching viewers for the moment(s)
+ *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
@@ -1763,15 +1672,16 @@ router.get("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authori
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Server error in authorizedUserMomentsViewers"
+ *                   example: Server error in authorizedUserMomentsViewers
  */
-router.get("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedUserMomentsViewers);
+router.post("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedUserMomentsViewers);
 /**
  * @swagger
  * /user/deleteMoment/{momentId}:
  *   delete:
- *     summary: Delete a moment owned by the authorized user
- *     description: Deletes a specific moment by ID if it belongs to the currently authenticated user and the provided email and token match the authorized user's details.
+ *     summary: Delete a specific moment owned by the authorized user
+ *     description: |
+ *       Deletes a moment if it belongs to the authorized user. Requires verification of the user's token and email.
  *     tags:
  *       - Moments
  *     security:
@@ -1780,26 +1690,25 @@ router.get("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedUs
  *       - in: path
  *         name: momentId
  *         required: true
- *         description: The ID of the moment to delete
+ *         description: ID of the moment to be deleted
  *         schema:
  *           type: string
- *           example: "665f4970dbd1f0153fc6e788"
- *       - in: body
- *         name: body
- *         description: The email and token to verify against the authorized user's credentials.
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *               example: "user@example.com"
- *             token:
- *               type: string
- *               example: "abcdef12345"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: your-auth-token
  *     responses:
  *       200:
- *         description: Moment deleted successfully or not found
+ *         description: Moment deletion result
  *         content:
  *           application/json:
  *             schema:
@@ -1810,9 +1719,9 @@ router.get("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedUs
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Moment deleted successfully"
+ *                   example: Moment deleted successfully
  *       403:
- *         description: Token does not match the authorized token
+ *         description: Token mismatch or unauthorized access
  *         content:
  *           application/json:
  *             schema:
@@ -1823,22 +1732,9 @@ router.get("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedUs
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Provided token does not match authorized token"
- *       400:
- *         description: Provided email does not match authorized email
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Provided email does not match authorized email"
+ *                   example: Provided token does not match authorized token
  *       404:
- *         description: Moment not found or not owned by the authorized user
+ *         description: Moment not found
  *         content:
  *           application/json:
  *             schema:
@@ -1849,9 +1745,9 @@ router.get("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedUs
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Moment not found or not owned by the authorized user"
+ *                   example: Moment not found or not owned by the authorized user
  *       500:
- *         description: Server error during moment deletion
+ *         description: Server error during deletion
  *         content:
  *           application/json:
  *             schema:
@@ -1862,7 +1758,7 @@ router.get("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedUs
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Server error in deleteMoment"
+ *                   example: Server error in deleteMoment
  */
 router.delete("/deleteMoment/:momentId",authMiddelWere,deleteMoment)
 
