@@ -1111,7 +1111,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email, colorMatrix } = req.body;
+        const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email } = req.body;
         const userId = req.user.userId;
 
         const authHeader = req.headers.authorization;
@@ -1167,30 +1167,30 @@ exports.createPost = async (req, res) => {
             imageUrl: imageUrls,
         };
 
-        let parsedColorMatrix = [];
+        // let parsedColorMatrix = [];
 
-        if (isImageContent && colorMatrix) {
-            let matrixArray = [];
+        // if (isImageContent && colorMatrix) {
+        //     let matrixArray = [];
 
-            if (typeof colorMatrix === 'string') {
-                try {
-                    matrixArray = JSON.parse(colorMatrix);
-                } catch (error) {
-                    console.warn("Invalid colorMatrix JSON string", error);
-                }
-            } else if (Array.isArray(colorMatrix)) {
-                matrixArray = colorMatrix;
-            }
+        //     if (typeof colorMatrix === 'string') {
+        //         try {
+        //             matrixArray = JSON.parse(colorMatrix);
+        //         } catch (error) {
+        //             console.warn("Invalid colorMatrix JSON string", error);
+        //         }
+        //     } else if (Array.isArray(colorMatrix)) {
+        //         matrixArray = colorMatrix;
+        //     }
 
-            if (Array.isArray(matrixArray)) {
-                parsedColorMatrix = matrixArray.map(val =>
-                    mongoose.Types.Decimal128.fromString(parseFloat(val).toString())
-                );
-            }
-        }
+        //     if (Array.isArray(matrixArray)) {
+        //         parsedColorMatrix = matrixArray.map(val =>
+        //             mongoose.Types.Decimal128.fromString(parseFloat(val).toString())
+        //         );
+        //     }
+        // }
 
-        console.log("Raw colorMatrix from req.body:", colorMatrix);
-        console.log("Parsed colorMatrix:", parsedColorMatrix);
+        // console.log("Raw colorMatrix from req.body:", colorMatrix);
+        // console.log("Parsed colorMatrix:", parsedColorMatrix);
 
         // Create post document
         const newPost = await Postcreate.create({
@@ -1198,7 +1198,7 @@ exports.createPost = async (req, res) => {
             content,
             visibility: visibilityBoolean,
             hashTag: Array.isArray(hashTag) ? hashTag : hashTag ? [hashTag] : [],
-            colorMatrix: parsedColorMatrix, // ✅ This is your Decimal128 array
+            //colorMatrix: parsedColorMatrix, // ✅ This is your Decimal128 array
             appliedFilter: isImageContent ? (appliedFilter || 'normal') : 'normal',
             filteredImageUrl: isImageContent ? filteredImageUrl : " ",
             is_photography: isImageContent,
@@ -1264,7 +1264,7 @@ exports.getAllFriends = async (req, res) => {
 exports.sharePostWithFriend = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { postId, friendId } = req.params;
+        const { momentId, friendId } = req.params;
 
         // Step 1: Validate the post
         const originalPost = await Postcreate.findOne({ _id: postId });
@@ -1870,7 +1870,7 @@ exports.viweAllPosts = async (req, res) => {
 
 
 
-exports.getViewYourMoment = async (req, res) => {
+exports.getYourMoment = async (req, res) => {
     try {
         const userId = req.user.userId;
 
@@ -1891,49 +1891,84 @@ exports.getViewYourMoment = async (req, res) => {
 }
 
 
-// Add Last and route will not implement
-exports.viewMoment = async (req, res) => {
+// Add Last 
+exports.viewAMoment = async (req, res) => {
     try {
         const viewerId = req.user.userId;
-        const { userId } = req.params; // ID of the moment's owner
+        const { userId, momentId } = req.params;
 
         if (!userId) {
             return res.status(200).json({
                 success: false,
-                message: "Moment owner ID is required"
+                message: "Moment owner ID is required",
             });
         }
 
-        const moments = await Moment.find({ userId });
+        // 👉 View single moment
+        if (momentId) {
+            const moment = await Moment.findOne({ _id: momentId, userId });
 
-        if (!moments.length) {
-            return res.status(200).json({
-                success: false,
-                message: "No moments found for this user"
-            });
-        }
-
-        // Add viewer only if not the owner
-        if (viewerId !== userId) {
-            for (let moment of moments) {
-                if (!moment.viewers.includes(viewerId)) {
-                    moment.viewers.push(viewerId);
-                    await moment.save();
-                }
+            if (!moment) {
+                return res.status(200).json({
+                    success: false,
+                    message: "Moment not found for the given user",
+                });
             }
+
+            // ➕ Push viewerId only if not already present and not the owner
+            if (viewerId !== userId && !moment.viewers.includes(viewerId)) {
+                moment.viewers.push(viewerId);
+                await moment.save();
+            }
+
+            // 🧾 Populate for response only
+            const populatedMoment = await Moment.findById(momentId)
+
+            //const populatedMoment = await Moment.findById(momentId).populate("viewers", "userName email profilePic");
+
+            return res.status(200).json({
+                success: true,
+                message: "Fetched single moment",
+                viewersCount: populatedMoment.viewers.length,
+                viewers: populatedMoment.viewers,
+                moment: populatedMoment,
+            });
         }
 
-        return res.status(200).json({
-            success: true,
-            message: "Fetched user's moments",
-            moments,
-        });
+        // // 👉 View all moments for the user
+        // const moments = await Moment.find({ userId });
+
+        // if (!moments.length) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         message: "No moments found for this user",
+        //     });
+        // }
+
+        // // ➕ Add viewerId to each moment if needed (only if not the owner)
+        // if (viewerId !== userId) {
+        //     for (let moment of moments) {
+        //         if (!moment.viewers.includes(viewerId)) {
+        //             moment.viewers.push(viewerId);
+        //             await moment.save();
+        //         }
+        //     }
+        // }
+
+        // const updatedMoments = await Moment.find({ userId }).populate("viewers", "userName email profilePic");
+
+        // return res.status(200).json({
+        //     success: true,
+        //     message: "Fetched all user's moments",
+        //     viewersCount: updatedMoments.reduce((acc, m) => acc + m.viewers.length, 0),
+        //     moments: updatedMoments,
+        // });
 
     } catch (error) {
-        console.error("Error in viewMoment:", error);
+        console.error("Error in viewAMoment:", error);
         return res.status(500).json({
             success: false,
-            message: "Internal server error in viewMoment",
+            message: "Internal server error in viewAMoment",
         });
     }
 };
@@ -1941,25 +1976,24 @@ exports.viewMoment = async (req, res) => {
 
 
 
-exports.viewAllMoments = async (req, res) => {
+exports.getAllMoments = async (req, res) => {
     try {
         const userId = req.user.userId;
 
         // Get current user's friends
-        const user = await User.findById(userId).populate('userAllFriends', '_id');
-        if (!user) {
-            return res.status(200).json({
-                success: false,
-                message: "User not found"
-            });
-        }
+        // const user = await User.findById(userId).populate('userAllFriends', '_id');
+        // if (!user) {
+        //     return res.status(200).json({
+        //         success: false,
+        //         message: "User not found"
+        //     });
+        // }
 
-        const friendIds = user.userAllFriends.map(friend => friend._id);
+        // const friendIds = user.userAllFriends.map(friend => friend._id);
+
 
         // Fetch only friends' moments
-        const allMoments = await Moment.find({ user: { $in: friendIds } })
-            .sort({ createdAt: -1 })
-            .populate('user', 'userName profilePic');
+        const allMoments = await Moment.find()
 
         return res.status(200).json({
             success: true,
@@ -1978,3 +2012,170 @@ exports.viewAllMoments = async (req, res) => {
 
 
 
+// This for authorized user moment viewers count
+exports.authorizedUserMomentsViewersCount = async (req, res) => {
+    try {
+        const userId = req.user.userId; // Authorized user
+        const { momentId } = req.params;
+
+        // If specific momentId is provided
+        if (momentId) {
+            const moment = await Moment.findOne({ _id: momentId, userId }).select("viewers");
+
+            if (!moment) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Moment not found or not owned by the authorized user",
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Fetched viewer count for the specific moment",
+                totalViewers: moment.viewers.length,
+                momentId: momentId
+            });
+        }
+
+        // If no momentId, fetch all moments of the user
+        const moments = await Moment.find({ userId }).select("viewers");
+
+        if (!moments || moments.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No moments found for this user",
+                totalViewers: 0,
+                momentsCount: 0
+            });
+        }
+
+        // Calculate unique viewer IDs across all moments
+        const allViewerIds = moments.flatMap(moment => moment.viewers);
+        const uniqueViewerIds = [...new Set(allViewerIds.map(String))];
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched authorized user's total viewers across all moments",
+            totalViewers: uniqueViewerIds.length,
+            momentsCount: moments.length
+        });
+
+    } catch (error) {
+        console.error("Error in authorizedUserMomentsViewersCount:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error in authorizedUserMomentsViewersCount",
+        });
+    }
+};
+
+
+
+
+//This  for authorized user moment viewers list on the basis of userName and profilePic
+exports.authorizedUserMomentsViewers = async (req, res) => {
+    try {
+        const userId = req.user.userId; // Authorized user
+        const { momentId } = req.params;
+
+        // If specific momentId is provided
+        if (momentId) {
+            const moment = await Moment.findOne({ _id: momentId, userId })
+                .populate("viewers", "userName profilePic")
+                .select("viewers");
+
+            if (!moment) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Moment not found or not owned by the authorized user",
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Fetched viewers for the specific moment",
+                viewers: moment.viewers,
+                momentId: momentId
+            });
+        }
+
+        // Fetch all moments for the user and populate viewers
+        const moments = await Moment.find({ userId })
+            .populate("viewers", "userName profilePic")
+            .select("viewers");
+
+        if (!moments || moments.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No moments found for this user",
+                viewers: [],
+                momentsCount: 0
+            });
+        }
+
+        // Merge all viewers and ensure uniqueness by _id
+        const viewerMap = new Map();
+        for (const moment of moments) {
+            for (const viewer of moment.viewers) {
+                viewerMap.set(viewer._id.toString(), viewer); // Avoid duplicates
+            }
+        }
+
+        const uniqueViewers = Array.from(viewerMap.values());
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched authorized user's unique viewers across all moments",
+            viewers: uniqueViewers,
+            momentsCount: moments.length
+        });
+
+    } catch (error) {
+        console.error("Error in authorizedUserMomentsViewers:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error in authorizedUserMomentsViewers",
+        });
+    }
+};
+
+
+
+
+
+exports.deleteMoment = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { momentId } = req.params;
+
+        if (!momentId) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment ID is required",
+            });
+        }
+
+        const moment = await Moment.findOne({ _id: momentId, userId });
+
+        if (!moment) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment not found or not owned by the authorized user",
+            });
+        }
+
+        await moment.remove();
+
+        return res.status(200).json({
+            success: true,
+            message: "Moment deleted successfully",
+        });
+
+    } catch (error) {
+        console.error("Error in deleteMoment:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error in deleteMoment",
+        });
+    }
+}

@@ -31,10 +31,13 @@ const {
     giveTedSilverPost,
     giveTedBronzePost,
     giveTedBlackCoin,
-    viewYourMoment,
-    viewAllMoments,
     resendOtp,
-    getViewYourMoment
+    viewAMoment,
+    getYourMoment,
+    getAllMoments,
+    authorizedUserMomentsViewersCount,
+    authorizedUserMomentsViewers,
+    deleteMoment
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const {uploadd} = require("../middelwere/multer");
@@ -651,10 +654,6 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  *                 example: grayscale
  *               filteredImageUrl:
  *                 type: string
- *               colorMatrix:
- *                 type: string
- *                 description: JSON stringified array of numbers. E.g. "[0.3, 0.6, 0.9]"
- *                 example: "[0.3, 0.6, 0.9]"
  *               files:
  *                 type: array
  *                 items:
@@ -1120,8 +1119,7 @@ router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
  */
 router.post("/giveTedBronzeCoin/:postId",authMiddelWere,giveTedBronzePost);
 router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
-router.get("/getYourMoment",authMiddelWere,getViewYourMoment);
-router.get("/getallmomets",authMiddelWere,viewAllMoments);
+
 /**
  * @swagger
  * /user/resendOtp:
@@ -1197,5 +1195,469 @@ router.get("/getallmomets",authMiddelWere,viewAllMoments);
  *                   example: error in resend-Otp Controller
  */
 router.post("/resendOtp",resendOtp)
+/**
+ * @swagger
+ * /user/getYourMoment:
+ *   get:
+ *     summary: Fetch the authenticated user's moments
+ *     description: This endpoint retrieves all moments created by the authenticated user.
+ *     tags:
+ *       - Moments
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully fetched the user's moments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Fetched your moments"
+ *                 yourMoment:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "607c72efbc13b04d12c5a6b4"
+ *                       userId:
+ *                         type: string
+ *                         example: "607c72efbc13b04d12c5a6b4"
+ *                       viewers:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                           example: "607c72efbc13b04d12c5a6b5"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2021-05-10T12:00:00Z"
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2021-05-10T12:00:00Z"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "error getting in viewYourMoment"
+ *       401:
+ *         description: Unauthorized access, missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ */
+router.get("/getYourMoment",authMiddelWere,getYourMoment);
+/**
+ * @swagger
+ * /user/getallmoments:
+ *   get:
+ *     summary: Fetch all moments
+ *     description: This endpoint retrieves all moments, regardless of the user.
+ *     tags:
+ *       - Moments
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully fetched all moments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 allMoments:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "607c72efbc13b04d12c5a6b4"
+ *                       userId:
+ *                         type: string
+ *                         example: "607c72efbc13b04d12c5a6b4"
+ *                       viewers:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                           example: "607c72efbc13b04d12c5a6b5"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2021-05-10T12:00:00Z"
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2021-05-10T12:00:00Z"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Error in viewAllMoments controller"
+ *       401:
+ *         description: Unauthorized access, missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ */
+router.get("/getallmomets",authMiddelWere,getAllMoments);
+/**
+ * @swagger
+ * /user/viewMoment/{userId}/{momentId}:
+ *   get:
+ *     summary: View a single moment and track viewer
+ *     description: |
+ *       This endpoint allows an authorized user to view a specific moment of another user.  
+ *       If the viewer is not the owner and hasn't already viewed the moment, they will be added to the moment's viewers list.
+ *     tags:
+ *       - Moments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: ID of the moment owner
+ *         schema:
+ *           type: string
+ *           example: "664225d11267dbfcfedcf90a"
+ *       - in: path
+ *         name: momentId
+ *         required: true
+ *         description: ID of the specific moment
+ *         schema:
+ *           type: string
+ *           example: "665f4970dbd1f0153fc6e788"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched a specific moment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Fetched single moment"
+ *                 viewersCount:
+ *                   type: integer
+ *                   example: 5
+ *                 viewers:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     example: "664226cc1267dbfcfedcf90e"
+ *                 moment:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "665f4970dbd1f0153fc6e788"
+ *                     userId:
+ *                       type: string
+ *                       example: "664225d11267dbfcfedcf90a"
+ *                     viewers:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       404:
+ *         description: Moment not found for the given user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Moment not found for the given user"
+ *       500:
+ *         description: Server error while fetching moment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error in viewAMoment"
+ */
+router.get("/viewMoment/:userId/:momentId",authMiddelWere,viewAMoment);
+/**
+ * @swagger
+ * /user/authorizedUserMomentsViewersCount/{momentId}:
+ *   get:
+ *     summary: Get viewer count for a specific moment or all moments of the authorized user
+ *     description: |
+ *       Retrieves the number of viewers for a specific moment owned by the authorized user.  
+ *       If a momentId is provided, it returns the count for that moment.  
+ *       If not provided (momentId = "null"), it returns the unique viewer count across all moments of the authorized user.
+ *     tags:
+ *       - Moments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: momentId
+ *         required: true
+ *         description: |
+ *           The ID of the moment to check viewer count.  
+ *           Use "null" or skip valid ObjectId to fetch counts for all moments of the user.
+ *         schema:
+ *           type: string
+ *           example: "665f4970dbd1f0153fc6e788"
+ *     responses:
+ *       200:
+ *         description: Viewer count successfully retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Fetched viewer count for the specific moment"
+ *                 totalViewers:
+ *                   type: integer
+ *                   example: 5
+ *                 momentId:
+ *                   type: string
+ *                   example: "665f4970dbd1f0153fc6e788"
+ *                 momentsCount:
+ *                   type: integer
+ *                   example: 3
+ *       404:
+ *         description: Moment not found or not owned by the authorized user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Moment not found or not owned by the authorized user"
+ *       500:
+ *         description: Server error while retrieving viewer count
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Server error in authorizedUserMomentsViewersCount"
+ */
+router.get("/authorizedUserMomentsViewersCount/:momentId",authMiddelWere,authorizedUserMomentsViewersCount);
+/**
+ * @swagger
+ * /user/authorizedUserMomentsViewers/{momentId}:
+ *   get:
+ *     summary: Get viewers of a specific moment or all unique viewers across all moments of the authorized user
+ *     description: |
+ *       Retrieves the list of users who viewed a specific moment owned by the authorized user.  
+ *       If a valid `momentId` is provided, it returns the viewers for that moment.  
+ *       If `momentId` is "null" or not a valid ObjectId, it returns the unique viewers across all moments.
+ *     tags:
+ *       - Moments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: momentId
+ *         required: true
+ *         description: |
+ *           The ID of the moment to retrieve viewers for.  
+ *           Pass "null" or an invalid ID to get viewers across all moments.
+ *         schema:
+ *           type: string
+ *           example: "665f4970dbd1f0153fc6e788"
+ *     responses:
+ *       200:
+ *         description: Viewers successfully retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Fetched viewers for the specific moment"
+ *                 viewers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "665f48e9dbd1f0153fc6e712"
+ *                       userName:
+ *                         type: string
+ *                         example: "John Doe"
+ *                       profilePic:
+ *                         type: string
+ *                         example: "https://example.com/profile.jpg"
+ *                 momentId:
+ *                   type: string
+ *                   example: "665f4970dbd1f0153fc6e788"
+ *                 momentsCount:
+ *                   type: integer
+ *                   example: 5
+ *       404:
+ *         description: Moment not found or not owned by the authorized user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Moment not found or not owned by the authorized user"
+ *       500:
+ *         description: Server error while retrieving viewers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Server error in authorizedUserMomentsViewers"
+ */
+router.get("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedUserMomentsViewers);
+/**
+ * @swagger
+ * /user/deleteMoment/{momentId}:
+ *   delete:
+ *     summary: Delete a moment owned by the authorized user
+ *     description: Deletes a specific moment by ID if it belongs to the currently authenticated user.
+ *     tags:
+ *       - Moments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: momentId
+ *         required: true
+ *         description: The ID of the moment to delete
+ *         schema:
+ *           type: string
+ *           example: "665f4970dbd1f0153fc6e788"
+ *     responses:
+ *       200:
+ *         description: Moment deleted or not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Moment deleted successfully"
+ *       404:
+ *         description: Moment not found or not owned by user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Moment not found or not owned by the authorized user"
+ *       500:
+ *         description: Server error during deletion
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Server error in deleteMoment"
+ */
+router.delete("/deleteMoment/:momentId",authMiddelWere,deleteMoment)
 
 module.exports = router;
