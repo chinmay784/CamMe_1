@@ -1872,9 +1872,9 @@ exports.viweAllPosts = async (req, res) => {
 
 exports.getYourMoment = async (req, res) => {
     try {
-        const userId = req.user.userId;
 
         const { email, token } = req.body;
+        const userId = req.user.userId;
 
         const authHeader = req.headers.authorization;
 

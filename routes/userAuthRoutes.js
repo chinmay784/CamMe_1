@@ -1202,30 +1202,32 @@ router.post("/resendOtp",resendOtp)
 /**
  * @swagger
  * /user/getYourMoment:
- *   get:
+ *   post:
  *     summary: Fetch the authenticated user's moments
- *     description: Retrieves all moments created by the authenticated user.
+ *     description: Retrieves all moments created by the authenticated user. Requires Bearer token authentication and email/token verification.
  *     tags:
  *       - Moments
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: body
- *         name: body
- *         description: The email and token to verify against the authorized user's credentials.
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *               example: "user@example.com"
- *             token:
- *               type: string
- *               example: "abcdef12345"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "user@example.com"
+ *               token:
+ *                 type: string
+ *                 example: "abcdef12345"
  *     responses:
  *       200:
- *         description: Successfully fetched the authenticated user's moments
+ *         description: Successfully fetched the authenticated user's moments or email mismatch
  *         content:
  *           application/json:
  *             schema:
@@ -1247,18 +1249,16 @@ router.post("/resendOtp",resendOtp)
  *                         example: "60d3b41abdacab002f3c6b80"
  *                       title:
  *                         type: string
- *                         example: "Beach Day"
+ *                         example: "My First Moment"
  *                       description:
  *                         type: string
- *                         example: "A relaxing day at the beach."
+ *                         example: "This is a special memory."
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: "2021-05-12T10:00:00Z"
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: "2021-05-12T11:00:00Z"
  *                       viewers:
  *                         type: array
  *                         items:
@@ -1277,19 +1277,6 @@ router.post("/resendOtp",resendOtp)
  *                 message:
  *                   type: string
  *                   example: "Provided token does not match authorized token"
- *       400:
- *         description: Provided email does not match authorized email
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Provided email does not match authorized email"
  *       500:
  *         description: Internal server error while processing the request
  *         content:
@@ -1304,7 +1291,7 @@ router.post("/resendOtp",resendOtp)
  *                   type: string
  *                   example: "error getting in viewYourMoment"
  */
-router.get("/getYourMoment",authMiddelWere,getYourMoment);
+router.post("/getYourMoment",authMiddelWere,getYourMoment);
 /**
  * @swagger
  * /user/getallmoments:
