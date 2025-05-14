@@ -37,7 +37,10 @@ const {
     getAllMoments,
     authorizedUserMomentsViewersCount,
     authorizedUserMomentsViewers,
-    deleteMoment
+    deleteMoment,
+    giveCommentToAnMomemt,
+    replyToMomontComment,
+    getAllCommentsWithReplies
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const {uploadd} = require("../middelwere/multer");
@@ -1740,5 +1743,239 @@ router.post("/authorizedUserMomentsViewers/:momentId",authMiddelWere,authorizedU
  *                   example: Server error in deleteMoment
  */
 router.delete("/deleteMoment/:momentId",authMiddelWere,deleteMoment)
+/**
+ * @swagger
+ * /user/giveCommentToAnMomemt/{momentId}:
+ *   post:
+ *     summary: Add a comment to a specific moment
+ *     tags: [Moments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: momentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the moment to comment on
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - comment
+ *               - token
+ *               - email
+ *             properties:
+ *               comment:
+ *                 type: string
+ *                 example: "Nice moment!"
+ *               token:
+ *                 type: string
+ *                 example: "your-jwt-token"
+ *               email:
+ *                 type: string
+ *                 example: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: Comment added successfully or error message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Comment added successfully
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                         example: "609e123456abcdef12345678"
+ *                       comment:
+ *                         type: string
+ *                         example: "Nice moment!"
+ *       500:
+ *         description: Server error
+ */
+router.post("/giveCommentToAnMomemt/:momentId",authMiddelWere,giveCommentToAnMomemt);
+/**
+ * @swagger
+ * /user/replyToMomontComment/{momentId}/{commentId}:
+ *   post:
+ *     summary: Reply to a comment on a specific moment
+ *     tags: [Moments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: momentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the moment containing the comment
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the comment to reply to
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reply
+ *               - email
+ *               - token
+ *             properties:
+ *               reply:
+ *                 type: string
+ *                 example: "Thanks for your comment!"
+ *               email:
+ *                 type: string
+ *                 example: "user@example.com"
+ *               token:
+ *                 type: string
+ *                 example: "your-jwt-token"
+ *     responses:
+ *       200:
+ *         description: Reply added successfully or error message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Reply added successfully.
+ *                 updatedComment:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     userId:
+ *                       type: string
+ *                     comment:
+ *                       type: string
+ *                     replies:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           userId:
+ *                             type: string
+ *                           reply:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *       500:
+ *         description: Server error
+ */
+router.post("/replyToMomontComment/:momentId/:commentId",authMiddelWere,replyToMomontComment)
+/**
+ * @swagger
+ * /user/getAllCommentsWithReplies/{momentId}:
+ *   post:
+ *     summary: Get all comments and replies for a specific moment
+ *     tags: [Moments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: momentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the moment to retrieve comments and replies for
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: your-jwt-token
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved comments and replies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Fetched all comments and replies for the moment
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                       comment:
+ *                         type: string
+ *                       replies:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             userId:
+ *                               type: object
+ *                               properties:
+ *                                 _id:
+ *                                   type: string
+ *                                 userName:
+ *                                   type: string
+ *                                 profilePic:
+ *                                   type: string
+ *                             reply:
+ *                               type: string
+ *                             createdAt:
+ *                               type: string
+ *                               format: date-time
+ *       400:
+ *         description: Moment ID is missing from the request
+ *       404:
+ *         description: Moment not found
+ *       500:
+ *         description: Server error while fetching comments and replies
+ */
+router.post("/getAllCommentsWithReplies/:momentId",authMiddelWere,getAllCommentsWithReplies)
 
 module.exports = router;

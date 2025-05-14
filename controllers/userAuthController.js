@@ -2330,3 +2330,210 @@ exports.deleteMoment = async (req, res) => {
         });
     }
 }
+
+
+
+
+exports.giveCommentToAnMomemt = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { momentId } = req.params;
+        const { comment,token,email } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        if(token !== authorizedToken){
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+
+        if(userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!momentId) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment ID is required",
+            });
+        }
+
+        if (!comment) {
+            return res.status(200).json({
+                success: false,
+                message: "Comment is required",
+            });
+        }
+
+        const moment = await Moment.findOne({ _id: momentId });
+
+        if (!moment) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment not found",
+            });
+        }
+
+        moment.comments.push({ userId, comment });
+        await moment.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Comment added successfully",
+            comments: moment.comments
+        });
+
+    } catch (error) {
+        console.error("Error in giveCommentToAMomemt:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error in giveCommentToAMomemt",
+        });
+    }
+}
+
+
+
+
+exports.replyToMomontComment = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { momentId, commentId } = req.params;
+        const { reply , email , token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        // if (token !== authorizedToken) {
+        //     return res.status(200).json({
+        //         success: false,
+        //         message: "Provided token does not match authorized token",
+        //     });
+        // }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!reply || !momentId || !commentId) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment ID, Comment ID, and Reply are required.",
+            });
+        }
+
+        const moment = await Moment.findById(momentId);
+        if (!moment) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment not found.",
+            });
+        }
+
+        const comment = moment.comments.id(commentId);
+        if (!comment) {
+            return res.status(200).json({
+                success: false,
+                message: "Comment not found.",
+            });
+        }
+
+        comment.replies.push({
+            userId,
+            reply,
+        });
+
+        await moment.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Reply added successfully.",
+            updatedComment: comment,
+        });
+
+    } catch (error) {
+        console.error("Error in replyToComment:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while replying to comment.",
+        });
+    }
+};
+
+
+
+
+
+
+exports.getAllCommentsWithReplies = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+        const { momentId } = req.params;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!momentId) {
+            return res.status(400).json({
+                success: false,
+                message: "Moment ID is required",
+            });
+        }
+
+        const moment = await Moment.findById(momentId)
+            .populate("comments.userId", "userName profilePic")
+            .populate("comments.replies.userId", "userName profilePic");
+
+        if (!moment) {
+            return res.status(404).json({
+                success: false,
+                message: "Moment not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched all comments and replies for the moment",
+            comments: moment.comments,
+        });
+
+    } catch (error) {
+        console.error("Error in getAllCommentsWithReplies:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while fetching comments and replies",
+        });
+    }
+};
