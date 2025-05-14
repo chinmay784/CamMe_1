@@ -1361,307 +1361,6 @@ exports.getAllPosts = async (req, res) => {
 
 
 
-exports.giveTedGoldToPost = async (req, res) => {
-    try {
-        const giverId = req.user.userId;
-        const { postId } = req.params;
-
-        const post = await Postcreate.findOne({ _id: postId });
-        if (!post) {
-            return res.status(200).json({
-                success: false,
-                message: "Post not found"
-            });
-        }
-
-        if (
-            (post.tedGoldGivers?.includes(giverId)) ||
-            (post.tedSilverGivers?.includes(giverId)) ||
-            (post.tedBronzeGivers?.includes(giverId))
-        ) {
-            return res.status(200).json({
-                success: false,
-                message: "You have already given a coin to this post"
-            });
-        }
-
-        const receiver = await User.findOne({ _id: post.userId });
-        if (!receiver) {
-            return res.status(200).json({
-                success: false,
-                message: "Post owner not found"
-            });
-        }
-
-        receiver.coinWallet.tedGold += 1;
-        // 5. Recalculate and update totalTedCoin
-        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
-        const totalGoldUnits = Math.floor(tedGold / 75);
-        const totalSilverUnits = Math.floor(tedSilver / 50);
-        const totalBronzeUnits = Math.floor(tedBronze / 25);
-        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
-
-        receiver.coinWallet.totalTedCoin = calculatedTotal;
-
-        // 6. Update post data
-        post.tedGoldGivers = post.tedGoldGivers || [];
-        post.tedGoldGivers.push(giverId);
-        post.tedGoldCount = (post.tedGoldCount || 0) + 1;
-
-        // 7. Save both
-        await receiver.save();
-        await post.save();
-
-        return res.status(200).json({
-            success: true,
-            message: "TedGold given successfully",
-            updatedTedGoldCount: post.tedGoldCount,
-            toUser: receiver._id,
-        });
-
-    } catch (error) {
-        console.error("Error giving TedGold:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error in giveTedGoldToPost"
-        });
-    }
-};
-
-
-
-exports.giveTedSilverPost = async (req, res) => {
-    try {
-        const giverId = req.user.userId;
-        const { postId } = req.params;
-
-        const post = await Postcreate.findOne({ _id: postId });
-        if (!post) {
-            return res.status(200).json({
-                success: false,
-                message: "Post not found"
-            });
-        };
-
-
-        if (
-            (post.tedGoldGivers?.includes(giverId)) ||
-            (post.tedSilverGivers?.includes(giverId)) ||
-            (post.tedBronzeGivers?.includes(giverId))
-        ) {
-            return res.status(200).json({
-                success: false,
-                message: "You have already given a coin to this post"
-            });
-        }
-
-        const receiver = await User.findOne({ _id: post.userId });
-        if (!receiver) {
-            return res.status(200).json({
-                success: false,
-                message: "Post owner not found"
-            });
-        };
-
-
-        receiver.coinWallet.tedSilver += 1;
-
-
-        // 5. Recalculate and update totalTedCoin
-        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
-        const totalGoldUnits = Math.floor(tedGold / 75);
-        const totalSilverUnits = Math.floor(tedSilver / 50);
-        const totalBronzeUnits = Math.floor(tedBronze / 25);
-        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
-
-        receiver.coinWallet.totalTedCoin = calculatedTotal;
-
-
-        // 6. Update post data
-        post.tedSilverGivers = post.tedSilverGivers || [];
-        post.tedSilverGivers.push(giverId);
-        post.tedSilverCount = (post.tedSilverCount || 0) + 1;
-
-
-        // 7. Save both
-        await receiver.save();
-        await post.save();
-
-
-        return res.status(200).json({
-            success: true,
-            message: "TedSilver given successfully",
-            updatedTedSilverCount: post.tedSilverCount,
-            toUser: receiver._id
-        });
-
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            sucess: false,
-            message: "error in giveTedSilverPost controller"
-        })
-    }
-}
-
-
-
-exports.giveTedBronzePost = async (req, res) => {
-    try {
-        const giverId = req.user.userId;
-        const { postId } = req.params;
-
-        const post = await Postcreate.findOne({ _id: postId });
-        if (!post) {
-            return res.status(200).json({
-                success: false,
-                message: "Post not found"
-            });
-        };
-
-        if (
-            (post.tedGoldGivers?.includes(giverId)) ||
-            (post.tedSilverGivers?.includes(giverId)) ||
-            (post.tedBronzeGivers?.includes(giverId))
-        ) {
-            return res.status(200).json({
-                success: false,
-                message: "You have already given a coin to this post"
-            });
-        }
-
-        const receiver = await User.findOne({ _id: post.userId });
-
-        if (!receiver) {
-            return res.status(200).json({
-                success: false,
-                message: "Post owner not found"
-            });
-        }
-
-        receiver.coinWallet.tedBronze += 1;
-
-
-        // 5. Recalculate and update totalTedCoin
-        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
-
-        const totalGoldUnits = Math.floor(tedGold / 75);
-        const totalSilverUnits = Math.floor(tedSilver / 50);
-        const totalBronzeUnits = Math.floor(tedBronze / 25);
-        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
-
-        receiver.coinWallet.totalTedCoin = calculatedTotal;
-
-
-        // 6. Update post data
-        post.tedBronzeGivers = post.tedBronzeGivers || [];
-        post.tedBronzeGivers.push(giverId);
-        post.tedBronzeCount = (post.tedBronzeCount || 0) + 1;
-
-
-        // 7. Save both
-        await receiver.save();
-        await post.save();
-
-
-        return res.status(200).json({
-            success: true,
-            message: "TedBronze given successfully",
-            updatedTedBronzeCount: post.tedBronzeCount,
-            toUser: receiver._id
-        });
-
-    } catch (error) {
-        console.error("Error in giveTedBronzePost:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error in giveTedBronzePost"
-        });
-    }
-};
-
-
-
-// Lot of work pending is here
-exports.giveTedBlackCoin = async (req, res) => {
-    try {
-        const giverId = req.user.userId;  // Authorized user
-        const { postId } = req.params;
-        const { reason } = req.body;  // Reason for giving TedBlackCoin
-
-        // Check if the post exists
-        const post = await Postcreate.findById(postId);
-        if (!post) {
-            return res.status(404).json({
-                success: false,
-                message: "Post not found"
-            });
-        }
-
-        // Check if TedBlackCoin voting is already active
-        if (post.tedBlackCoinData && post.tedBlackCoinData.status === 'pending') {
-            return res.status(400).json({
-                success: false,
-                message: "TedBlackCoin voting is already active for this post"
-            });
-        }
-
-        // Initialize the TedBlackCoin voting data
-        const votingDuration = 60 * 60 * 1000; // 1 hour in milliseconds
-        const votingEndsAt = new Date(Date.now() + votingDuration);
-
-        // Add TedBlackCoin data to the post
-        post.tedBlackCoinData = {
-            givenBy: giverId,
-            reason: reason,
-            givenAt: Date.now(),
-            votingEndsAt: votingEndsAt,
-            votes: [],
-            status: 'pending'
-        };
-
-        // Notify users who have given TedGold, TedSilver, or TedBronze to the post
-        const notifiedUsers = new Set();
-
-        // Check for TedGold, TedSilver, and TedBronze givers
-        const coinGivers = [
-            ...post.tedGoldGivers,
-            ...post.tedSilverGivers,
-            ...post.tedBronzeGivers
-        ];
-
-        for (const userId of coinGivers) {
-            if (userId !== giverId && !notifiedUsers.has(userId)) {
-                // Notify the user (you can implement your notification logic here)
-                await Notification.create({
-                    userId: userId,
-                    message: `A TedBlackCoin has been given to your post! Reason: ${reason}. Please vote "Agree" or "Disagree".`,
-                    postId: postId,
-                    type: 'TedBlackCoinVoting',
-                    status: 'unread'
-                });
-
-                notifiedUsers.add(userId);
-            }
-        }
-
-        // Save the post with TedBlackCoin data
-        await post.save();
-
-        return res.status(200).json({
-            success: true,
-            message: "TedBlackCoin voting initiated successfully",
-            votingEndsAt: votingEndsAt
-        });
-
-    } catch (error) {
-        console.error("Error in giveTedBlackCoin:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error while giving TedBlackCoin"
-        });
-    }
-};
 
 
 
@@ -1899,7 +1598,7 @@ exports.getYourMoment = async (req, res) => {
             });
         }
 
-        const yourMoment = await Moment.find({ userId })
+        const yourMoment = await Moment.find({ userId }).populate("userId", "userName profilePic")
 
         return res.status(200).json({
             sucess: false,
@@ -2068,7 +1767,7 @@ exports.getAllMoments = async (req, res) => {
             });
         }
 
-        const allMoments = await Moment.find()
+        const allMoments = await Moment.find().populate("userId", "userName profilePic");
 
         return res.status(200).json({
             success: true,
@@ -2534,6 +2233,479 @@ exports.getAllCommentsWithReplies = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Server error while fetching comments and replies",
+        });
+    }
+};
+
+
+
+
+exports.getAllPost = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }   
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        const allPosts = await Postcreate.find()
+            .populate("userId", "userName profilePic email")
+            .populate("comments.userId", "userName profilePic email")
+            // .populate("comments.replies.userId", "userName profilePic email");
+
+        if (!allPosts || allPosts.length === 0) {
+            return res.status(200).json({
+                success: false,
+                message: "No posts found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched all posts",
+            allPosts,
+        });
+    }
+    catch (error) {
+        console.error("Error in getAllPost:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while fetching all posts",
+        });
+    }
+}
+
+
+exports.getSinglePost = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+        const { postId } = req.params;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!postId) {
+            return res.status(200).json({
+                success: false,
+                message: "Post ID is required",
+            });
+        }
+
+        const post = await Postcreate.findById(postId)
+            .populate("userId", "userName profilePic email")
+            .populate("comments.userId", "userName profilePic email")
+            // .populate("comments.replies.userId", "userName profilePic email");
+
+        if (!post) {
+            return res.status(200).json({
+                success: false,
+                message: "Post not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched single post",
+            post,
+        });
+
+    } catch (error) {
+        console.error("Error in getSinglePost:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while fetching single post",
+        });
+    }
+};
+
+
+
+
+exports.getAuthorizedUserPost = async (req,res) =>{
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        // if (token !== authorizedToken) {
+        //     return res.status(200).json({
+        //         success: false,
+        //         message: "Provided token does not match authorized token",
+        //     });
+        // }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        const userPosts = await Postcreate.find({ userId })
+            .populate("userId", "userName profilePic email")
+            .populate("comments.userId", "userName profilePic email")
+            // .populate("comments.replies.userId", "userName profilePic email");
+
+        if (!userPosts || userPosts.length === 0) {
+            return res.status(200).json({
+                success: false,
+                message: "No posts found for this user",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched all posts for the authorized user",
+            userPosts,
+        });
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            sucess:false,
+            message:"server error while fetching userAll Posts"
+        })
+    }
+}
+
+
+
+
+exports.giveTedGoldToPost = async (req, res) => {
+    try {
+        const giverId = req.user.userId;
+        const { postId } = req.params;
+
+        const post = await Postcreate.findOne({ _id: postId });
+        if (!post) {
+            return res.status(200).json({
+                success: false,
+                message: "Post not found"
+            });
+        }
+
+        if (
+            (post.tedGoldGivers?.includes(giverId)) ||
+            (post.tedSilverGivers?.includes(giverId)) ||
+            (post.tedBronzeGivers?.includes(giverId))
+        ) {
+            return res.status(200).json({
+                success: false,
+                message: "You have already given a coin to this post"
+            });
+        }
+
+        const receiver = await User.findOne({ _id: post.userId });
+        if (!receiver) {
+            return res.status(200).json({
+                success: false,
+                message: "Post owner not found"
+            });
+        }
+
+        receiver.coinWallet.tedGold += 1;
+        // 5. Recalculate and update totalTedCoin
+        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
+        const totalGoldUnits = Math.floor(tedGold / 75);
+        const totalSilverUnits = Math.floor(tedSilver / 50);
+        const totalBronzeUnits = Math.floor(tedBronze / 25);
+        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
+
+        receiver.coinWallet.totalTedCoin = calculatedTotal;
+
+        // 6. Update post data
+        post.tedGoldGivers = post.tedGoldGivers || [];
+        post.tedGoldGivers.push(giverId);
+        post.tedGoldCount = (post.tedGoldCount || 0) + 1;
+
+        // 7. Save both
+        await receiver.save();
+        await post.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "TedGold given successfully",
+            updatedTedGoldCount: post.tedGoldCount,
+            toUser: receiver._id,
+        });
+
+    } catch (error) {
+        console.error("Error giving TedGold:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error in giveTedGoldToPost"
+        });
+    }
+};
+
+
+
+exports.giveTedSilverPost = async (req, res) => {
+    try {
+        const giverId = req.user.userId;
+        const { postId } = req.params;
+
+        const post = await Postcreate.findOne({ _id: postId });
+        if (!post) {
+            return res.status(200).json({
+                success: false,
+                message: "Post not found"
+            });
+        };
+
+
+        if (
+            (post.tedGoldGivers?.includes(giverId)) ||
+            (post.tedSilverGivers?.includes(giverId)) ||
+            (post.tedBronzeGivers?.includes(giverId))
+        ) {
+            return res.status(200).json({
+                success: false,
+                message: "You have already given a coin to this post"
+            });
+        }
+
+        const receiver = await User.findOne({ _id: post.userId });
+        if (!receiver) {
+            return res.status(200).json({
+                success: false,
+                message: "Post owner not found"
+            });
+        };
+
+
+        receiver.coinWallet.tedSilver += 1;
+
+
+        // 5. Recalculate and update totalTedCoin
+        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
+        const totalGoldUnits = Math.floor(tedGold / 75);
+        const totalSilverUnits = Math.floor(tedSilver / 50);
+        const totalBronzeUnits = Math.floor(tedBronze / 25);
+        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
+
+        receiver.coinWallet.totalTedCoin = calculatedTotal;
+
+
+        // 6. Update post data
+        post.tedSilverGivers = post.tedSilverGivers || [];
+        post.tedSilverGivers.push(giverId);
+        post.tedSilverCount = (post.tedSilverCount || 0) + 1;
+
+
+        // 7. Save both
+        await receiver.save();
+        await post.save();
+
+
+        return res.status(200).json({
+            success: true,
+            message: "TedSilver given successfully",
+            updatedTedSilverCount: post.tedSilverCount,
+            toUser: receiver._id
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess: false,
+            message: "error in giveTedSilverPost controller"
+        })
+    }
+}
+
+
+
+exports.giveTedBronzePost = async (req, res) => {
+    try {
+        const giverId = req.user.userId;
+        const { postId } = req.params;
+
+        const post = await Postcreate.findOne({ _id: postId });
+        if (!post) {
+            return res.status(200).json({
+                success: false,
+                message: "Post not found"
+            });
+        };
+
+        if (
+            (post.tedGoldGivers?.includes(giverId)) ||
+            (post.tedSilverGivers?.includes(giverId)) ||
+            (post.tedBronzeGivers?.includes(giverId))
+        ) {
+            return res.status(200).json({
+                success: false,
+                message: "You have already given a coin to this post"
+            });
+        }
+
+        const receiver = await User.findOne({ _id: post.userId });
+
+        if (!receiver) {
+            return res.status(200).json({
+                success: false,
+                message: "Post owner not found"
+            });
+        }
+
+        receiver.coinWallet.tedBronze += 1;
+
+
+        // 5. Recalculate and update totalTedCoin
+        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
+
+        const totalGoldUnits = Math.floor(tedGold / 75);
+        const totalSilverUnits = Math.floor(tedSilver / 50);
+        const totalBronzeUnits = Math.floor(tedBronze / 25);
+        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
+
+        receiver.coinWallet.totalTedCoin = calculatedTotal;
+
+
+        // 6. Update post data
+        post.tedBronzeGivers = post.tedBronzeGivers || [];
+        post.tedBronzeGivers.push(giverId);
+        post.tedBronzeCount = (post.tedBronzeCount || 0) + 1;
+
+
+        // 7. Save both
+        await receiver.save();
+        await post.save();
+
+
+        return res.status(200).json({
+            success: true,
+            message: "TedBronze given successfully",
+            updatedTedBronzeCount: post.tedBronzeCount,
+            toUser: receiver._id
+        });
+
+    } catch (error) {
+        console.error("Error in giveTedBronzePost:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error in giveTedBronzePost"
+        });
+    }
+};
+
+
+
+// Lot of work pending is here
+exports.giveTedBlackCoin = async (req, res) => {
+    try {
+        const giverId = req.user.userId;  // Authorized user
+        const { postId } = req.params;
+        const { reason } = req.body;  // Reason for giving TedBlackCoin
+
+        // Check if the post exists
+        const post = await Postcreate.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found"
+            });
+        }
+
+        // Check if TedBlackCoin voting is already active
+        if (post.tedBlackCoinData && post.tedBlackCoinData.status === 'pending') {
+            return res.status(400).json({
+                success: false,
+                message: "TedBlackCoin voting is already active for this post"
+            });
+        }
+
+        // Initialize the TedBlackCoin voting data
+        const votingDuration = 60 * 60 * 1000; // 1 hour in milliseconds
+        const votingEndsAt = new Date(Date.now() + votingDuration);
+
+        // Add TedBlackCoin data to the post
+        post.tedBlackCoinData = {
+            givenBy: giverId,
+            reason: reason,
+            givenAt: Date.now(),
+            votingEndsAt: votingEndsAt,
+            votes: [],
+            status: 'pending'
+        };
+
+        // Notify users who have given TedGold, TedSilver, or TedBronze to the post
+        const notifiedUsers = new Set();
+
+        // Check for TedGold, TedSilver, and TedBronze givers
+        const coinGivers = [
+            ...post.tedGoldGivers,
+            ...post.tedSilverGivers,
+            ...post.tedBronzeGivers
+        ];
+
+        for (const userId of coinGivers) {
+            if (userId !== giverId && !notifiedUsers.has(userId)) {
+                // Notify the user (you can implement your notification logic here)
+                await Notification.create({
+                    userId: userId,
+                    message: `A TedBlackCoin has been given to your post! Reason: ${reason}. Please vote "Agree" or "Disagree".`,
+                    postId: postId,
+                    type: 'TedBlackCoinVoting',
+                    status: 'unread'
+                });
+
+                notifiedUsers.add(userId);
+            }
+        }
+
+        // Save the post with TedBlackCoin data
+        await post.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "TedBlackCoin voting initiated successfully",
+            votingEndsAt: votingEndsAt
+        });
+
+    } catch (error) {
+        console.error("Error in giveTedBlackCoin:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error while giving TedBlackCoin"
         });
     }
 };

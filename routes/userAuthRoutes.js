@@ -40,7 +40,10 @@ const {
     deleteMoment,
     giveCommentToAnMomemt,
     replyToMomontComment,
-    getAllCommentsWithReplies
+    getAllCommentsWithReplies,
+    getAllPost,
+    getSinglePost,
+    getAuthorizedUserPost
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const {uploadd} = require("../middelwere/multer");
@@ -926,206 +929,8 @@ router.get('/friends', authMiddelWere, getAllFriends);
  *         description: Internal Server Error
  */
 router.get("/allPost",authMiddelWere,getAllPosts);
-/**
- * @swagger
- * /user/giveTedGoldcoin/{postId}:
- *   post:
- *     summary: Give a TedGold coin to a post (only one coin per user per post)
- *     tags:
- *       - Coins
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the post to give a TedGold coin to
- *     responses:
- *       200:
- *         description: TedGold given successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: TedGold given successfully
- *                 updatedTedGoldCount:
- *                   type: integer
- *                   example: 5
- *                 toUser:
- *                   type: string
- *                   example: 662a1d2b8e124ebfe41e8f77
- *       400:
- *         description: User has already given a coin to this post
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: You have already given a coin to this post
- *       404:
- *         description: Post or post owner not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Post not found
- *       500:
- *         description: Internal Server Error
- */
 
-router.post("/giveTedGoldcoin/:postId",authMiddelWere,giveTedGoldToPost);
-/**
- * @swagger
- * /user/giveTedSilvercoin/{postId}:
- *   post:
- *     summary: Give a TedSilver coin to a post (only one coin per user per post)
- *     tags:
- *       - Coins
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the post to give a TedSilver coin to
- *     responses:
- *       200:
- *         description: TedSilver given successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: TedSilver given successfully
- *                 updatedTedSilverCount:
- *                   type: integer
- *                   example: 3
- *                 toUser:
- *                   type: string
- *                   example: 662a1d2b8e124ebfe41e8f77
- *       400:
- *         description: User has already given a coin to this post
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: You have already given a coin to this post
- *       404:
- *         description: Post or post owner not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Post not found
- *       500:
- *         description: Internal Server Error
- */
-router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
-/**
- * @swagger
- * /user/giveTedBronzeCoin/{postId}:
- *   post:
- *     summary: Give a TedBronze coin to a post (only one coin per user per post)
- *     tags:
- *       - Coins
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the post to give a TedBronze coin to
- *     responses:
- *       200:
- *         description: TedBronze given successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: TedBronze given successfully
- *                 updatedTedBronzeCount:
- *                   type: integer
- *                   example: 2
- *                 toUser:
- *                   type: string
- *                   example: 662a1d2b8e124ebfe41e8f77
- *       400:
- *         description: User has already given a coin to this post
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: You have already given a coin to this post
- *       404:
- *         description: Post or post owner not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Post not found
- *       500:
- *         description: Internal Server Error
- */
-router.post("/giveTedBronzeCoin/:postId",authMiddelWere,giveTedBronzePost);
-router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
+
 
 /**
  * @swagger
@@ -1206,8 +1011,7 @@ router.post("/resendOtp",resendOtp)
  * @swagger
  * /user/getYourMoment:
  *   post:
- *     summary: Fetch the authenticated user's moments
- *     description: Retrieves all moments created by the authenticated user. Requires Bearer token authentication and email/token verification.
+ *     summary: Get all moments created by the authenticated user
  *     tags:
  *       - Moments
  *     security:
@@ -1224,24 +1028,26 @@ router.post("/resendOtp",resendOtp)
  *             properties:
  *               email:
  *                 type: string
- *                 example: "user@example.com"
+ *                 format: email
+ *                 example: user@example.com
  *               token:
  *                 type: string
- *                 example: "abcdef12345"
+ *                 description: The same JWT token sent in the Authorization header
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: Successfully fetched the authenticated user's moments or email mismatch
+ *         description: Successfully fetched user's own moments
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 success:
+ *                 sucess:
  *                   type: boolean
- *                   example: true
+ *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Fetched your moments"
+ *                   example: Fetched your moments
  *                 yourMoment:
  *                   type: array
  *                   items:
@@ -1249,58 +1055,33 @@ router.post("/resendOtp",resendOtp)
  *                     properties:
  *                       _id:
  *                         type: string
- *                         example: "60d3b41abdacab002f3c6b80"
- *                       title:
+ *                       userId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                       content:
  *                         type: string
- *                         example: "My First Moment"
- *                       description:
- *                         type: string
- *                         example: "This is a special memory."
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                       updatedAt:
- *                         type: string
- *                         format: date-time
- *                       viewers:
- *                         type: array
- *                         items:
- *                           type: string
- *                           example: "60d3b41abdacab002f3c6b81"
  *       403:
- *         description: Provided token does not match the authorized token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Provided token does not match authorized token"
+ *         description: Token mismatch
  *       500:
- *         description: Internal server error while processing the request
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "error getting in viewYourMoment"
+ *         description: Server error
  */
 router.post("/getYourMoment",authMiddelWere,getYourMoment);
 /**
  * @swagger
  * /user/getallmomets:
  *   post:
- *     summary: Fetch all moments (currently fetching all users' moments, not just friends)
- *     tags: [Moments]
+ *     summary: Get all moments with user information
+ *     tags:
+ *       - Moments
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -1315,17 +1096,12 @@ router.post("/getYourMoment",authMiddelWere,getYourMoment);
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: user@example.com
  *               token:
  *                 type: string
- *                 description: "JWT token from Authorization header"
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: "Bearer token for authentication. Format: Bearer <token>"
+ *                 description: The same JWT token sent in the Authorization header
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
  *         description: Successfully fetched all moments
@@ -1336,16 +1112,44 @@ router.post("/getYourMoment",authMiddelWere,getYourMoment);
  *               properties:
  *                 success:
  *                   type: boolean
+ *                   example: true
  *                 allMoments:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Moment'
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                       content:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
  *       403:
- *         description: Provided token does not match the authorized token
+ *         description: Token mismatch
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Provided token does not match authorized token
  *       500:
- *         description: Server error in viewAllMoments controller
+ *         description: Server error
  */
-
 router.post("/getallmomets",authMiddelWere,getAllMoments);
 /**
  * @swagger
@@ -1977,5 +1781,215 @@ router.post("/replyToMomontComment/:momentId/:commentId",authMiddelWere,replyToM
  *         description: Server error while fetching comments and replies
  */
 router.post("/getAllCommentsWithReplies/:momentId",authMiddelWere,getAllCommentsWithReplies)
+
+router.post("/getAllPost", authMiddelWere,getAllPost);
+
+router.post("/getSinglePost/:postId",authMiddelWere,getSinglePost)
+
+router.post("/getAuthorizedUserPost",authMiddelWere,getAuthorizedUserPost);
+
+/**
+ * @swagger
+ * /user/giveTedGoldcoin/{postId}:
+ *   post:
+ *     summary: Give a TedGold coin to a post (only one coin per user per post)
+ *     tags:
+ *       - Coins
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post to give a TedGold coin to
+ *     responses:
+ *       200:
+ *         description: TedGold given successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: TedGold given successfully
+ *                 updatedTedGoldCount:
+ *                   type: integer
+ *                   example: 5
+ *                 toUser:
+ *                   type: string
+ *                   example: 662a1d2b8e124ebfe41e8f77
+ *       400:
+ *         description: User has already given a coin to this post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: You have already given a coin to this post
+ *       404:
+ *         description: Post or post owner not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Post not found
+ *       500:
+ *         description: Internal Server Error
+ */
+
+router.post("/giveTedGoldcoin/:postId",authMiddelWere,giveTedGoldToPost);
+
+/**
+ * @swagger
+ * /user/giveTedSilvercoin/{postId}:
+ *   post:
+ *     summary: Give a TedSilver coin to a post (only one coin per user per post)
+ *     tags:
+ *       - Coins
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post to give a TedSilver coin to
+ *     responses:
+ *       200:
+ *         description: TedSilver given successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: TedSilver given successfully
+ *                 updatedTedSilverCount:
+ *                   type: integer
+ *                   example: 3
+ *                 toUser:
+ *                   type: string
+ *                   example: 662a1d2b8e124ebfe41e8f77
+ *       400:
+ *         description: User has already given a coin to this post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: You have already given a coin to this post
+ *       404:
+ *         description: Post or post owner not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Post not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
+
+
+/**
+ * @swagger
+ * /user/giveTedBronzeCoin/{postId}:
+ *   post:
+ *     summary: Give a TedBronze coin to a post (only one coin per user per post)
+ *     tags:
+ *       - Coins
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post to give a TedBronze coin to
+ *     responses:
+ *       200:
+ *         description: TedBronze given successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: TedBronze given successfully
+ *                 updatedTedBronzeCount:
+ *                   type: integer
+ *                   example: 2
+ *                 toUser:
+ *                   type: string
+ *                   example: 662a1d2b8e124ebfe41e8f77
+ *       400:
+ *         description: User has already given a coin to this post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: You have already given a coin to this post
+ *       404:
+ *         description: Post or post owner not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Post not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post("/giveTedBronzeCoin/:postId",authMiddelWere,giveTedBronzePost);
+router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
 
 module.exports = router;
