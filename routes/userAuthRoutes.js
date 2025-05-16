@@ -2251,64 +2251,33 @@ router.post("/giveTedSilvercoin",authMiddelWere,giveTedSilverPost);
  * @swagger
  * /user/giveTedBronzeCoin:
  *   post:
- *     summary: Give a TedBronze coin to a post after verifying token and email
+ *     summary: Give a TedBronze coin to a post
  *     tags:
- *       - Posts
+ *       - TedCoin
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       description: Information needed to give TedBronze coin to a post
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             required:
- *               - postId
  *               - email
  *               - token
+ *               - postId
  *             properties:
- *               postId:
- *                 type: string
- *                 example: 6644920a4ad4cc66aaae6131
  *               email:
  *                 type: string
  *                 format: email
- *                 example: user@example.com
  *               token:
  *                 type: string
- *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *               postId:
+ *                 type: string
+ *                 description: The ID of the post to give the coin to
  *     responses:
  *       200:
- *         description: TedBronze coin given successfully or validation errors
- *         content:
- *           application/json:
- *             schema:
- *               oneOf:
- *                 - type: object
- *                   properties:
- *                     success:
- *                       type: boolean
- *                       example: true
- *                     message:
- *                       type: string
- *                       example: TedBronze given successfully
- *                     updatedTedBronzeCount:
- *                       type: integer
- *                       example: 5
- *                     toUser:
- *                       type: string
- *                       example: 6644920a4ad4cc66aaae6131
- *                 - type: object
- *                   properties:
- *                     success:
- *                       type: boolean
- *                       example: false
- *                     message:
- *                       type: string
- *                       example: You have already given a coin to this post
- *       500:
- *         description: Internal server error while giving TedBronze coin
+ *         description: Coin given successfully or failure reason
  *         content:
  *           application/json:
  *             schema:
@@ -2316,10 +2285,25 @@ router.post("/giveTedSilvercoin",authMiddelWere,giveTedSilverPost);
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: false
  *                 message:
  *                   type: string
- *                   example: Internal Server Error in giveTedBronzePost
+ *                 updatedTedBronzeCount:
+ *                   type: integer
+ *                   nullable: true
+ *                 toUser:
+ *                   type: string
+ *                   nullable: true
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
  */
 
 router.post("/giveTedBronzeCoin",authMiddelWere,giveTedBronzePost);
