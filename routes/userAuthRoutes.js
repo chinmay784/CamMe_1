@@ -2247,7 +2247,6 @@ router.post("/giveTedGoldcoin",authMiddelWere,giveTedGoldToPost);
  *                   example: error in giveTedSilverPost controller
  */
 router.post("/giveTedSilvercoin",authMiddelWere,giveTedSilverPost);
-
 /**
  * @swagger
  * /user/giveTedBronzeCoin:
@@ -2322,6 +2321,7 @@ router.post("/giveTedSilvercoin",authMiddelWere,giveTedSilverPost);
  *                   type: string
  *                   example: Internal Server Error in giveTedBronzePost
  */
+
 router.post("/giveTedBronzeCoin",authMiddelWere,giveTedBronzePost);
 router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
 
