@@ -1327,37 +1327,37 @@ exports.sharePostWithFriend = async (req, res) => {
 
 
 
-exports.getAllPosts = async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const posts = await Postcreate.find({ userId }).populate("userId", "fullName userName profilePic").sort({ createdAt: -1 });
+// exports.getAllPosts = async (req, res) => {
+//     try {
+//         const userId = req.user.userId;
+//         const posts = await Postcreate.find({ userId }).populate("userId", "fullName userName profilePic").sort({ createdAt: -1 });
 
-        if (!userId) {
-            return res.status(200).json({
-                success: false,
-                message: "User Not found",
-            })
-        }
+//         if (!userId) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "User Not found",
+//             })
+//         }
 
-        if (!posts) {
-            return res.status(200).json({
-                success: false,
-                message: "No posts found",
-            });
-        }
+//         if (!posts) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "No posts found",
+//             });
+//         }
 
-        return res.status(200).json({
-            success: true,
-            posts,
-        });
-    } catch (error) {
-        console.error("Error in getAllPosts:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
-    }
-};
+//         return res.status(200).json({
+//             success: true,
+//             posts,
+//         });
+//     } catch (error) {
+//         console.error("Error in getAllPosts:", error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal Server Error",
+//         });
+//     }
+// };
 
 
 
@@ -2037,13 +2037,13 @@ exports.giveCommentToAnMomemt = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { momentId } = req.params;
-        const { comment,token,email } = req.body;
+        const { comment, token, email } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
         const userEmail = await User.findById(userId).select("email");
 
-        if(token !== authorizedToken){
+        if (token !== authorizedToken) {
             return res.status(200).json({
                 success: false,
                 message: "Provided token does not match authorized token",
@@ -2051,7 +2051,7 @@ exports.giveCommentToAnMomemt = async (req, res) => {
         }
 
 
-        if(userEmail.email !== email) {
+        if (userEmail.email !== email) {
             return res.status(200).json({
                 success: false,
                 message: "Provided email does not match authorized email",
@@ -2106,7 +2106,7 @@ exports.replyToMomontComment = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { momentId, commentId } = req.params;
-        const { reply , email , token } = req.body;
+        const { reply, email, token } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2264,17 +2264,37 @@ exports.getAllPost = async (req, res) => {
             });
         }
 
-        const allPosts = await Postcreate.find()
+        const rawPosts = await Postcreate.find()
             .populate("userId", "userName profilePic email")
             .populate("comments.userId", "userName profilePic email")
-            // .populate("comments.replies.userId", "userName profilePic email");
+        // .populate("comments.replies.userId", "userName profilePic email");
 
-        if (!allPosts || allPosts.length === 0) {
+        if (!rawPosts || rawPosts.length === 0) {
             return res.status(200).json({
                 success: false,
                 message: "No posts found",
             });
         }
+
+
+        const allPosts = rawPosts.map(post => {
+            const tedGoldCount = post.tedGoldGivers?.length || 0;
+            const tedSilverCount = post.tedSilverGivers?.length || 0;
+            const tedBronzeCount = post.tedBronzeGivers?.length || 0;
+            const tedBlackCoinCount = post.tedBlackCoinData?.length || 0;
+
+            // Optional: Calculate total coin value
+            const totalCoin = (tedGoldCount * 75) + (tedSilverCount * 50) + (tedBronzeCount * 25);
+
+            return {
+                ...post._doc,
+                tedGoldCount,
+                tedSilverCount,
+                tedBronzeCount,
+                tedBlackCoinCount,
+                totalCoin
+            };
+        });
 
         return res.status(200).json({
             success: true,
@@ -2327,7 +2347,7 @@ exports.getSinglePost = async (req, res) => {
         const post = await Postcreate.findById(postId)
             .populate("userId", "userName profilePic email")
             .populate("comments.userId", "userName profilePic email")
-            // .populate("comments.replies.userId", "userName profilePic email");
+        // .populate("comments.replies.userId", "userName profilePic email");
 
         if (!post) {
             return res.status(200).json({
@@ -2335,13 +2355,25 @@ exports.getSinglePost = async (req, res) => {
                 message: "Post not found",
             });
         }
+        // Coin counts
+        const tedGoldCount = post.tedGoldGivers?.length || 0;
+        const tedSilverCount = post.tedSilverGivers?.length || 0;
+        const tedBronzeCount = post.tedBronzeGivers?.length || 0;
+        const tedBlackCoinCount = post.tedBlackCoinData?.length || 0;
+        const totalCoin = (75 * tedGoldCount) + (50 * tedSilverCount) + (25 * tedBronzeCount);
 
         return res.status(200).json({
             success: true,
             message: "Fetched single post",
-            post,
+            post: {
+                ...post._doc, // original post fields
+                tedGoldCount,
+                tedSilverCount,
+                tedBronzeCount,
+                tedBlackCoinCount,
+                totalCoin
+            }
         });
-
     } catch (error) {
         console.error("Error in getSinglePost:", error);
         return res.status(500).json({
@@ -2354,7 +2386,77 @@ exports.getSinglePost = async (req, res) => {
 
 
 
-exports.getAuthorizedUserPost = async (req,res) =>{
+exports.giveCommentToPost = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { postId } = req.params;
+        const { comment, email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            })
+        }
+
+        if (!postId) {
+            return res.status(200).json({
+                success: false,
+                message: "Post ID is required",
+            });
+        }
+
+        if (!comment) {
+            return res.status(200).json({
+                success: false,
+                message: "Comment is required",
+            });
+        }
+
+        const post = await Postcreate.findById(postId);
+        if (!post) {
+            return res.status(200).json({
+                success: false,
+                message: "Post not found",
+
+            });
+        }
+
+        post.comments.push({ userId, comment });
+        await post.save();
+        return res.status(200).json({
+            success: true,
+            message: "Comment added successfully",
+            comments: post.comments
+        });
+
+    } catch (error) {
+        console.error("Error in giveCommentToPost:", error);
+        return res.status(500).json({
+            sucess: false,
+            message: "server error while adding comment to post"
+        })
+    }
+}
+
+
+
+
+
+exports.getAuthorizedUserPost = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { email, token } = req.body;
@@ -2381,7 +2483,7 @@ exports.getAuthorizedUserPost = async (req,res) =>{
         const userPosts = await Postcreate.find({ userId })
             .populate("userId", "userName profilePic email")
             .populate("comments.userId", "userName profilePic email")
-            // .populate("comments.replies.userId", "userName profilePic email");
+        // .populate("comments.replies.userId", "userName profilePic email");
 
         if (!userPosts || userPosts.length === 0) {
             return res.status(200).json({
@@ -2399,8 +2501,8 @@ exports.getAuthorizedUserPost = async (req,res) =>{
     } catch (error) {
         console.log(error)
         return res.status(500).json({
-            sucess:false,
-            message:"server error while fetching userAll Posts"
+            sucess: false,
+            message: "server error while fetching userAll Posts"
         })
     }
 }
@@ -2412,6 +2514,42 @@ exports.giveTedGoldToPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
         const { postId } = req.params;
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(giverId).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+        if (!postId) {
+            return res.status(200).json({
+                success: false,
+                message: "Post ID is required",
+            });
+        }
+
+        //  Find the giver
+        const giver = await User.findById(giverId);
+        if (!giver) {
+            return res.status(200).json({
+                success: false,
+                message: "Giver not found"
+            });
+        }
 
         const post = await Postcreate.findOne({ _id: postId });
         if (!post) {
@@ -2481,6 +2619,43 @@ exports.giveTedSilverPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
         const { postId } = req.params;
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(giverId).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!postId) {
+            return res.status(200).json({
+                success: false,
+                message: "Post ID is required",
+            });
+        }
+
+        //  Find the giver
+        const giver = await User.findById(giverId);
+        if (!giver) {
+            return res.status(200).json({
+                success: false,
+                message: "Giver not found"
+            });
+        }
 
         const post = await Postcreate.findOne({ _id: postId });
         if (!post) {
@@ -2557,6 +2732,42 @@ exports.giveTedBronzePost = async (req, res) => {
     try {
         const giverId = req.user.userId;
         const { postId } = req.params;
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(giverId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!postId) {
+            return res.status(200).json({
+                success: false,
+                message: "Post ID is required",
+            });
+        }
+
+        //  Find the giver
+        const giver = await User.findById(giverId);
+        if (!giver) {
+            return res.status(200).json({
+                success: false,
+                message: "Giver not found"
+            });
+        }
 
         const post = await Postcreate.findOne({ _id: postId });
         if (!post) {
@@ -2629,7 +2840,7 @@ exports.giveTedBronzePost = async (req, res) => {
 
 
 
-// Lot of work pending is here
+// Lot of work pending is here not complited
 exports.giveTedBlackCoin = async (req, res) => {
     try {
         const giverId = req.user.userId;  // Authorized user

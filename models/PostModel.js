@@ -42,11 +42,6 @@ const postSchema = new mongoose.Schema({
         type: [String],
         required: false,
     },
-    // imageFilter: {
-    //     type: String,
-    //     enum: ['normal', 'clarendon', 'sepia', 'grayscale', 'lark', 'moon', 'aden', 'perpetua'],
-    //     default: 'normal',
-    // },
     filteredImageUrl: {
         type: String,
         required: false
@@ -102,6 +97,10 @@ const postSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     }],
+    tedBronzeCount: {
+        type: Number,
+        default: 0
+    },
     tedBlackCoinData: {
         givenBy: {
             type: mongoose.Schema.Types.ObjectId,

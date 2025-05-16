@@ -43,7 +43,8 @@ const {
     getAllCommentsWithReplies,
     getAllPost,
     getSinglePost,
-    getAuthorizedUserPost
+    getAuthorizedUserPost,
+    giveCommentToPost
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const {uploadd} = require("../middelwere/multer");
@@ -679,88 +680,88 @@ router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest
  */
 
 router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost);
-/**
- * @swagger
- * /user/share/{postId}/{friendId}:
- *   post:
- *     summary: Share a post with a friend
- *     tags:
- *       - Posts
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the original post to share
- *       - in: path
- *         name: friendId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the friend to share the post with
- *     responses:
- *       200:
- *         description: Post shared successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Post shared successfully your friend
- *                 sharedPostId:
- *                   type: string
- *                   example: 6629a314d67d72a3a0989f4e
- *                 originalPost:
- *                   type: object
- *                   description: Original post data
- *       403:
- *         description: Not a friend, sharing not allowed
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Not a friend, so post Not share
- *       404:
- *         description: Post not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Post not found
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Internal Server Error
- */
+// /**
+//  * @swagger
+//  * /user/share/{postId}/{friendId}:
+//  *   post:
+//  *     summary: Share a post with a friend
+//  *     tags:
+//  *       - Posts
+//  *     security:
+//  *       - bearerAuth: []
+//  *     parameters:
+//  *       - in: path
+//  *         name: postId
+//  *         required: true
+//  *         schema:
+//  *           type: string
+//  *         description: ID of the original post to share
+//  *       - in: path
+//  *         name: friendId
+//  *         required: true
+//  *         schema:
+//  *           type: string
+//  *         description: ID of the friend to share the post with
+//  *     responses:
+//  *       200:
+//  *         description: Post shared successfully
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: true
+//  *                 message:
+//  *                   type: string
+//  *                   example: Post shared successfully your friend
+//  *                 sharedPostId:
+//  *                   type: string
+//  *                   example: 6629a314d67d72a3a0989f4e
+//  *                 originalPost:
+//  *                   type: object
+//  *                   description: Original post data
+//  *       403:
+//  *         description: Not a friend, sharing not allowed
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: false
+//  *                 message:
+//  *                   type: string
+//  *                   example: Not a friend, so post Not share
+//  *       404:
+//  *         description: Post not found
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: false
+//  *                 message:
+//  *                   type: string
+//  *                   example: Post not found
+//  *       500:
+//  *         description: Internal server error
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: false
+//  *                 message:
+//  *                   type: string
+//  *                   example: Internal Server Error
+//  */
 router.post('/share/:postId/:friendId', authMiddelWere, sharePostWithFriend);
 router.post("/reportPost/:postId",authMiddelWere,report);
 /**
@@ -875,61 +876,6 @@ router.post("/moments",authMiddelWere,upload.array('image',10),createMoment);
  */
 
 router.get('/friends', authMiddelWere, getAllFriends);
-/**
- * @swagger
- * /user/allPost:
- *   get:
- *     summary: Get all posts created by the logged-in user
- *     tags:
- *       - Posts
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Successfully retrieved all posts
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 posts:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Post'
- *       400:
- *         description: User not found or unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: User Not found
- *       404:
- *         description: No posts found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: No posts found
- *       500:
- *         description: Internal Server Error
- */
-router.get("/allPost",authMiddelWere,getAllPosts);
-
 
 
 /**
@@ -1781,12 +1727,354 @@ router.post("/replyToMomontComment/:momentId/:commentId",authMiddelWere,replyToM
  *         description: Server error while fetching comments and replies
  */
 router.post("/getAllCommentsWithReplies/:momentId",authMiddelWere,getAllCommentsWithReplies)
-
+/**
+ * @swagger
+ * /user/getAllPost:
+ *   post:
+ *     summary: Get all posts with user and coin count data
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []  # Assumes JWT Bearer token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     responses:
+ *       200:
+ *         description: Returns all posts with coin count and user info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Fetched all posts
+ *                 allPosts:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 609c5ecf9d1d8b001fba14a7
+ *                       description:
+ *                         type: string
+ *                       tedGoldCount:
+ *                         type: integer
+ *                         example: 3
+ *                       tedSilverCount:
+ *                         type: integer
+ *                         example: 2
+ *                       tedBronzeCount:
+ *                         type: integer
+ *                         example: 4
+ *                       tedBlackCoinCount:
+ *                         type: integer
+ *                         example: 1
+ *                       totalCoin:
+ *                         type: integer
+ *                         example: 425
+ *                       userId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       comments:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             userId:
+ *                               type: object
+ *                               properties:
+ *                                 _id:
+ *                                   type: string
+ *                                 userName:
+ *                                   type: string
+ *                                 profilePic:
+ *                                   type: string
+ *                                 email:
+ *                                   type: string
+ *                             comment:
+ *                               type: string
+ *       401:
+ *         description: Unauthorized or token mismatch
+ *       500:
+ *         description: Server error
+ */
 router.post("/getAllPost", authMiddelWere,getAllPost);
-
+/**
+ * @swagger
+ * /user/getSinglePost/{postId}:
+ *   post:
+ *     summary: Get a single post by ID with coin counts
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []  # JWT token in Authorization header
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post to retrieve
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     responses:
+ *       200:
+ *         description: Returns the requested post with coin data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Fetched single post
+ *                 post:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     userId:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         userName:
+ *                           type: string
+ *                         profilePic:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                     tedGoldCount:
+ *                       type: integer
+ *                       example: 5
+ *                     tedSilverCount:
+ *                       type: integer
+ *                       example: 2
+ *                     tedBronzeCount:
+ *                       type: integer
+ *                       example: 3
+ *                     tedBlackCoinCount:
+ *                       type: integer
+ *                       example: 1
+ *                     totalCoin:
+ *                       type: integer
+ *                       example: 525
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           userId:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                               userName:
+ *                                 type: string
+ *                               profilePic:
+ *                                 type: string
+ *                               email:
+ *                                 type: string
+ *                           comment:
+ *                             type: string
+ *       401:
+ *         description: Unauthorized or token mismatch
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Server error
+ */
 router.post("/getSinglePost/:postId",authMiddelWere,getSinglePost)
-
+/**
+ * @swagger
+ * /user/getAuthorizedUserPost:
+ *   post:
+ *     summary: Get all posts created by the authorized user
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []  # JWT token in Authorization header
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (optional if not using token verification)
+ *     responses:
+ *       200:
+ *         description: Returns all posts made by the authorized user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Fetched all posts for the authorized user
+ *                 userPosts:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       userId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       comments:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             userId:
+ *                               type: object
+ *                               properties:
+ *                                 _id:
+ *                                   type: string
+ *                                 userName:
+ *                                   type: string
+ *                                 profilePic:
+ *                                   type: string
+ *                                 email:
+ *                                   type: string
+ *                             comment:
+ *                               type: string
+ *       401:
+ *         description: Unauthorized or email mismatch
+ *       500:
+ *         description: Server error while fetching posts
+ */
 router.post("/getAuthorizedUserPost",authMiddelWere,getAuthorizedUserPost);
+/**
+ * @swagger
+ * /user/giveCommentToPost/{postId}:
+ *   post:
+ *     summary: Add a comment to a specific post
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []  # JWT token in Authorization header
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post to comment on
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - comment
+ *               - email
+ *               - token
+ *             properties:
+ *               comment:
+ *                 type: string
+ *                 example: This is a great post!
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     responses:
+ *       200:
+ *         description: Comment added successfully or relevant validation message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Comment added successfully
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                       comment:
+ *                         type: string
+ *       400:
+ *         description: Bad request due to missing comment or postId
+ *       500:
+ *         description: Server error while adding comment to post
+ */
+router.post("/giveCommentToPost/:postId",authMiddelWere,giveCommentToPost)
 
 /**
  * @swagger
