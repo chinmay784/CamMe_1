@@ -1900,19 +1900,6 @@ router.post("/getAllPost", authMiddelWere,getAllPost);
  *                     totalCoin:
  *                       type: integer
  *                       example: 200
- *       200:
- *         description: Error cases like token/email mismatch, post not found or missing postId
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Provided token does not match authorized token"
  *       500:
  *         description: Server error while fetching single post
  *         content:
