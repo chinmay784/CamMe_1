@@ -2080,21 +2080,37 @@ router.post("/giveCommentToPost/:postId",authMiddelWere,giveCommentToPost)
  * @swagger
  * /user/giveTedGoldcoin/{postId}:
  *   post:
- *     summary: Give a TedGold coin to a post (only one coin per user per post)
+ *     summary: Give TedGold to a specific post
  *     tags:
- *       - Coins
+ *       - Posts
  *     security:
- *       - bearerAuth: []
+ *       - bearerAuth: []  # JWT token in Authorization header
  *     parameters:
  *       - in: path
  *         name: postId
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the post to give a TedGold coin to
+ *         description: The ID of the post to give TedGold to
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: TedGold given successfully
+ *         description: TedGold given successfully or validation failed
  *         content:
  *           application/json:
  *             schema:
@@ -2107,62 +2123,53 @@ router.post("/giveCommentToPost/:postId",authMiddelWere,giveCommentToPost)
  *                   type: string
  *                   example: TedGold given successfully
  *                 updatedTedGoldCount:
- *                   type: integer
- *                   example: 5
+ *                   type: number
+ *                   example: 1
  *                 toUser:
  *                   type: string
- *                   example: 662a1d2b8e124ebfe41e8f77
+ *                   example: 64f123456abcde7890f12345
  *       400:
- *         description: User has already given a coin to this post
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: You have already given a coin to this post
- *       404:
- *         description: Post or post owner not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Post not found
+ *         description: Missing postId or other required information
  *       500:
- *         description: Internal Server Error
+ *         description: Internal Server Error while giving TedGold
  */
-
 router.post("/giveTedGoldcoin/:postId",authMiddelWere,giveTedGoldToPost);
 
 /**
  * @swagger
  * /user/giveTedSilvercoin/{postId}:
  *   post:
- *     summary: Give a TedSilver coin to a post (only one coin per user per post)
+ *     summary: Give TedSilver to a specific post
  *     tags:
- *       - Coins
+ *       - Posts
  *     security:
- *       - bearerAuth: []
+ *       - bearerAuth: []  # Requires JWT token in Authorization header
  *     parameters:
  *       - in: path
  *         name: postId
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the post to give a TedSilver coin to
+ *         description: The ID of the post to give TedSilver to
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: TedSilver given successfully
+ *         description: TedSilver given successfully or validation failed
  *         content:
  *           application/json:
  *             schema:
@@ -2175,62 +2182,53 @@ router.post("/giveTedGoldcoin/:postId",authMiddelWere,giveTedGoldToPost);
  *                   type: string
  *                   example: TedSilver given successfully
  *                 updatedTedSilverCount:
- *                   type: integer
- *                   example: 3
+ *                   type: number
+ *                   example: 1
  *                 toUser:
  *                   type: string
- *                   example: 662a1d2b8e124ebfe41e8f77
+ *                   example: 64f123456abcde7890f12345
  *       400:
- *         description: User has already given a coin to this post
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: You have already given a coin to this post
- *       404:
- *         description: Post or post owner not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Post not found
+ *         description: Missing postId or other required fields
  *       500:
- *         description: Internal Server Error
+ *         description: Internal Server Error while giving TedSilver
  */
 router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
-
 
 /**
  * @swagger
  * /user/giveTedBronzeCoin/{postId}:
  *   post:
- *     summary: Give a TedBronze coin to a post (only one coin per user per post)
+ *     summary: Give TedBronze to a specific post
  *     tags:
- *       - Coins
+ *       - Posts
  *     security:
- *       - bearerAuth: []
+ *       - bearerAuth: []  # JWT Token required
  *     parameters:
  *       - in: path
  *         name: postId
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the post to give a TedBronze coin to
+ *         description: ID of the post to give TedBronze to
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: TedBronze given successfully
+ *         description: TedBronze given successfully or validation failed
  *         content:
  *           application/json:
  *             schema:
@@ -2243,37 +2241,13 @@ router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
  *                   type: string
  *                   example: TedBronze given successfully
  *                 updatedTedBronzeCount:
- *                   type: integer
- *                   example: 2
+ *                   type: number
+ *                   example: 1
  *                 toUser:
  *                   type: string
- *                   example: 662a1d2b8e124ebfe41e8f77
+ *                   example: 64f123456abcde7890f12345
  *       400:
- *         description: User has already given a coin to this post
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: You have already given a coin to this post
- *       404:
- *         description: Post or post owner not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Post not found
+ *         description: Bad Request or missing fields
  *       500:
  *         description: Internal Server Error
  */
