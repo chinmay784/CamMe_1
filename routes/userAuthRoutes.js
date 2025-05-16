@@ -1416,19 +1416,6 @@ router.post("/authorizedUserMomentsViewers",authMiddelWere,authorizedUserMoments
  *                 message:
  *                   type: string
  *                   example: Moment deleted successfully
- *       200:
- *         description: Token or email mismatch, or moment not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Provided token does not match authorized token
  *       500:
  *         description: Server error during deletion
  *         content:
@@ -1509,19 +1496,6 @@ router.delete("/deleteMoment",authMiddelWere,deleteMoment)
  *                       comment:
  *                         type: string
  *                         description: Comment text
- *       200:
- *         description: Token or email mismatch or missing parameters
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Provided token does not match authorized token
  *       500:
  *         description: Server error while adding comment
  *         content:
@@ -1597,19 +1571,6 @@ router.post("/giveCommentToAnMomemt",authMiddelWere,giveCommentToAnMomemt);
  *                 updatedComment:
  *                   type: object
  *                   description: The updated comment with new replies
- *       200:
- *         description: Token or email mismatch, missing parameters, or not found errors
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Provided token does not match authorized token
  *       500:
  *         description: Server error while adding reply
  *         content:
@@ -1679,32 +1640,6 @@ router.post("/replyToMomontComment",authMiddelWere,replyToMomontComment)
  *                   items:
  *                     type: object
  *                     description: Comment object with replies and user info
- *       200:
- *         description: Token or email mismatch errors
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Provided token does not match authorized token
- *       400:
- *         description: Missing momentId in the request
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Moment ID is required
  *       404:
  *         description: Moment not found
  *         content:
