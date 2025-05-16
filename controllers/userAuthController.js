@@ -2316,8 +2316,8 @@ exports.getAllPost = async (req, res) => {
 exports.getSinglePost = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { email, token } = req.body;
-        const { postId } = req.params;
+        const { email, token,postId } = req.body;
+        // const { postId } = req.params;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2390,8 +2390,8 @@ exports.getSinglePost = async (req, res) => {
 exports.giveCommentToPost = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { postId } = req.params;
-        const { comment, email, token } = req.body;
+        //const { postId } = req.params;
+        const { comment, email, token ,postId} = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2467,12 +2467,12 @@ exports.getAuthorizedUserPost = async (req, res) => {
         const userEmail = await User.findById(userId).select("email");
 
         // Compare provided token with authorized token
-        // if (token !== authorizedToken) {
-        //     return res.status(200).json({
-        //         success: false,
-        //         message: "Provided token does not match authorized token",
-        //     });
-        // }
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
 
         if (userEmail.email !== email) {
             return res.status(200).json({
@@ -2514,8 +2514,8 @@ exports.getAuthorizedUserPost = async (req, res) => {
 exports.giveTedGoldToPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
-        const { postId } = req.params;
-        const { email, token } = req.body;
+        //const { postId } = req.params;
+        const { email, token ,postId} = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2619,8 +2619,8 @@ exports.giveTedGoldToPost = async (req, res) => {
 exports.giveTedSilverPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
-        const { postId } = req.params;
-        const { email, token } = req.body;
+       // const { postId } = req.params;
+        const { email, token ,postId} = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2732,8 +2732,8 @@ exports.giveTedSilverPost = async (req, res) => {
 exports.giveTedBronzePost = async (req, res) => {
     try {
         const giverId = req.user.userId;
-        const { postId } = req.params;
-        const { email, token } = req.body;
+        //const { postId } = req.params;
+        const { email, token,postId } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];

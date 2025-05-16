@@ -1825,20 +1825,13 @@ router.post("/getAllCommentsWithReplies/:momentId",authMiddelWere,getAllComments
 router.post("/getAllPost", authMiddelWere,getAllPost);
 /**
  * @swagger
- * /user/getSinglePost/{postId}:
+ * /user/getSinglePost:
  *   post:
- *     summary: Get a single post by ID with coin counts
+ *     summary: Fetch a single post by postId after validating token and email
  *     tags:
  *       - Posts
  *     security:
- *       - bearerAuth: []  # JWT token in Authorization header
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the post to retrieve
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -1848,16 +1841,21 @@ router.post("/getAllPost", authMiddelWere,getAllPost);
  *             required:
  *               - email
  *               - token
+ *               - postId
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: user@example.com
  *               token:
  *                 type: string
  *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *               postId:
+ *                 type: string
+ *                 example: 6644920a4ad4cc66aaae6131
  *     responses:
  *       200:
- *         description: Returns the requested post with coin data
+ *         description: Successfully fetched single post
  *         content:
  *           application/json:
  *             schema:
@@ -1874,60 +1872,62 @@ router.post("/getAllPost", authMiddelWere,getAllPost);
  *                   properties:
  *                     _id:
  *                       type: string
- *                     description:
- *                       type: string
+ *                       example: 6644920a4ad4cc66aaae6131
  *                     userId:
  *                       type: object
  *                       properties:
- *                         _id:
- *                           type: string
  *                         userName:
  *                           type: string
+ *                           example: Chinmay
  *                         profilePic:
  *                           type: string
+ *                           example: "https://example.com/profile.jpg"
  *                         email:
  *                           type: string
+ *                           example: user@example.com
  *                     tedGoldCount:
  *                       type: integer
- *                       example: 5
+ *                       example: 2
  *                     tedSilverCount:
  *                       type: integer
- *                       example: 2
+ *                       example: 1
  *                     tedBronzeCount:
  *                       type: integer
- *                       example: 3
+ *                       example: 0
  *                     tedBlackCoinCount:
  *                       type: integer
- *                       example: 1
+ *                       example: 0
  *                     totalCoin:
  *                       type: integer
- *                       example: 525
- *                     comments:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           userId:
- *                             type: object
- *                             properties:
- *                               _id:
- *                                 type: string
- *                               userName:
- *                                 type: string
- *                               profilePic:
- *                                 type: string
- *                               email:
- *                                 type: string
- *                           comment:
- *                             type: string
- *       401:
- *         description: Unauthorized or token mismatch
- *       404:
- *         description: Post not found
+ *                       example: 200
+ *       200:
+ *         description: Error cases like token/email mismatch, post not found or missing postId
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Provided token does not match authorized token"
  *       500:
- *         description: Server error
+ *         description: Server error while fetching single post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Server error while fetching single post
  */
-router.post("/getSinglePost/:postId",authMiddelWere,getSinglePost)
+router.post("/getSinglePost",authMiddelWere,getSinglePost)
 /**
  * @swagger
  * /user/getAuthorizedUserPost:
@@ -2012,43 +2012,78 @@ router.post("/getSinglePost/:postId",authMiddelWere,getSinglePost)
 router.post("/getAuthorizedUserPost",authMiddelWere,getAuthorizedUserPost);
 /**
  * @swagger
- * /user/giveCommentToPost/{postId}:
+ * /user/giveCommentToPost:
  *   post:
- *     summary: Add a comment to a specific post
+ *     summary: Add a comment to a post after verifying token and email
  *     tags:
  *       - Posts
  *     security:
- *       - bearerAuth: []  # JWT token in Authorization header
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the post to comment on
+ *       - bearerAuth: []
  *     requestBody:
+ *       description: Comment details with postId, email, and token
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             required:
+ *               - postId
  *               - comment
  *               - email
  *               - token
  *             properties:
+ *               postId:
+ *                 type: string
+ *                 example: 6644920a4ad4cc66aaae6131
  *               comment:
  *                 type: string
  *                 example: This is a great post!
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: user@example.com
  *               token:
  *                 type: string
  *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: Comment added successfully or relevant validation message
+ *         description: Comment added successfully or validation error message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: true
+ *                     message:
+ *                       type: string
+ *                       example: Comment added successfully
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           userId:
+ *                             type: string
+ *                             example: 6644920a4ad4cc66aaae6131
+ *                           comment:
+ *                             type: string
+ *                             example: This is a great post!
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: false
+ *                     message:
+ *                       type: string
+ *                       example: Provided token does not match authorized token
+ *       500:
+ *         description: Server error while adding comment
  *         content:
  *           application/json:
  *             schema:
@@ -2056,61 +2091,74 @@ router.post("/getAuthorizedUserPost",authMiddelWere,getAuthorizedUserPost);
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
+ *                   example: false
  *                 message:
  *                   type: string
- *                   example: Comment added successfully
- *                 comments:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       userId:
- *                         type: string
- *                       comment:
- *                         type: string
- *       400:
- *         description: Bad request due to missing comment or postId
- *       500:
- *         description: Server error while adding comment to post
+ *                   example: server error while adding comment to post
  */
-router.post("/giveCommentToPost/:postId",authMiddelWere,giveCommentToPost)
-
+router.post("/giveCommentToPost",authMiddelWere,giveCommentToPost)
 /**
  * @swagger
- * /user/giveTedGoldcoin/{postId}:
+ * /user/giveTedGoldcoin:
  *   post:
- *     summary: Give TedGold to a specific post
+ *     summary: Give a TedGold coin to a post after verifying token and email
  *     tags:
  *       - Posts
  *     security:
- *       - bearerAuth: []  # JWT token in Authorization header
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: The ID of the post to give TedGold to
+ *       - bearerAuth: []
  *     requestBody:
+ *       description: Details required to give TedGold coin to a post
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             required:
+ *               - postId
  *               - email
  *               - token
  *             properties:
+ *               postId:
+ *                 type: string
+ *                 example: 6644920a4ad4cc66aaae6131
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: user@example.com
  *               token:
  *                 type: string
  *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: TedGold given successfully or validation failed
+ *         description: TedGold coin given successfully or validation errors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: true
+ *                     message:
+ *                       type: string
+ *                       example: TedGold given successfully
+ *                     updatedTedGoldCount:
+ *                       type: integer
+ *                       example: 5
+ *                     toUser:
+ *                       type: string
+ *                       example: 6644920a4ad4cc66aaae6131
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: false
+ *                     message:
+ *                       type: string
+ *                       example: You have already given a coin to this post
+ *       500:
+ *         description: Internal server error while giving TedGold coin
  *         content:
  *           application/json:
  *             schema:
@@ -2118,58 +2166,74 @@ router.post("/giveCommentToPost/:postId",authMiddelWere,giveCommentToPost)
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
+ *                   example: false
  *                 message:
  *                   type: string
- *                   example: TedGold given successfully
- *                 updatedTedGoldCount:
- *                   type: number
- *                   example: 1
- *                 toUser:
- *                   type: string
- *                   example: 64f123456abcde7890f12345
- *       400:
- *         description: Missing postId or other required information
- *       500:
- *         description: Internal Server Error while giving TedGold
+ *                   example: Internal Server Error in giveTedGoldToPost
  */
-router.post("/giveTedGoldcoin/:postId",authMiddelWere,giveTedGoldToPost);
-
+router.post("/giveTedGoldcoin",authMiddelWere,giveTedGoldToPost);
 /**
  * @swagger
- * /user/giveTedSilvercoin/{postId}:
+ * /user/giveTedSilvercoin:
  *   post:
- *     summary: Give TedSilver to a specific post
+ *     summary: Give a TedSilver coin to a post after verifying token and email
  *     tags:
  *       - Posts
  *     security:
- *       - bearerAuth: []  # Requires JWT token in Authorization header
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: The ID of the post to give TedSilver to
+ *       - bearerAuth: []
  *     requestBody:
+ *       description: Details required to give TedSilver coin to a post
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             required:
+ *               - postId
  *               - email
  *               - token
  *             properties:
+ *               postId:
+ *                 type: string
+ *                 example: 6644920a4ad4cc66aaae6131
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: user@example.com
  *               token:
  *                 type: string
  *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: TedSilver given successfully or validation failed
+ *         description: TedSilver coin given successfully or validation errors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: true
+ *                     message:
+ *                       type: string
+ *                       example: TedSilver given successfully
+ *                     updatedTedSilverCount:
+ *                       type: integer
+ *                       example: 3
+ *                     toUser:
+ *                       type: string
+ *                       example: 6644920a4ad4cc66aaae6131
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: false
+ *                     message:
+ *                       type: string
+ *                       example: You have already given a coin to this post
+ *       500:
+ *         description: Internal server error while giving TedSilver coin
  *         content:
  *           application/json:
  *             schema:
@@ -2177,58 +2241,75 @@ router.post("/giveTedGoldcoin/:postId",authMiddelWere,giveTedGoldToPost);
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
+ *                   example: false
  *                 message:
  *                   type: string
- *                   example: TedSilver given successfully
- *                 updatedTedSilverCount:
- *                   type: number
- *                   example: 1
- *                 toUser:
- *                   type: string
- *                   example: 64f123456abcde7890f12345
- *       400:
- *         description: Missing postId or other required fields
- *       500:
- *         description: Internal Server Error while giving TedSilver
+ *                   example: error in giveTedSilverPost controller
  */
-router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
+router.post("/giveTedSilvercoin",authMiddelWere,giveTedSilverPost);
 
 /**
  * @swagger
- * /user/giveTedBronzeCoin/{postId}:
+ * /user/giveTedBronzeCoin:
  *   post:
- *     summary: Give TedBronze to a specific post
+ *     summary: Give a TedBronze coin to a post after verifying token and email
  *     tags:
  *       - Posts
  *     security:
- *       - bearerAuth: []  # JWT Token required
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the post to give TedBronze to
+ *       - bearerAuth: []
  *     requestBody:
+ *       description: Information needed to give TedBronze coin to a post
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             required:
+ *               - postId
  *               - email
  *               - token
  *             properties:
+ *               postId:
+ *                 type: string
+ *                 example: 6644920a4ad4cc66aaae6131
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: user@example.com
  *               token:
  *                 type: string
  *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: TedBronze given successfully or validation failed
+ *         description: TedBronze coin given successfully or validation errors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: true
+ *                     message:
+ *                       type: string
+ *                       example: TedBronze given successfully
+ *                     updatedTedBronzeCount:
+ *                       type: integer
+ *                       example: 5
+ *                     toUser:
+ *                       type: string
+ *                       example: 6644920a4ad4cc66aaae6131
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: false
+ *                     message:
+ *                       type: string
+ *                       example: You have already given a coin to this post
+ *       500:
+ *         description: Internal server error while giving TedBronze coin
  *         content:
  *           application/json:
  *             schema:
@@ -2236,22 +2317,12 @@ router.post("/giveTedSilvercoin/:postId",authMiddelWere,giveTedSilverPost);
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
+ *                   example: false
  *                 message:
  *                   type: string
- *                   example: TedBronze given successfully
- *                 updatedTedBronzeCount:
- *                   type: number
- *                   example: 1
- *                 toUser:
- *                   type: string
- *                   example: 64f123456abcde7890f12345
- *       400:
- *         description: Bad Request or missing fields
- *       500:
- *         description: Internal Server Error
+ *                   example: Internal Server Error in giveTedBronzePost
  */
-router.post("/giveTedBronzeCoin/:postId",authMiddelWere,giveTedBronzePost);
+router.post("/giveTedBronzeCoin",authMiddelWere,giveTedBronzePost);
 router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
 
 module.exports = router;
