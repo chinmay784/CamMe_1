@@ -1727,30 +1727,20 @@ exports.viewAMoment = async (req, res) => {
 exports.getAllMoments = async (req, res) => {
     try {
         const userId = req.user.userId;
-
-        // Get current user's friends
-        // const user = await User.findById(userId).populate('userAllFriends', '_id');
-        // if (!user) {
-        //     return res.status(200).json({
-        //         success: false,
-        //         message: "User not found"
-        //     });
-        // }
-
-        // const friendIds = user.userAllFriends.map(friend => friend._id);
-
-
-        // Fetch only friends' moments
-
         const { email, token } = req.body;
 
         const authHeader = req.headers.authorization;
-
         const authorizedToken = authHeader.split(" ")[1];
 
-        const userEmail = await User.findById(userId).select("email");
+        const user = await User.findById(userId).select("email userAllFriends");
 
-        // Compare provided token with authorized token
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
         if (token !== authorizedToken) {
             return res.status(403).json({
                 success: false,
@@ -1758,27 +1748,32 @@ exports.getAllMoments = async (req, res) => {
             });
         }
 
-
-
-        if (userEmail.email !== email) {
-            return res.status(200).json({
+        if (user.email !== email) {
+            return res.status(401).json({
                 success: false,
                 message: "Provided email does not match authorized email",
             });
         }
 
-        const allMoments = await Moment.find().populate("userId", "userName profilePic");
+        const friendIds = user.userAllFriends;
+
+        // If you also want to include current user's own moments, add: friendIds.push(userId);
+        // friendIds.push(userId);
+
+        const allMoments = await Moment.find({ userId: { $in: friendIds } })
+            .populate("userId", "userName profilePic");
 
         return res.status(200).json({
             success: true,
-            allMoments,
+            message: "Fetched all friends' moments",
+            allMoments
         });
 
     } catch (error) {
-        console.log("Error in viewAllMoments:", error);
+        console.error("Error in getAllMoments:", error);
         return res.status(500).json({
             success: false,
-            message: "Error in viewAllMoments controller"
+            message: "Internal Server Error in getAllMoments"
         });
     }
 };
@@ -2247,7 +2242,7 @@ exports.getAllPost = async (req, res) => {
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
-        const userEmail = await User.findById(userId).select("email");
+        const userEmail = await User.findById(userId).select("email userAllFriends");
 
         // Compare provided token with authorized token
         if (token !== authorizedToken) {
@@ -2255,7 +2250,7 @@ exports.getAllPost = async (req, res) => {
                 success: false,
                 message: "Provided token does not match authorized token",
             });
-        }   
+        }
 
         if (userEmail.email !== email) {
             return res.status(200).json({
@@ -2264,12 +2259,20 @@ exports.getAllPost = async (req, res) => {
             });
         }
 
-        const rawPosts = await Postcreate.find()
+        const friendIds = userEmail.userAllFriends;
+
+        const posts = await Postcreate.find({
+            $or: [
+                { userId: { $in: [...friendIds, userId] } },   // Posts by user or friends
+                { visibility: true }                           // OR public posts
+            ]
+        })
             .populate("userId", "userName profilePic email")
-            .populate("comments.userId", "userName profilePic email")
+            .populate("comments.userId", "userName profilePic email");
+
         // .populate("comments.replies.userId", "userName profilePic email");
 
-        if (!rawPosts || rawPosts.length === 0) {
+        if (!posts || posts.length === 0) {
             return res.status(200).json({
                 success: false,
                 message: "No posts found",
@@ -2277,13 +2280,11 @@ exports.getAllPost = async (req, res) => {
         }
 
 
-        const allPosts = rawPosts.map(post => {
+        const formattedPosts = posts.map(post => {
             const tedGoldCount = post.tedGoldGivers?.length || 0;
             const tedSilverCount = post.tedSilverGivers?.length || 0;
             const tedBronzeCount = post.tedBronzeGivers?.length || 0;
             const tedBlackCoinCount = post.tedBlackCoinData?.length || 0;
-
-            // Optional: Calculate total coin value
             const totalCoin = (tedGoldCount * 75) + (tedSilverCount * 50) + (tedBronzeCount * 25);
 
             return {
@@ -2299,7 +2300,7 @@ exports.getAllPost = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Fetched all posts",
-            allPosts,
+            posts: formattedPosts
         });
     }
     catch (error) {
