@@ -1619,8 +1619,8 @@ exports.getYourMoment = async (req, res) => {
 exports.viewAMoment = async (req, res) => {
     try {
         const viewerId = req.user.userId;
-        const { userId, momentId } = req.params;
-        const { email, token } = req.body;
+        //const { userId, momentId } = req.params;
+        const { email, token ,userId,momentId} = req.body;
         const authHeader = req.headers.authorization;
 
         const authorizedToken = authHeader.split(" ")[1];
@@ -1785,9 +1785,9 @@ exports.getAllMoments = async (req, res) => {
 exports.authorizedUserMomentsViewersCount = async (req, res) => {
     try {
         const userId = req.user.userId; // Authorized user
-        const { momentId } = req.params;
+       // const { momentId } = req.params;
 
-        const { email, token } = req.body;
+        const { email, token,momentId } = req.body;
 
         const authHeader = req.headers.authorization;
 
@@ -1870,10 +1870,10 @@ exports.authorizedUserMomentsViewersCount = async (req, res) => {
 exports.authorizedUserMomentsViewers = async (req, res) => {
     try {
         const userId = req.user.userId; // Authorized user
-        const { momentId } = req.params;
+        //const { momentId } = req.params;
 
 
-        const { email, token } = req.body;
+        const { email, token ,momentId} = req.body;
 
         const authHeader = req.headers.authorization;
 
@@ -1966,9 +1966,9 @@ exports.authorizedUserMomentsViewers = async (req, res) => {
 exports.deleteMoment = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { momentId } = req.params;
+        //const { momentId } = req.params;
 
-        const { email, token } = req.body;
+        const { email, token,momentId } = req.body;
 
         const authHeader = req.headers.authorization;
 
@@ -2031,8 +2031,8 @@ exports.deleteMoment = async (req, res) => {
 exports.giveCommentToAnMomemt = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { momentId } = req.params;
-        const { comment, token, email } = req.body;
+        //const { momentId } = req.params;
+        const { comment, token, email,momentId } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2100,20 +2100,20 @@ exports.giveCommentToAnMomemt = async (req, res) => {
 exports.replyToMomontComment = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { momentId, commentId } = req.params;
-        const { reply, email, token } = req.body;
+        //const { momentId, commentId } = req.params;
+        const { reply, email, token,momentId,commentId } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
         const userEmail = await User.findById(userId).select("email");
 
         // Compare provided token with authorized token
-        // if (token !== authorizedToken) {
-        //     return res.status(200).json({
-        //         success: false,
-        //         message: "Provided token does not match authorized token",
-        //     });
-        // }
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
 
         if (userEmail.email !== email) {
             return res.status(200).json({
@@ -2175,8 +2175,8 @@ exports.replyToMomontComment = async (req, res) => {
 exports.getAllCommentsWithReplies = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { email, token } = req.body;
-        const { momentId } = req.params;
+        const { email, token,momentId } = req.body;
+        //const { momentId } = req.params;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
