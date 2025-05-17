@@ -2605,9 +2605,7 @@ exports.giveTedGoldToPost = async (req, res) => {
         }
 
         if (
-            (post.tedGoldGivers?.includes(giverId)) ||
-            (post.tedSilverGivers?.includes(giverId)) ||
-            (post.tedBronzeGivers?.includes(giverId))
+            (post.tedGoldGivers?.includes(giverId)) 
         ) {
             return res.status(200).json({
                 success: false,
@@ -2615,40 +2613,58 @@ exports.giveTedGoldToPost = async (req, res) => {
             });
         }
 
-        const receiver = await User.findOne({ _id: post.userId });
-        if (!receiver) {
-            return res.status(200).json({
-                success: false,
-                message: "Post owner not found"
-            });
-        }
+        
 
-        receiver.coinWallet.tedGold += 1;
-        // 5. Recalculate and update totalTedCoin
-        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
-        const totalGoldUnits = Math.floor(tedGold / 75);
-        const totalSilverUnits = Math.floor(tedSilver / 50);
-        const totalBronzeUnits = Math.floor(tedBronze / 25);
-        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
 
-        receiver.coinWallet.totalTedCoin = calculatedTotal;
+       const receiver = await User.findById(post.userId);
+    if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
-        // 6. Update post data
-        post.tedGoldGivers = post.tedGoldGivers || [];
-        post.tedGoldGivers.push(giverId);
-        post.tedGoldCount = (post.tedGoldCount || 0) + 1;
+    // If already Gold, quit
+    if (post.tedGoldGivers?.includes(giverId))
+      return res.status(200).json({ success: false, message: "Already gave Gold" });
 
-        // 7. Save both
-        await receiver.save();
-        await post.save();
+    const giverIdStr = giverId.toString();
 
-        return res.status(200).json({
-            success: true,
-            message: "TedGold given successfully",
-            updatedTedGoldCount: post.tedGoldCount,
-            toUser: receiver._id,
-        });
+    // ---------- remove from lower tiers if present ----------
+    const tiers = [
+      { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
+      { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" }
+    ];
 
+    tiers.forEach(t => {
+      if (post[t.arr]?.includes(giverId)) {
+        post[t.arr]   = post[t.arr].filter(id => id.toString() !== giverIdStr);
+        post[t.cnt]   = Math.max((post[t.cnt] || 1) - 1, 0);
+        receiver.coinWallet[t.wallet] =
+          Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
+      }
+    });
+
+    // ---------- add to Gold ----------
+    post.tedGoldGivers = post.tedGoldGivers || [];
+    post.tedGoldGivers.push(giverId);
+    post.tedGoldCount  = (post.tedGoldCount || 0) + 1;
+    receiver.coinWallet.tedGold = (receiver.coinWallet.tedGold || 0) + 1;
+
+    // ---------- recalc totalTedCoin ----------
+    const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
+    const goldUnits   = Math.floor(tedGold   / 75);
+    const silverUnits = Math.floor(tedSilver / 50);
+    const bronzeUnits = Math.floor(tedBronze / 25);
+    receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+
+    await receiver.save();
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Switched to TedGold successfully",
+      counts: {
+        tedGold:   post.tedGoldCount,
+        tedSilver: post.tedSilverCount,
+        tedBronze: post.tedBronzeCount
+      }
+    });
     } catch (error) {
         console.error("Error giving TedGold:", error);
         return res.status(500).json({
@@ -2712,56 +2728,62 @@ exports.giveTedSilverPost = async (req, res) => {
 
 
         if (
-            (post.tedGoldGivers?.includes(giverId)) ||
-            (post.tedSilverGivers?.includes(giverId)) ||
-            (post.tedBronzeGivers?.includes(giverId))
+            
+            (post.tedSilverGivers?.includes(giverId)) 
+            
         ) {
             return res.status(200).json({
                 success: false,
-                message: "You have already given a coin to this post"
+                message: "You have already given a Silvercoin to this post"
             });
         }
 
-        const receiver = await User.findOne({ _id: post.userId });
-        if (!receiver) {
-            return res.status(200).json({
-                success: false,
-                message: "Post owner not found"
-            });
-        };
+       const receiver = await User.findById(post.userId);
+    if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
+    const giverStr = giverId.toString();
 
-        receiver.coinWallet.tedSilver += 1;
+    /* ---------- remove from Gold / Bronze tiers if present ---------- */
+    const tiers = [
+      { arr: "tedGoldGivers",   cnt: "tedGoldCount",   wallet: "tedGold"   },
+      { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" }
+    ];
 
+    tiers.forEach(t => {
+      if (post[t.arr]?.includes(giverId)) {
+        post[t.arr]   = post[t.arr].filter(id => id.toString() !== giverStr);
+        post[t.cnt]   = Math.max((post[t.cnt] || 1) - 1, 0);
+        receiver.coinWallet[t.wallet] =
+          Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
+      }
+    });
 
-        // 5. Recalculate and update totalTedCoin
-        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
-        const totalGoldUnits = Math.floor(tedGold / 75);
-        const totalSilverUnits = Math.floor(tedSilver / 50);
-        const totalBronzeUnits = Math.floor(tedBronze / 25);
-        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
+    /* ---------- add to Silver tier ---------- */
+    post.tedSilverGivers = post.tedSilverGivers || [];
+    post.tedSilverGivers.push(giverId);
+    post.tedSilverCount  = (post.tedSilverCount || 0) + 1;
+    receiver.coinWallet.tedSilver = (receiver.coinWallet.tedSilver || 0) + 1;
 
-        receiver.coinWallet.totalTedCoin = calculatedTotal;
+    /* ---------- recalc totalTedCoin ---------- */
+    const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
+    const goldUnits   = Math.floor(tedGold   / 75);
+    const silverUnits = Math.floor(tedSilver / 50);
+    const bronzeUnits = Math.floor(tedBronze / 25);
+    receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
 
+    await receiver.save();
+    await post.save();
 
-        // 6. Update post data
-        post.tedSilverGivers = post.tedSilverGivers || [];
-        post.tedSilverGivers.push(giverId);
-        post.tedSilverCount = (post.tedSilverCount || 0) + 1;
-
-
-        // 7. Save both
-        await receiver.save();
-        await post.save();
-
-
-        return res.status(200).json({
-            success: true,
-            message: "TedSilver given successfully",
-            updatedTedSilverCount: post.tedSilverCount,
-            toUser: receiver._id
-        });
-
+    return res.status(200).json({
+      success: true,
+      message: "TedSilver given successfully",
+      counts: {
+        tedGold:   post.tedGoldCount,
+        tedSilver: post.tedSilverCount,
+        tedBronze: post.tedBronzeCount
+      },
+      toUser: receiver._id
+    });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
@@ -2823,56 +2845,60 @@ exports.giveTedBronzePost = async (req, res) => {
         };
 
         if (
-            (post.tedGoldGivers?.includes(giverId)) ||
-            (post.tedSilverGivers?.includes(giverId)) ||
             (post.tedBronzeGivers?.includes(giverId))
         ) {
             return res.status(200).json({
                 success: false,
-                message: "You have already given a coin to this post"
+                message: "You have already given a Bronzecoin to this post"
             });
         }
 
-        const receiver = await User.findOne({ _id: post.userId });
+        const receiver = await User.findById(post.userId);
+    if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
-        if (!receiver) {
-            return res.status(200).json({
-                success: false,
-                message: "Post owner not found"
-            });
-        }
+    const giverStr = giverId.toString();
 
-        receiver.coinWallet.tedBronze += 1;
+    /* ---------- remove from Gold / Silver if present ---------- */
+    const tiers = [
+      { arr: "tedGoldGivers",   cnt: "tedGoldCount",   wallet: "tedGold"   },
+      { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" }
+    ];
 
+    tiers.forEach(t => {
+      if (post[t.arr]?.includes(giverId)) {
+        post[t.arr] = post[t.arr].filter(id => id.toString() !== giverStr);
+        post[t.cnt] = Math.max((post[t.cnt] || 1) - 1, 0);
+        receiver.coinWallet[t.wallet] =
+          Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
+      }
+    });
 
-        // 5. Recalculate and update totalTedCoin
-        const { tedGold, tedSilver, tedBronze } = receiver.coinWallet;
+    /* ---------- add to Bronze tier ---------- */
+    post.tedBronzeGivers = post.tedBronzeGivers || [];
+    post.tedBronzeGivers.push(giverId);
+    post.tedBronzeCount  = (post.tedBronzeCount || 0) + 1;
+    receiver.coinWallet.tedBronze = (receiver.coinWallet.tedBronze || 0) + 1;
 
-        const totalGoldUnits = Math.floor(tedGold / 75);
-        const totalSilverUnits = Math.floor(tedSilver / 50);
-        const totalBronzeUnits = Math.floor(tedBronze / 25);
-        const calculatedTotal = Math.min(totalGoldUnits, totalSilverUnits, totalBronzeUnits);
+    /* ---------- recalc totalTedCoin ---------- */
+    const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
+    const goldUnits   = Math.floor(tedGold   / 75);
+    const silverUnits = Math.floor(tedSilver / 50);
+    const bronzeUnits = Math.floor(tedBronze / 25);
+    receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
 
-        receiver.coinWallet.totalTedCoin = calculatedTotal;
+    await receiver.save();
+    await post.save();
 
-
-        // 6. Update post data
-        post.tedBronzeGivers = post.tedBronzeGivers || [];
-        post.tedBronzeGivers.push(giverId);
-        post.tedBronzeCount = (post.tedBronzeCount || 0) + 1;
-
-
-        // 7. Save both
-        await receiver.save();
-        await post.save();
-
-
-        return res.status(200).json({
-            success: true,
-            message: "TedBronze given successfully",
-            updatedTedBronzeCount: post.tedBronzeCount,
-            toUser: receiver._id
-        });
+    return res.status(200).json({
+      success: true,
+      message: "TedBronze given successfully",
+      counts: {
+        tedGold:   post.tedGoldCount,
+        tedSilver: post.tedSilverCount,
+        tedBronze: post.tedBronzeCount
+      },
+      toUser: receiver._id
+    });
 
     } catch (error) {
         console.error("Error in giveTedBronzePost:", error);
@@ -2965,3 +2991,56 @@ exports.giveTedBlackCoin = async (req, res) => {
         });
     }
 };
+
+
+
+// // Lots of work pending is here not complited
+// exports.getYourProfile = async (req,res) =>{
+//     try {
+//         const user = req.user.userId;
+//         const { email, token } = req.body;
+//         const authHeader = req.headers.authorization;
+
+//         const authorizedToken = authHeader.split(" ")[1];
+//         const userEmail = await User.findById(user).select("email");
+        
+//         // Compare provided token with authorized token
+//         if (token !== authorizedToken) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Provided token does not match authorized token",
+//             });
+//         }
+
+//         if (userEmail.email !== email) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Provided email does not match authorized email",
+//             });
+//         }
+
+//         const userProfile = await User.findById(user)
+//             .populate("userAllFriends", "userName profilePic email")
+
+
+//         if (!userProfile) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "User not found",
+//             });
+//         }
+
+//         return res.status(200).json({
+//             success: true,
+//             message: "Fetched user profile",
+//             userProfile
+//         });
+      
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({
+//             sucess:false,
+//             message:"Server Error while Fetching Profile"
+//         })
+//     }
+// }

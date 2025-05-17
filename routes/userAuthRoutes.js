@@ -2179,7 +2179,7 @@ router.post("/giveTedSilvercoin", authMiddelWere, giveTedSilverPost);
  *   post:
  *     summary: Give a TedBronze coin to a post
  *     tags:
- *       - TedCoin
+ *       - Posts
  *     security:
  *       - bearerAuth: []
  *     requestBody:
