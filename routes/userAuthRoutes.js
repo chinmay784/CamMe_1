@@ -1,55 +1,55 @@
 const express = require('express');
 const {
-    register,
-    otpVerify,
-    ProfileCreation,
-    login,
-    loginOtpverify,
-    connectionFilter,
-    getConnectionFilter,
-    PasswordResetRequest,
-    resetPassword,
-    addAccount,
-    approveLinkAccount,
-    finalizeLinkAccount,
-    rejectLinkAccount,
-    logoutUser,
-    getMatchedIntrested,
-    getHashTagContent,
-    getAllowLocation,
-    sendFriendRequest,
-    acceptFriendRequest,
-    createPost,
-    giveTedBlackCoinToPost,
-    report,
-    createMoment,
-    generateAndTrackShare,
-    getAllFriends,
-    sharePostWithFriend,
-    getAllPosts,
-    giveTedGoldToPost,
-    giveTedSilverPost,
-    giveTedBronzePost,
-    giveTedBlackCoin,
-    resendOtp,
-    viewAMoment,
-    getYourMoment,
-    getAllMoments,
-    authorizedUserMomentsViewersCount,
-    authorizedUserMomentsViewers,
-    deleteMoment,
-    giveCommentToAnMomemt,
-    replyToMomontComment,
-    getAllCommentsWithReplies,
-    getAllPost,
-    getSinglePost,
-    getAuthorizedUserPost,
-    giveCommentToPost
+  register,
+  otpVerify,
+  ProfileCreation,
+  login,
+  loginOtpverify,
+  connectionFilter,
+  getConnectionFilter,
+  PasswordResetRequest,
+  resetPassword,
+  addAccount,
+  approveLinkAccount,
+  finalizeLinkAccount,
+  rejectLinkAccount,
+  logoutUser,
+  getMatchedIntrested,
+  getHashTagContent,
+  getAllowLocation,
+  sendFriendRequest,
+  acceptFriendRequest,
+  createPost,
+  giveTedBlackCoinToPost,
+  report,
+  createMoment,
+  generateAndTrackShare,
+  getAllFriends,
+  sharePostWithFriend,
+  getAllPosts,
+  giveTedGoldToPost,
+  giveTedSilverPost,
+  giveTedBronzePost,
+  giveTedBlackCoin,
+  resendOtp,
+  viewAMoment,
+  getYourMoment,
+  getAllMoments,
+  authorizedUserMomentsViewersCount,
+  authorizedUserMomentsViewers,
+  deleteMoment,
+  giveCommentToAnMomemt,
+  replyToMomontComment,
+  getAllCommentsWithReplies,
+  getAllPost,
+  getSinglePost,
+  getAuthorizedUserPost,
+  giveCommentToPost
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
-const {uploadd} = require("../middelwere/multer");
+const { uploadd } = require("../middelwere/multer");
 const checkBlacklist = require('../middelwere/BlackListToken');
-const {upload} = require("../config/cloudinary")
+const { upload } = require("../config/cloudinary")
 
 const router = express.Router();
 /**
@@ -106,9 +106,9 @@ const router = express.Router();
  *         description: Server error
  */
 router.post('/register', upload.fields([
-    { name: 'profilePic', maxCount: 1 },
-    { name: 'theme', maxCount: 1 },
-  ]),register)
+  { name: 'profilePic', maxCount: 1 },
+  { name: 'theme', maxCount: 1 },
+]), register)
 /**
  * @swagger
  * /user/verifyotp:
@@ -609,16 +609,14 @@ router.post("/reset-password", resetPassword);
  *       500:
  *         description: Error in addAccount controller
  */
-router.post("/addAccount",authMiddelWere,addAccount)
+router.post("/addAccount", authMiddelWere, addAccount)
 router.get("/account-link/approve/:userId/:requesterId", approveLinkAccount);
 router.post("/account-link/verify-otp", finalizeLinkAccount);
 router.post("/account-link/reject/:userId/:requesterId", rejectLinkAccount);
-router.post("/logout", checkBlacklist,logoutUser);
-router.get("/getMatchIntrested",authMiddelWere,getMatchedIntrested);
-router.get("/getHashTagContent",authMiddelWere,getHashTagContent);
-router.get("/getLocation",authMiddelWere,getAllowLocation);
-router.post("/inviteAFriend/:reciverId",authMiddelWere,sendFriendRequest);
-router.post("/acceptFriendRequest/:requestId",authMiddelWere,acceptFriendRequest);
+router.post("/logout", checkBlacklist, logoutUser);
+router.get("/getMatchIntrested", authMiddelWere, getMatchedIntrested);
+router.get("/getHashTagContent", authMiddelWere, getHashTagContent);
+router.get("/getLocation", authMiddelWere, getAllowLocation);
 /**
  * @swagger
  * /user/createpost:
@@ -763,7 +761,7 @@ router.post("/createpost", authMiddelWere, upload.array("files", 10), createPost
 //  *                   example: Internal Server Error
 //  */
 router.post('/share/:postId/:friendId', authMiddelWere, sharePostWithFriend);
-router.post("/reportPost/:postId",authMiddelWere,report);
+router.post("/reportPost/:postId", authMiddelWere, report);
 /**
  * @swagger
  * /user/moments:
@@ -829,7 +827,7 @@ router.post("/reportPost/:postId",authMiddelWere,report);
  */
 
 
-router.post("/moments",authMiddelWere,upload.array('image',10),createMoment);
+router.post("/moments", authMiddelWere, upload.array('image', 10), createMoment);
 /**
  * @swagger
  * /user/friends:
@@ -952,7 +950,7 @@ router.get('/friends', authMiddelWere, getAllFriends);
  *                   type: string
  *                   example: error in resend-Otp Controller
  */
-router.post("/resendOtp",resendOtp)
+router.post("/resendOtp", resendOtp)
 /**
  * @swagger
  * /user/getYourMoment:
@@ -1020,7 +1018,7 @@ router.post("/resendOtp",resendOtp)
  *       500:
  *         description: Server error
  */
-router.post("/getYourMoment",authMiddelWere,getYourMoment);
+router.post("/getYourMoment", authMiddelWere, getYourMoment);
 /**
  * @swagger
  * /user/getallmomets:
@@ -1096,7 +1094,7 @@ router.post("/getYourMoment",authMiddelWere,getYourMoment);
  *       500:
  *         description: Server error
  */
-router.post("/getallmomets",authMiddelWere,getAllMoments);
+router.post("/getallmomets", authMiddelWere, getAllMoments);
 /**
  * @swagger
  * /user/viewMoment:
@@ -1180,7 +1178,7 @@ router.post("/getallmomets",authMiddelWere,getAllMoments);
  *                 message:
  *                   type: string
  */
-router.post("/viewMoment",authMiddelWere,viewAMoment);
+router.post("/viewMoment", authMiddelWere, viewAMoment);
 /**
  * @swagger
  * /user/authorizedUserMomentsViewersCount:
@@ -1269,7 +1267,7 @@ router.post("/viewMoment",authMiddelWere,viewAMoment);
  *                 message:
  *                   type: string
  */
-router.post("/authorizedUserMomentsViewersCount",authMiddelWere,authorizedUserMomentsViewersCount);
+router.post("/authorizedUserMomentsViewersCount", authMiddelWere, authorizedUserMomentsViewersCount);
 /**
  * @swagger
  * /user/authorizedUserMomentsViewers:
@@ -1366,7 +1364,7 @@ router.post("/authorizedUserMomentsViewersCount",authMiddelWere,authorizedUserMo
  *                 message:
  *                   type: string
  */
-router.post("/authorizedUserMomentsViewers",authMiddelWere,authorizedUserMomentsViewers);
+router.post("/authorizedUserMomentsViewers", authMiddelWere, authorizedUserMomentsViewers);
 /**
  * @swagger
  * /user/deleteMoment:
@@ -1430,7 +1428,7 @@ router.post("/authorizedUserMomentsViewers",authMiddelWere,authorizedUserMoments
  *                   type: string
  *                   example: Server error in deleteMoment
  */
-router.delete("/deleteMoment",authMiddelWere,deleteMoment)
+router.delete("/deleteMoment", authMiddelWere, deleteMoment)
 /**
  * @swagger
  * /user/giveCommentToAnMomemt:
@@ -1510,7 +1508,7 @@ router.delete("/deleteMoment",authMiddelWere,deleteMoment)
  *                   type: string
  *                   example: Server error in giveCommentToAMomemt
  */
-router.post("/giveCommentToAnMomemt",authMiddelWere,giveCommentToAnMomemt);
+router.post("/giveCommentToAnMomemt", authMiddelWere, giveCommentToAnMomemt);
 /**
  * @swagger
  * /user/replyToMomontComment:
@@ -1585,7 +1583,7 @@ router.post("/giveCommentToAnMomemt",authMiddelWere,giveCommentToAnMomemt);
  *                   type: string
  *                   example: Server error while replying to comment.
  */
-router.post("/replyToMomontComment",authMiddelWere,replyToMomontComment)
+router.post("/replyToMomontComment", authMiddelWere, replyToMomontComment)
 /**
  * @swagger
  * /user/getAllCommentsWithReplies:
@@ -1667,7 +1665,7 @@ router.post("/replyToMomontComment",authMiddelWere,replyToMomontComment)
  *                   type: string
  *                   example: Server error while fetching comments and replies
  */
-router.post("/getAllCommentsWithReplies",authMiddelWere,getAllCommentsWithReplies)
+router.post("/getAllCommentsWithReplies", authMiddelWere, getAllCommentsWithReplies)
 /**
  * @swagger
  * /user/getAllPost:
@@ -1763,7 +1761,7 @@ router.post("/getAllCommentsWithReplies",authMiddelWere,getAllCommentsWithReplie
  *       500:
  *         description: Server error
  */
-router.post("/getAllPost", authMiddelWere,getAllPost);
+router.post("/getAllPost", authMiddelWere, getAllPost);
 /**
  * @swagger
  * /user/getSinglePost:
@@ -1855,7 +1853,7 @@ router.post("/getAllPost", authMiddelWere,getAllPost);
  *                   type: string
  *                   example: Server error while fetching single post
  */
-router.post("/getSinglePost",authMiddelWere,getSinglePost)
+router.post("/getSinglePost", authMiddelWere, getSinglePost)
 /**
  * @swagger
  * /user/getAuthorizedUserPost:
@@ -1937,7 +1935,7 @@ router.post("/getSinglePost",authMiddelWere,getSinglePost)
  *       500:
  *         description: Server error while fetching posts
  */
-router.post("/getAuthorizedUserPost",authMiddelWere,getAuthorizedUserPost);
+router.post("/getAuthorizedUserPost", authMiddelWere, getAuthorizedUserPost);
 /**
  * @swagger
  * /user/giveCommentToPost:
@@ -2024,7 +2022,7 @@ router.post("/getAuthorizedUserPost",authMiddelWere,getAuthorizedUserPost);
  *                   type: string
  *                   example: server error while adding comment to post
  */
-router.post("/giveCommentToPost",authMiddelWere,giveCommentToPost)
+router.post("/giveCommentToPost", authMiddelWere, giveCommentToPost)
 /**
  * @swagger
  * /user/giveTedGoldcoin:
@@ -2099,7 +2097,7 @@ router.post("/giveCommentToPost",authMiddelWere,giveCommentToPost)
  *                   type: string
  *                   example: Internal Server Error in giveTedGoldToPost
  */
-router.post("/giveTedGoldcoin",authMiddelWere,giveTedGoldToPost);
+router.post("/giveTedGoldcoin", authMiddelWere, giveTedGoldToPost);
 /**
  * @swagger
  * /user/giveTedSilvercoin:
@@ -2174,7 +2172,7 @@ router.post("/giveTedGoldcoin",authMiddelWere,giveTedGoldToPost);
  *                   type: string
  *                   example: error in giveTedSilverPost controller
  */
-router.post("/giveTedSilvercoin",authMiddelWere,giveTedSilverPost);
+router.post("/giveTedSilvercoin", authMiddelWere, giveTedSilverPost);
 /**
  * @swagger
  * /user/giveTedBronzeCoin:
@@ -2234,7 +2232,164 @@ router.post("/giveTedSilvercoin",authMiddelWere,giveTedSilverPost);
  *                   type: string
  */
 
-router.post("/giveTedBronzeCoin",authMiddelWere,giveTedBronzePost);
-router.post("/givetedBlackCoin/:postId",authMiddelWere,giveTedBlackCoin);
+router.post("/giveTedBronzeCoin", authMiddelWere, giveTedBronzePost);
+router.post("/givetedBlackCoin/:postId", authMiddelWere, giveTedBlackCoin);
+
+/**
+ * @swagger
+ * /user/inviteAFriend:
+ *   post:
+ *     summary: Send a friend request to another user
+ *     description: |
+ *       Allows an authenticated user to send a friend request to another user by their ID.
+ *       Verifies the JWT token and email before proceeding. Also checks if a request has already been sent.
+ *     tags:
+ *       - Friends
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - reciverId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *                 description: Authenticated user's email for verification
+ *               token:
+ *                 type: string
+ *                 example: your-jwt-token
+ *                 description: JWT token to verify user identity
+ *               reciverId:
+ *                 type: string
+ *                 example: 66512f6bbec36e0a27d44891
+ *                 description: ID of the user to whom the friend request is being sent
+ *     responses:
+ *       200:
+ *         description: Friend request sent or already sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Friend request sent
+ *       403:
+ *         description: Provided token does not match authorized token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Provided token does not match authorized token
+ *       500:
+ *         description: Server error while sending friend request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error in inviteAFriend Route
+ */
+router.post("/inviteAFriend", authMiddelWere, sendFriendRequest);
+/**
+ * @swagger
+ * /user/acceptFriendRequest:
+ *   post:
+ *     summary: Accept a friend request
+ *     description: |
+ *       Allows an authenticated user to accept a pending friend request.
+ *       Validates JWT token, user email, and the friend request ID.
+ *     tags:
+ *       - Friends
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - requestId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *                 description: Authenticated user's email
+ *               token:
+ *                 type: string
+ *                 example: your-jwt-token
+ *                 description: JWT token from Authorization header
+ *               requestId:
+ *                 type: string
+ *                 example: 6651356cf913ff4e09cc3cde
+ *                 description: ID of the friend request to accept
+ *     responses:
+ *       200:
+ *         description: Friend request accepted or validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Friend request accepted
+ *       403:
+ *         description: Provided token does not match authorized token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Provided token does not match authorized token
+ *       500:
+ *         description: Server error while accepting the friend request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error in acceptRequest controller
+ */
+router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
 
 module.exports = router;

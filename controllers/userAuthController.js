@@ -999,7 +999,28 @@ exports.sendFriendRequest = async (req, res) => {
     try {
         const user = req.user.userId
 
-        const { reciverId } = req.params;
+        const {email , token , reciverId} = req.body;
+
+        //const { reciverId } = req.params;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(user).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        };
 
         if (!reciverId) {
             return res.status(200).json({
@@ -1050,10 +1071,33 @@ exports.sendFriendRequest = async (req, res) => {
 }
 
 
+
 exports.acceptFriendRequest = async (req, res) => {
     try {
-        const { requestId } = req.params;
+        //const { requestId } = req.params;
         const user = req.user.userId;
+
+        const {email , token , requestId} = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(user).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        };
 
         if (!requestId) {
             return res.status(200).json({
