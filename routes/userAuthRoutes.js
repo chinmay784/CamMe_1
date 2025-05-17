@@ -58,7 +58,7 @@ const router = express.Router();
  *   post:
  *     summary: Register a new user with profile and theme image upload.
  *     tags:
- *       - Auth
+ *       - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -115,6 +115,8 @@ router.post('/register', upload.fields([
  *   post:
  *     summary: Verify OTP and activate user account
  *     description: Verifies the OTP sent to the user's email and activates the account
+ *    tags:
+ *     - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -161,6 +163,8 @@ router.post("/verifyotp", otpVerify);
  *   post:
  *     summary: Complete user profile by setting username and password
  *     description: After OTP verification, user sets their username and password to complete the profile
+ *    tags:
+ *    - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -205,7 +209,7 @@ router.post("/profileComplite", ProfileCreation);
  *   post:
  *     summary: Create or update a user's connection filter.
  *     tags:
- *       - Connection Filter
+ *       - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -313,6 +317,8 @@ router.post("/connectionFilter", connectionFilter);
  *   post:
  *     summary: User login with OTP verification
  *     description: Logs in a user by verifying credentials and sends OTP via email and SMS for further verification
+ *    tags:
+ *      - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -370,6 +376,8 @@ router.post("/login", login);
  *   post:
  *     summary: Verify OTP during login
  *     description: Verifies the OTP sent to the user's email/phone and logs them in by issuing a JWT token.
+ *    tags:
+ *      - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -2179,7 +2187,7 @@ router.post("/giveTedSilvercoin", authMiddelWere, giveTedSilverPost);
  *   post:
  *     summary: Give a TedBronze coin to a post
  *     tags:
- *       - TedCoin
+ *       - Posts
  *     security:
  *       - bearerAuth: []
  *     requestBody:
