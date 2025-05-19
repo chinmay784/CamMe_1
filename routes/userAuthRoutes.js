@@ -44,7 +44,8 @@ const {
   getAllPost,
   getSinglePost,
   getAuthorizedUserPost,
-  giveCommentToPost
+  giveCommentToPost,
+  getAuthorizedUserPhotoGraphy
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2233,6 +2234,7 @@ router.post("/giveTedSilvercoin", authMiddelWere, giveTedSilverPost);
  */
 
 router.post("/giveTedBronzeCoin", authMiddelWere, giveTedBronzePost);
+router.post("/getAuthorizedUserPhotoGraphy",authMiddelWere, getAuthorizedUserPhotoGraphy);
 router.post("/givetedBlackCoin/:postId", authMiddelWere, giveTedBlackCoin);
 
 /**

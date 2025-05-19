@@ -1158,6 +1158,13 @@ exports.createPost = async (req, res) => {
         const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email, colorMatrix } = req.body;
         const userId = req.user.userId;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+
         const authHeader = req.headers.authorization;
 
         const authorizedToken = authHeader.split(" ")[1];
@@ -1491,6 +1498,12 @@ exports.createMoment = async (req, res) => {
         const userId = req.user.userId;
         const image = req.files;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
 
@@ -1619,6 +1632,13 @@ exports.getYourMoment = async (req, res) => {
         const { email, token } = req.body;
         const userId = req.user.userId;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+
         const authHeader = req.headers.authorization;
 
         const authorizedToken = authHeader.split(" ")[1];
@@ -1665,6 +1685,13 @@ exports.viewAMoment = async (req, res) => {
         const viewerId = req.user.userId;
         //const { userId, momentId } = req.params;
         const { email, token ,userId,momentId} = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
         const authHeader = req.headers.authorization;
 
         const authorizedToken = authHeader.split(" ")[1];
@@ -1773,6 +1800,13 @@ exports.getAllMoments = async (req, res) => {
         const userId = req.user.userId;
         const { email, token } = req.body;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
 
@@ -1828,6 +1862,13 @@ exports.momentViewControl = async (req,res) =>{
     try {
         const userId = req.user.userId;
         const {email, token , momentId} = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -1886,6 +1927,13 @@ exports.authorizedUserMomentsViewersCount = async (req, res) => {
        // const { momentId } = req.params;
 
         const { email, token,momentId } = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
 
@@ -1972,6 +2020,13 @@ exports.authorizedUserMomentsViewers = async (req, res) => {
 
 
         const { email, token ,momentId} = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
 
@@ -2068,6 +2123,13 @@ exports.deleteMoment = async (req, res) => {
 
         const { email, token,momentId } = req.body;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+
         const authHeader = req.headers.authorization;
 
         const authorizedToken = authHeader.split(" ")[1];
@@ -2131,6 +2193,13 @@ exports.giveCommentToAnMomemt = async (req, res) => {
         const userId = req.user.userId;
         //const { momentId } = req.params;
         const { comment, token, email,momentId } = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2200,6 +2269,13 @@ exports.replyToMomontComment = async (req, res) => {
         const userId = req.user.userId;
         //const { momentId, commentId } = req.params;
         const { reply, email, token,momentId,commentId } = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2276,6 +2352,13 @@ exports.getAllCommentsWithReplies = async (req, res) => {
         const { email, token,momentId } = req.body;
         //const { momentId } = req.params;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
         const userEmail = await User.findById(userId).select("email");
@@ -2337,6 +2420,13 @@ exports.getAllPost = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { email, token } = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2416,6 +2506,12 @@ exports.getSinglePost = async (req, res) => {
         const userId = req.user.userId;
         const { email, token,postId } = req.body;
         // const { postId } = req.params;
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2491,6 +2587,13 @@ exports.giveCommentToPost = async (req, res) => {
         //const { postId } = req.params;
         const { comment, email, token ,postId} = req.body;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
         const userEmail = await User.findById(userId).select("email");
@@ -2560,6 +2663,13 @@ exports.getAuthorizedUserPost = async (req, res) => {
         const userId = req.user.userId;
         const { email, token } = req.body;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
         const userEmail = await User.findById(userId).select("email");
@@ -2609,11 +2719,83 @@ exports.getAuthorizedUserPost = async (req, res) => {
 
 
 
+
+exports.getAuthorizedUserPhotoGraphy = async (req,res) =>{
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+        const authHeader = req.headers.authorization;
+
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        const userPhotoGraphy = await Postcreate.find({ userId , is_photography: true })
+            .populate("userId", "userName profilePic email")
+            .populate("comments.userId", "userName profilePic email")
+        // .populate("comments.replies.userId", "userName profilePic email");
+
+
+        if(!userPhotoGraphy || userPhotoGraphy.length === 0){
+            return res.status(200).json({
+                sucess:false,
+                message:"No Photos found for this user"
+            })
+        }
+
+
+        return res.status(200).json({
+            sucess:true,
+            message:"Fetched all Photos for the authorized user",
+            userPhotoGraphy,
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess:false,
+            message:"Server Error while fetching userAll Photos"
+        })
+    }
+}
+
+
+
+
+
 exports.giveTedGoldToPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
         //const { postId } = req.params;
         const { email, token ,postId} = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -2736,6 +2918,13 @@ exports.giveTedSilverPost = async (req, res) => {
        // const { postId } = req.params;
         const { email, token ,postId} = req.body;
 
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
+
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
         const userEmail = await User.findById(giverId).select("email");
@@ -2854,6 +3043,13 @@ exports.giveTedBronzePost = async (req, res) => {
         const giverId = req.user.userId;
         //const { postId } = req.params;
         const { email, token,postId } = req.body;
+
+        if(!email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please provide Email And Token"
+            })
+        }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
