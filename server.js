@@ -59,7 +59,7 @@ dbConnect();
 app.use("/api/v1/user", authRoutes);
 
 app.get("/", (req, res) => {
-    res.send("Welcome to the Chat Application API");
+    res.send("Welcome to the Cam Me Application API");
 }
 );
 

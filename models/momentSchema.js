@@ -16,7 +16,7 @@ const momentSchema = new mongoose.Schema({
     },
     is_closeFriends: {
         type: Boolean,
-        default: false
+        default: true // means true for friendsOnly and false for public
     },
     comments: [
         {

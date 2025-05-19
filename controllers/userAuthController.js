@@ -1767,7 +1767,7 @@ exports.viewAMoment = async (req, res) => {
 
 
 
-
+// if any changes happen in momentViewControl logic then also change here
 exports.getAllMoments = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -1822,6 +1822,60 @@ exports.getAllMoments = async (req, res) => {
     }
 };
 
+
+// work is pending Here
+exports.momentViewControl = async (req,res) =>{
+    try {
+        const userId = req.user.userId;
+        const {email, token , momentId} = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!momentId) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment ID is required",
+            });
+        }
+
+        const moment = await Moment.findById(momentId);
+        if (!moment) {
+            return res.status(200).json({
+                success: false,
+                message: "Moment not found",
+            });
+        }
+
+        moment.is_closeFriends = !moment.is_closeFriends; // Toggle the is_closeFriends status
+
+      
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess:false,
+            message:"Server Error while Control MomentView"
+        })
+    }
+}
 
 
 
@@ -2053,7 +2107,7 @@ exports.deleteMoment = async (req, res) => {
             });
         }
 
-        await moment.remove();
+        await moment.deleteOne();
 
         return res.status(200).json({
             success: true,
