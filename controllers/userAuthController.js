@@ -999,7 +999,7 @@ exports.sendFriendRequest = async (req, res) => {
     try {
         const user = req.user.userId
 
-        const {email , token , reciverId} = req.body;
+        const { email, token, reciverId } = req.body;
 
         //const { reciverId } = req.params;
 
@@ -1077,7 +1077,7 @@ exports.acceptFriendRequest = async (req, res) => {
         //const { requestId } = req.params;
         const user = req.user.userId;
 
-        const {email , token , requestId} = req.body;
+        const { email, token, requestId } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -1158,10 +1158,10 @@ exports.createPost = async (req, res) => {
         const { description, visibility, hashTag, appliedFilter, filteredImageUrl, is_photography, token, email, colorMatrix } = req.body;
         const userId = req.user.userId;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -1498,10 +1498,10 @@ exports.createMoment = async (req, res) => {
         const userId = req.user.userId;
         const image = req.files;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -1632,10 +1632,10 @@ exports.getYourMoment = async (req, res) => {
         const { email, token } = req.body;
         const userId = req.user.userId;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -1684,12 +1684,12 @@ exports.viewAMoment = async (req, res) => {
     try {
         const viewerId = req.user.userId;
         //const { userId, momentId } = req.params;
-        const { email, token ,userId,momentId} = req.body;
+        const { email, token, userId, momentId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
         const authHeader = req.headers.authorization;
@@ -1800,10 +1800,10 @@ exports.getAllMoments = async (req, res) => {
         const userId = req.user.userId;
         const { email, token } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -1858,15 +1858,15 @@ exports.getAllMoments = async (req, res) => {
 
 
 // work is pending Here
-exports.momentViewControl = async (req,res) =>{
+exports.momentViewControl = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const {email, token , momentId} = req.body;
+        const { email, token, momentId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -1906,14 +1906,14 @@ exports.momentViewControl = async (req,res) =>{
 
         moment.is_closeFriends = !moment.is_closeFriends; // Toggle the is_closeFriends status
 
-      
+
 
 
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            sucess:false,
-            message:"Server Error while Control MomentView"
+            sucess: false,
+            message: "Server Error while Control MomentView"
         })
     }
 }
@@ -1924,14 +1924,14 @@ exports.momentViewControl = async (req,res) =>{
 exports.authorizedUserMomentsViewersCount = async (req, res) => {
     try {
         const userId = req.user.userId; // Authorized user
-       // const { momentId } = req.params;
+        // const { momentId } = req.params;
 
-        const { email, token,momentId } = req.body;
+        const { email, token, momentId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2019,12 +2019,12 @@ exports.authorizedUserMomentsViewers = async (req, res) => {
         //const { momentId } = req.params;
 
 
-        const { email, token ,momentId} = req.body;
+        const { email, token, momentId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2121,12 +2121,12 @@ exports.deleteMoment = async (req, res) => {
         const userId = req.user.userId;
         //const { momentId } = req.params;
 
-        const { email, token,momentId } = req.body;
+        const { email, token, momentId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2192,12 +2192,12 @@ exports.giveCommentToAnMomemt = async (req, res) => {
     try {
         const userId = req.user.userId;
         //const { momentId } = req.params;
-        const { comment, token, email,momentId } = req.body;
+        const { comment, token, email, momentId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2268,12 +2268,12 @@ exports.replyToMomontComment = async (req, res) => {
     try {
         const userId = req.user.userId;
         //const { momentId, commentId } = req.params;
-        const { reply, email, token,momentId,commentId } = req.body;
+        const { reply, email, token, momentId, commentId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2349,13 +2349,13 @@ exports.replyToMomontComment = async (req, res) => {
 exports.getAllCommentsWithReplies = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { email, token,momentId } = req.body;
+        const { email, token, momentId } = req.body;
         //const { momentId } = req.params;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2421,10 +2421,10 @@ exports.getAllPost = async (req, res) => {
         const userId = req.user.userId;
         const { email, token } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2504,12 +2504,12 @@ exports.getAllPost = async (req, res) => {
 exports.getSinglePost = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { email, token,postId } = req.body;
+        const { email, token, postId } = req.body;
         // const { postId } = req.params;
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2585,12 +2585,12 @@ exports.giveCommentToPost = async (req, res) => {
     try {
         const userId = req.user.userId;
         //const { postId } = req.params;
-        const { comment, email, token ,postId} = req.body;
+        const { comment, email, token, postId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2663,10 +2663,10 @@ exports.getAuthorizedUserPost = async (req, res) => {
         const userId = req.user.userId;
         const { email, token } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2720,15 +2720,15 @@ exports.getAuthorizedUserPost = async (req, res) => {
 
 
 
-exports.getAuthorizedUserPhotoGraphy = async (req,res) =>{
+exports.getAuthorizedUserPhotoGraphy = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { email, token } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
         const authHeader = req.headers.authorization;
@@ -2751,31 +2751,31 @@ exports.getAuthorizedUserPhotoGraphy = async (req,res) =>{
             });
         }
 
-        const userPhotoGraphy = await Postcreate.find({ userId , is_photography: true })
+        const userPhotoGraphy = await Postcreate.find({ userId, is_photography: true })
             .populate("userId", "userName profilePic email")
             .populate("comments.userId", "userName profilePic email")
         // .populate("comments.replies.userId", "userName profilePic email");
 
 
-        if(!userPhotoGraphy || userPhotoGraphy.length === 0){
+        if (!userPhotoGraphy || userPhotoGraphy.length === 0) {
             return res.status(200).json({
-                sucess:false,
-                message:"No Photos found for this user"
+                sucess: false,
+                message: "No Photos found for this user"
             })
         }
 
 
         return res.status(200).json({
-            sucess:true,
-            message:"Fetched all Photos for the authorized user",
+            sucess: true,
+            message: "Fetched all Photos for the authorized user",
             userPhotoGraphy,
         })
 
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            sucess:false,
-            message:"Server Error while fetching userAll Photos"
+            sucess: false,
+            message: "Server Error while fetching userAll Photos"
         })
     }
 }
@@ -2788,12 +2788,12 @@ exports.giveTedGoldToPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
         //const { postId } = req.params;
-        const { email, token ,postId} = req.body;
+        const { email, token, postId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2841,7 +2841,7 @@ exports.giveTedGoldToPost = async (req, res) => {
         }
 
         if (
-            (post.tedGoldGivers?.includes(giverId)) 
+            (post.tedGoldGivers?.includes(giverId))
         ) {
             return res.status(200).json({
                 success: false,
@@ -2849,58 +2849,58 @@ exports.giveTedGoldToPost = async (req, res) => {
             });
         }
 
-        
 
 
-       const receiver = await User.findById(post.userId);
-    if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
-    // If already Gold, quit
-    if (post.tedGoldGivers?.includes(giverId))
-      return res.status(200).json({ success: false, message: "Already gave Gold" });
+        const receiver = await User.findById(post.userId);
+        if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
-    const giverIdStr = giverId.toString();
+        // If already Gold, quit
+        if (post.tedGoldGivers?.includes(giverId))
+            return res.status(200).json({ success: false, message: "Already gave Gold" });
 
-    // ---------- remove from lower tiers if present ----------
-    const tiers = [
-      { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
-      { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" }
-    ];
+        const giverIdStr = giverId.toString();
 
-    tiers.forEach(t => {
-      if (post[t.arr]?.includes(giverId)) {
-        post[t.arr]   = post[t.arr].filter(id => id.toString() !== giverIdStr);
-        post[t.cnt]   = Math.max((post[t.cnt] || 1) - 1, 0);
-        receiver.coinWallet[t.wallet] =
-          Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
-      }
-    });
+        // ---------- remove from lower tiers if present ----------
+        const tiers = [
+            { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
+            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" }
+        ];
 
-    // ---------- add to Gold ----------
-    post.tedGoldGivers = post.tedGoldGivers || [];
-    post.tedGoldGivers.push(giverId);
-    post.tedGoldCount  = (post.tedGoldCount || 0) + 1;
-    receiver.coinWallet.tedGold = (receiver.coinWallet.tedGold || 0) + 1;
+        tiers.forEach(t => {
+            if (post[t.arr]?.includes(giverId)) {
+                post[t.arr] = post[t.arr].filter(id => id.toString() !== giverIdStr);
+                post[t.cnt] = Math.max((post[t.cnt] || 1) - 1, 0);
+                receiver.coinWallet[t.wallet] =
+                    Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
+            }
+        });
 
-    // ---------- recalc totalTedCoin ----------
-    const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
-    const goldUnits   = Math.floor(tedGold   / 75);
-    const silverUnits = Math.floor(tedSilver / 50);
-    const bronzeUnits = Math.floor(tedBronze / 25);
-    receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+        // ---------- add to Gold ----------
+        post.tedGoldGivers = post.tedGoldGivers || [];
+        post.tedGoldGivers.push(giverId);
+        post.tedGoldCount = (post.tedGoldCount || 0) + 1;
+        receiver.coinWallet.tedGold = (receiver.coinWallet.tedGold || 0) + 1;
 
-    await receiver.save();
-    await post.save();
+        // ---------- recalc totalTedCoin ----------
+        const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
+        const goldUnits = Math.floor(tedGold / 75);
+        const silverUnits = Math.floor(tedSilver / 50);
+        const bronzeUnits = Math.floor(tedBronze / 25);
+        receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
 
-    res.status(200).json({
-      success: true,
-      message: "Switched to TedGold successfully",
-      counts: {
-        tedGold:   post.tedGoldCount,
-        tedSilver: post.tedSilverCount,
-        tedBronze: post.tedBronzeCount
-      }
-    });
+        await receiver.save();
+        await post.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Switched to TedGold successfully",
+            counts: {
+                tedGold: post.tedGoldCount,
+                tedSilver: post.tedSilverCount,
+                tedBronze: post.tedBronzeCount
+            }
+        });
     } catch (error) {
         console.error("Error giving TedGold:", error);
         return res.status(500).json({
@@ -2915,13 +2915,13 @@ exports.giveTedGoldToPost = async (req, res) => {
 exports.giveTedSilverPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
-       // const { postId } = req.params;
-        const { email, token ,postId} = req.body;
+        // const { postId } = req.params;
+        const { email, token, postId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -2971,9 +2971,9 @@ exports.giveTedSilverPost = async (req, res) => {
 
 
         if (
-            
-            (post.tedSilverGivers?.includes(giverId)) 
-            
+
+            (post.tedSilverGivers?.includes(giverId))
+
         ) {
             return res.status(200).json({
                 success: false,
@@ -2981,52 +2981,52 @@ exports.giveTedSilverPost = async (req, res) => {
             });
         }
 
-       const receiver = await User.findById(post.userId);
-    if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
+        const receiver = await User.findById(post.userId);
+        if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
-    const giverStr = giverId.toString();
+        const giverStr = giverId.toString();
 
-    /* ---------- remove from Gold / Bronze tiers if present ---------- */
-    const tiers = [
-      { arr: "tedGoldGivers",   cnt: "tedGoldCount",   wallet: "tedGold"   },
-      { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" }
-    ];
+        /* ---------- remove from Gold / Bronze tiers if present ---------- */
+        const tiers = [
+            { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
+            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" }
+        ];
 
-    tiers.forEach(t => {
-      if (post[t.arr]?.includes(giverId)) {
-        post[t.arr]   = post[t.arr].filter(id => id.toString() !== giverStr);
-        post[t.cnt]   = Math.max((post[t.cnt] || 1) - 1, 0);
-        receiver.coinWallet[t.wallet] =
-          Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
-      }
-    });
+        tiers.forEach(t => {
+            if (post[t.arr]?.includes(giverId)) {
+                post[t.arr] = post[t.arr].filter(id => id.toString() !== giverStr);
+                post[t.cnt] = Math.max((post[t.cnt] || 1) - 1, 0);
+                receiver.coinWallet[t.wallet] =
+                    Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
+            }
+        });
 
-    /* ---------- add to Silver tier ---------- */
-    post.tedSilverGivers = post.tedSilverGivers || [];
-    post.tedSilverGivers.push(giverId);
-    post.tedSilverCount  = (post.tedSilverCount || 0) + 1;
-    receiver.coinWallet.tedSilver = (receiver.coinWallet.tedSilver || 0) + 1;
+        /* ---------- add to Silver tier ---------- */
+        post.tedSilverGivers = post.tedSilverGivers || [];
+        post.tedSilverGivers.push(giverId);
+        post.tedSilverCount = (post.tedSilverCount || 0) + 1;
+        receiver.coinWallet.tedSilver = (receiver.coinWallet.tedSilver || 0) + 1;
 
-    /* ---------- recalc totalTedCoin ---------- */
-    const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
-    const goldUnits   = Math.floor(tedGold   / 75);
-    const silverUnits = Math.floor(tedSilver / 50);
-    const bronzeUnits = Math.floor(tedBronze / 25);
-    receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+        /* ---------- recalc totalTedCoin ---------- */
+        const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
+        const goldUnits = Math.floor(tedGold / 75);
+        const silverUnits = Math.floor(tedSilver / 50);
+        const bronzeUnits = Math.floor(tedBronze / 25);
+        receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
 
-    await receiver.save();
-    await post.save();
+        await receiver.save();
+        await post.save();
 
-    return res.status(200).json({
-      success: true,
-      message: "TedSilver given successfully",
-      counts: {
-        tedGold:   post.tedGoldCount,
-        tedSilver: post.tedSilverCount,
-        tedBronze: post.tedBronzeCount
-      },
-      toUser: receiver._id
-    });
+        return res.status(200).json({
+            success: true,
+            message: "TedSilver given successfully",
+            counts: {
+                tedGold: post.tedGoldCount,
+                tedSilver: post.tedSilverCount,
+                tedBronze: post.tedBronzeCount
+            },
+            toUser: receiver._id
+        });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
@@ -3042,12 +3042,12 @@ exports.giveTedBronzePost = async (req, res) => {
     try {
         const giverId = req.user.userId;
         //const { postId } = req.params;
-        const { email, token,postId } = req.body;
+        const { email, token, postId } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please provide Email And Token"
+                sucess: false,
+                message: "Please provide Email And Token"
             })
         }
 
@@ -3104,51 +3104,51 @@ exports.giveTedBronzePost = async (req, res) => {
         }
 
         const receiver = await User.findById(post.userId);
-    if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
+        if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
-    const giverStr = giverId.toString();
+        const giverStr = giverId.toString();
 
-    /* ---------- remove from Gold / Silver if present ---------- */
-    const tiers = [
-      { arr: "tedGoldGivers",   cnt: "tedGoldCount",   wallet: "tedGold"   },
-      { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" }
-    ];
+        /* ---------- remove from Gold / Silver if present ---------- */
+        const tiers = [
+            { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
+            { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" }
+        ];
 
-    tiers.forEach(t => {
-      if (post[t.arr]?.includes(giverId)) {
-        post[t.arr] = post[t.arr].filter(id => id.toString() !== giverStr);
-        post[t.cnt] = Math.max((post[t.cnt] || 1) - 1, 0);
-        receiver.coinWallet[t.wallet] =
-          Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
-      }
-    });
+        tiers.forEach(t => {
+            if (post[t.arr]?.includes(giverId)) {
+                post[t.arr] = post[t.arr].filter(id => id.toString() !== giverStr);
+                post[t.cnt] = Math.max((post[t.cnt] || 1) - 1, 0);
+                receiver.coinWallet[t.wallet] =
+                    Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
+            }
+        });
 
-    /* ---------- add to Bronze tier ---------- */
-    post.tedBronzeGivers = post.tedBronzeGivers || [];
-    post.tedBronzeGivers.push(giverId);
-    post.tedBronzeCount  = (post.tedBronzeCount || 0) + 1;
-    receiver.coinWallet.tedBronze = (receiver.coinWallet.tedBronze || 0) + 1;
+        /* ---------- add to Bronze tier ---------- */
+        post.tedBronzeGivers = post.tedBronzeGivers || [];
+        post.tedBronzeGivers.push(giverId);
+        post.tedBronzeCount = (post.tedBronzeCount || 0) + 1;
+        receiver.coinWallet.tedBronze = (receiver.coinWallet.tedBronze || 0) + 1;
 
-    /* ---------- recalc totalTedCoin ---------- */
-    const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
-    const goldUnits   = Math.floor(tedGold   / 75);
-    const silverUnits = Math.floor(tedSilver / 50);
-    const bronzeUnits = Math.floor(tedBronze / 25);
-    receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+        /* ---------- recalc totalTedCoin ---------- */
+        const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
+        const goldUnits = Math.floor(tedGold / 75);
+        const silverUnits = Math.floor(tedSilver / 50);
+        const bronzeUnits = Math.floor(tedBronze / 25);
+        receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
 
-    await receiver.save();
-    await post.save();
+        await receiver.save();
+        await post.save();
 
-    return res.status(200).json({
-      success: true,
-      message: "TedBronze given successfully",
-      counts: {
-        tedGold:   post.tedGoldCount,
-        tedSilver: post.tedSilverCount,
-        tedBronze: post.tedBronzeCount
-      },
-      toUser: receiver._id
-    });
+        return res.status(200).json({
+            success: true,
+            message: "TedBronze given successfully",
+            counts: {
+                tedGold: post.tedGoldCount,
+                tedSilver: post.tedSilverCount,
+                tedBronze: post.tedBronzeCount
+            },
+            toUser: receiver._id
+        });
 
     } catch (error) {
         console.error("Error in giveTedBronzePost:", error);
@@ -3244,53 +3244,62 @@ exports.giveTedBlackCoin = async (req, res) => {
 
 
 
-// // Lots of work pending is here not complited
-// exports.getYourProfile = async (req,res) =>{
-//     try {
-//         const user = req.user.userId;
-//         const { email, token } = req.body;
-//         const authHeader = req.headers.authorization;
 
-//         const authorizedToken = authHeader.split(" ")[1];
-//         const userEmail = await User.findById(user).select("email");
-        
-//         // Compare provided token with authorized token
-//         if (token !== authorizedToken) {
-//             return res.status(200).json({
-//                 success: false,
-//                 message: "Provided token does not match authorized token",
-//             });
-//         }
+exports.getProfile = async (req, res) => {
+    try {
+        const { email, token, userId } = req.body;
 
-//         if (userEmail.email !== email) {
-//             return res.status(200).json({
-//                 success: false,
-//                 message: "Provided email does not match authorized email",
-//             });
-//         }
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
 
-//         const userProfile = await User.findById(user)
-//             .populate("userAllFriends", "userName profilePic email")
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        const userProfile = await User.findById(userId)
+            .populate("userAllFriends", "userName profilePic email")
+            .populate("userAllFriends.userId", "userName profilePic email");
+
+        if (!userProfile) {
+            return res.status(200).json({
+                success: false,
+                message: "User not found",
+            });
+        }
 
 
-//         if (!userProfile) {
-//             return res.status(200).json({
-//                 success: false,
-//                 message: "User not found",
-//             });
-//         }
+        // Fetch all posts by this user, including comments and the is_photography flag
+        const posts = await Postcreate.find({ userId })
+            .sort({ createdAt: -1 })
+            .populate("comments.userId", "userName profilePic email")
+            .select("content descriptionText is_photography colorMatrix comments createdAt");
 
-//         return res.status(200).json({
-//             success: true,
-//             message: "Fetched user profile",
-//             userProfile
-//         });
-      
-//     } catch (error) {
-//         console.log(error);
-//         return res.status(500).json({
-//             sucess:false,
-//             message:"Server Error while Fetching Profile"
-//         })
-//     }
-// }
+        return res.status(200).json({
+            success: true,
+            message: "Fetched user profile",
+            userProfile: {
+                ...userProfile.toObject(),
+                posts,
+            },
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error while Fetching Profile"
+        })
+    }
+}

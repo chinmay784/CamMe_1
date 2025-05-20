@@ -2234,7 +2234,88 @@ router.post("/giveTedSilvercoin", authMiddelWere, giveTedSilverPost);
  */
 
 router.post("/giveTedBronzeCoin", authMiddelWere, giveTedBronzePost);
-router.post("/getAuthorizedUserPhotoGraphy",authMiddelWere, getAuthorizedUserPhotoGraphy);
+/**
+ * @swagger
+ * /user/getAuthorizedUserPhotoGraphy:
+ *   post:
+ *     summary: Retrieve authenticated user's photography posts
+ *     description: |
+ *       Returns all posts for the authorized user where `is_photography` is true.
+ *       Validates the user's email against the provided token in the request body.
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: User's registered email address
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 description: Bearer token from the Authorization header
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     responses:
+ *       200:
+ *         description: List of photography posts or a message if none exist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Fetched all Photos for the authorized user
+ *                 userPhotoGraphy:
+ *                   type: array
+ *                   description: Array of photography Post objects
+ *                   items:
+ *                     $ref: '#/components/schemas/Post'
+ *       403:
+ *         description: Token mismatch or unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Provided token does not match authorized token
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Server Error while fetching userAll Photos
+ */
+router.post(
+  "/getAuthorizedUserPhotoGraphy",
+  authMiddelWere,
+  getAuthorizedUserPhotoGraphy
+);
+
 router.post("/givetedBlackCoin/:postId", authMiddelWere, giveTedBlackCoin);
 
 /**
