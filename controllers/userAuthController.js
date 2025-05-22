@@ -2656,6 +2656,77 @@ exports.giveCommentToPost = async (req, res) => {
 
 
 
+// Route will be Not added in userAuthRoutes (work is pending Here)
+exports.giveReplayToCommentPost = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const { email, token, commentId, postId, reply } = req.body;
+        if (!email || !token || !commentId || !postId || !reply) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please Provide All Details"
+            })
+        }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+
+        const posts = await Postcreate.findById(postId);
+
+        if (!posts) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Post Not Found."
+            })
+        }
+
+        const comment = posts.comments.id(commentId);
+        if (!comment) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Comment Not Found."
+            })
+        }
+
+        comment.replies.push({
+            userId,
+            reply
+        })
+
+        await posts.save();
+
+        return res.status(200).json({
+            sucess: true,
+            message: "Reply Give SucessFully to an Post"
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error while Give ReplayTo an Posts"
+        })
+    }
+}
+
+
 
 
 exports.getAuthorizedUserPost = async (req, res) => {
@@ -2864,7 +2935,8 @@ exports.giveTedGoldToPost = async (req, res) => {
         // ---------- remove from lower tiers if present ----------
         const tiers = [
             { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
-            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" }
+            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
+            { arr: "tedBlackGivers", cnt: "tedBlackCount", wallet: "tedBlack" }
         ];
 
         tiers.forEach(t => {
@@ -2898,7 +2970,8 @@ exports.giveTedGoldToPost = async (req, res) => {
             counts: {
                 tedGold: post.tedGoldCount,
                 tedSilver: post.tedSilverCount,
-                tedBronze: post.tedBronzeCount
+                tedBronze: post.tedBronzeCount,
+                tedBlack: post.tedBlackCount
             }
         });
     } catch (error) {
@@ -2989,7 +3062,8 @@ exports.giveTedSilverPost = async (req, res) => {
         /* ---------- remove from Gold / Bronze tiers if present ---------- */
         const tiers = [
             { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
-            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" }
+            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
+            { arr: "tedBlackGivers", cnt: "tedBlackCount", wallet: "tedBlack" }
         ];
 
         tiers.forEach(t => {
@@ -3023,7 +3097,8 @@ exports.giveTedSilverPost = async (req, res) => {
             counts: {
                 tedGold: post.tedGoldCount,
                 tedSilver: post.tedSilverCount,
-                tedBronze: post.tedBronzeCount
+                tedBronze: post.tedBronzeCount,
+                tedBlack: post.tedBlackCount
             },
             toUser: receiver._id
         });
@@ -3111,7 +3186,8 @@ exports.giveTedBronzePost = async (req, res) => {
         /* ---------- remove from Gold / Silver if present ---------- */
         const tiers = [
             { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
-            { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" }
+            { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
+            { arr: "tedBlackGivers", cnt: "tedBlackCount", wallet: "tedBlack" }
         ];
 
         tiers.forEach(t => {
@@ -3145,7 +3221,8 @@ exports.giveTedBronzePost = async (req, res) => {
             counts: {
                 tedGold: post.tedGoldCount,
                 tedSilver: post.tedSilverCount,
-                tedBronze: post.tedBronzeCount
+                tedBronze: post.tedBronzeCount,
+                tedBlack: post.tedBlackCount
             },
             toUser: receiver._id
         });
@@ -3161,14 +3238,54 @@ exports.giveTedBronzePost = async (req, res) => {
 
 
 
-// Lot of work pending is here not complited
+
 exports.giveTedBlackCoin = async (req, res) => {
     try {
-        const giverId = req.user.userId;  // Authorized user
-        const { postId } = req.params;
-        const { reason } = req.body;  // Reason for giving TedBlackCoin
+        const authorizedUserId = req.user.userId;
+        const { postId, reason, email, token } = req.body;
 
-        // Check if the post exists
+        if (!postId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please provide PostId"
+            })
+        }
+
+        if (!reason) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please provide reason"
+            })
+        }
+
+
+        if (!email || !token) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please provide email and token"
+            })
+        }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(authorizedUserId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+
         const post = await Postcreate.findById(postId);
         if (!post) {
             return res.status(404).json({
@@ -3177,68 +3294,209 @@ exports.giveTedBlackCoin = async (req, res) => {
             });
         }
 
-        // Check if TedBlackCoin voting is already active
-        if (post.tedBlackCoinData && post.tedBlackCoinData.status === 'pending') {
-            return res.status(400).json({
-                success: false,
-                message: "TedBlackCoin voting is already active for this post"
-            });
+
+        if (post.tedBlackGivers?.includes(authorizedUserId)) {
+            return res.status(200).json({
+                sucess: "false",
+                message: "You Have Already Given Black coin to this post",
+            })
         }
 
-        // Initialize the TedBlackCoin voting data
-        const votingDuration = 60 * 60 * 1000; // 1 hour in milliseconds
-        const votingEndsAt = new Date(Date.now() + votingDuration);
+        const receiver = await User.findById(post.userId);
+        if (!receiver) {
+            return re.status(200).json({
+                sucess: false,
+                message: "Post Owner Not Found "
+            })
+        }
 
-        // Add TedBlackCoin data to the post
+        const giverStr = authorizedUserId.toString();
+
+        /* ---------- remove from Gold / Silver if present ---------- */
+        const tiers = [
+            { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
+            { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
+            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
+        ];
+
+        // Save the TedBlackCoin data
         post.tedBlackCoinData = {
-            givenBy: giverId,
-            reason: reason,
-            givenAt: Date.now(),
-            votingEndsAt: votingEndsAt,
-            votes: [],
-            status: 'pending'
+            givenBy: authorizedUserId,
+            reason,
+            createdAt: new Date(),
+            voters: [],
+            agree: [],
+            disagree: [],
+            isFinalized: false
         };
+        await post.save();
 
-        // Notify users who have given TedGold, TedSilver, or TedBronze to the post
-        const notifiedUsers = new Set();
-
-        // Check for TedGold, TedSilver, and TedBronze givers
-        const coinGivers = [
+        // Combine all givers
+        const allGivers = [
             ...post.tedGoldGivers,
             ...post.tedSilverGivers,
             ...post.tedBronzeGivers
         ];
 
-        for (const userId of coinGivers) {
-            if (userId !== giverId && !notifiedUsers.has(userId)) {
-                // Notify the user (you can implement your notification logic here)
-                await Notification.create({
-                    userId: userId,
-                    message: `A TedBlackCoin has been given to your post! Reason: ${reason}. Please vote "Agree" or "Disagree".`,
-                    postId: postId,
-                    type: 'TedBlackCoinVoting',
-                    status: 'unread'
-                });
+        // Remove duplicates
+        const uniqueGivers = [...new Set(allGivers.map(g => g.toString()))];
 
-                notifiedUsers.add(userId);
+        // Send notifications to all givers
+        for (const giverId of uniqueGivers) {
+            if (giverId !== authorizedUserId) {
+                await Notification.create({
+                    userId: giverId,
+                    postId: post._id,
+                    type: "TedBlackCoinVote",
+                    message: `A TedBlackCoin has been given to a post you previously reacted to. Reason: ${reason}`,
+                    actions: ["Agree", "Disagree"]
+                });
             }
         }
 
-        // Save the post with TedBlackCoin data
-        await post.save();
+        // Schedule evaluation after 1 hour
+        const blackCoinGiverId = authorizedUserId;
+        console.log("Ouside SetTimeOut")
+        setTimeout(async () => {
+            const updatedPost = await Postcreate.findById(postId);
+
+            if (updatedPost && !updatedPost.tedBlackCoinData.isFinalized) {
+                const { agree, disagree } = updatedPost.tedBlackCoinData;
+                const totalVotes = agree.length + disagree.length;
+                console.log("Inside SetTimeOut")
+                const agreePercentage = totalVotes > 0 ? (agree.length / totalVotes) * 100 : 0;
+
+                if (agreePercentage >= 70) {
+                    console.log("Hello 70% complited")
+                    const postCreator = await User.findById(updatedPost.userId);
+                    const postReceiver = await User.findById(updatedPost.userId); // Same as creator
+
+                    // postCreator.tedGold = Math.max(0, postCreator.tedGold - 1);
+                    // postCreator.tedSilver = Math.max(0, postCreator.tedSilver - 2);
+                    // postCreator.tedBronze = Math.max(0, postCreator.tedBronze - 3);
+
+
+                    const updatedTiers = [
+                        { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
+                        { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
+                        { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
+                    ];
+
+                    for (const tier of updatedTiers) {
+                        if (updatedPost[tier.arr]?.includes(blackCoinGiverId)) {
+                            updatedPost[tier.arr] = updatedPost[tier.arr].filter(id => id.toString() !== blackCoinGiverId.toString());
+                            updatedPost[tier.cnt] = Math.max((updatedPost[tier.cnt] || 1) - 1, 0);
+                            postReceiver.coinWallet[tier.wallet] =
+                                Math.max((postReceiver.coinWallet[tier.wallet] || 1) - 1, 0);
+                        }
+                    }
+
+                    updatedPost.tedBlackGivers = updatedPost.tedBlackGivers || [];
+                    if (!updatedPost.tedBlackGivers.includes(blackCoinGiverId)) {
+                        updatedPost.tedBlackGivers.push(blackCoinGiverId);
+                    }
+                    updatedPost.tedBlackCount = (updatedPost.tedBlackCount || 0) + 1;
+
+                    postReceiver.coinWallet.tedBlack = (postReceiver.coinWallet.tedBlack || 0) + 1;
+                    postReceiver.coinWallet.tedGold = (postReceiver.coinWallet.tedGold || 0) - 1;
+                    postReceiver.coinWallet.tedSilver = (postReceiver.coinWallet.tedSilver || 0) - 2;
+                    postReceiver.coinWallet.tedBronze = (postReceiver.coinWallet.tedBronze || 0) - 3;
+
+                    await postCreator.save();
+                    await postReceiver.save();
+                    await updatedPost.save();
+                }
+
+                updatedPost.tedBlackCoinData.isFinalized = true;
+                await updatedPost.save();
+            }
+        }, 20 * 60 * 1000); // 20 min
 
         return res.status(200).json({
             success: true,
-            message: "TedBlackCoin voting initiated successfully",
-            votingEndsAt: votingEndsAt
+            message: "TedBlackCoin given and notifications sent for voting."
         });
 
     } catch (error) {
         console.error("Error in giveTedBlackCoin:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error while giving TedBlackCoin"
-        });
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+
+
+
+exports.voteTedBlackCoin = async (req, res) => {
+    try {
+        const { postId, voteType, email, token } = req.body;
+        const voterId = req.user.userId;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(voterId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!postId) {
+            return res.status(200).json({ success: false, message: "Post ID is required" });
+        }
+
+        if (!voteType || (voteType !== 'agree' && voteType !== 'disagree')) {
+            return res.status(200).json({ success: false, message: "Vote type is required and must be either 'agree' or 'disagree'" });
+        }
+
+        if(!email || !token){
+            return res.status(200).json({
+                success: false,
+                message: "Please provide email and token",
+            });
+        }
+
+        const post = await Postcreate.findById(postId);
+
+        if (!post) {
+            return res.status(200).json({ success: false, message: "Post  not found" });
+        }
+
+        const { agree, disagree, voters, isFinalized } = post.tedBlackCoinData;
+
+        if (isFinalized) {
+            return res.status(200).json({ success: false, message: "Voting has already ended" });
+        }
+
+        if (voters.includes(voterId)) {
+            return res.status(200).json({ success: false, message: "You have already voted" });
+        }
+
+        if (voteType === 'agree') {
+            post.tedBlackCoinData.agree.push(voterId);
+        } else if (voteType === 'disagree') {
+            post.tedBlackCoinData.disagree.push(voterId);
+        } else {
+            return res.status(200).json({ success: false, message: "Invalid vote type" });
+        }
+
+        post.tedBlackCoinData.voters.push(voterId);
+        await post.save();
+
+        return res.status(200).json({ success: true, message: "Vote recorded successfully" });
+
+    } catch (error) {
+        console.error("voteTedBlackCoin error:", error);
+        return res.status(500).json({ success: false, message: "Server error while voting" });
     }
 };
 

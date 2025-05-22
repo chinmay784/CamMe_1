@@ -16,11 +16,11 @@ const server = http.createServer(app);
 
 
 const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
 });
 
 
@@ -29,22 +29,22 @@ global.onlineUsers = new Map();
 
 
 io.on("connection", (socket) => {
-    console.log("User Connected:", socket.id);
+  console.log("User Connected:", socket.id);
 
-    socket.on("User_Connected", (userId) => {
-        global.onlineUsers.set(userId, socket.id);
-        console.log("Online Users:", global.onlineUsers);
-    });
+  socket.on("User_Connected", (userId) => {
+    global.onlineUsers.set(userId, socket.id);
+    console.log("Online Users:", global.onlineUsers);
+  });
 
-    socket.on("disconnect", () => {
-        for (let [userId, socketId] of global.onlineUsers.entries()) {
-            if (socketId === socket.id) {
-                global.onlineUsers.delete(userId);
-                break;
-            }
-        }
-        console.log("User disconnected:", socket.id);
-    });
+  socket.on("disconnect", () => {
+    for (let [userId, socketId] of global.onlineUsers.entries()) {
+      if (socketId === socket.id) {
+        global.onlineUsers.delete(userId);
+        break;
+      }
+    }
+    console.log("User disconnected:", socket.id);
+  });
 });
 
 
@@ -59,16 +59,16 @@ dbConnect();
 app.use("/api/v1/user", authRoutes);
 
 app.get("/", (req, res) => {
-    res.send("Welcome to the Cam Me Application API");
+  res.send("Welcome to the Cam Me Application API Documentation");
 }
 );
 
 
 // in server.js or app.js
 app.get('/reset-window', (req, res) => {
-    const email = req.query.email;
-  
-    res.send(`
+  const email = req.query.email;
+
+  res.send(`
       <html>
         <head><title>Reset Password</title></head>
         <body>
@@ -107,10 +107,10 @@ app.get('/reset-window', (req, res) => {
         </body>
       </html>
     `);
-  });
-  
+});
+
 
 server.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
-    console.log(`Api Docs avaliable  at http://localhost:${PORT}/api-docs`);
+  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Api Docs avaliable  at http://localhost:${PORT}/api-docs`);
 });

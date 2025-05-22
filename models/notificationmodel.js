@@ -2,37 +2,36 @@ const mongoose = require('mongoose');
 
 // Define the notification schema
 const notificationSchema = new mongoose.Schema({
-    userId: {  // The user who will receive the notification
+    userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    message: {  // The message content of the notification
-        type: String,
-        required: true
-    },
-    postId: {  // The post associated with the notification (optional, can be null)
+    postId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Postcreate',
+        ref: 'Post',
         required: false
     },
-    type: {  // Type of notification (could be 'TedBlackCoinVoting', 'NewFriendRequest', etc.)
+    type: {
+        type: String,
+        enum: ['TedBlackCoinVote', 'FriendRequest', 'System', 'Comment', 'Reaction'],
+        required: true
+    },
+    message: {
         type: String,
         required: true
     },
-    status: {  // Notification status ('unread' or 'read')
-        type: String,
-        enum: ['unread', 'read'],
-        default: 'unread'
+    actions: {
+        type: [String], // e.g., ['Agree', 'Disagree']
+        default: []
     },
-    createdAt: {  // Timestamp when the notification was created
+    isRead: {
+        type: Boolean,
+        default: false
+    },
+    createdAt: {
         type: Date,
         default: Date.now
-    },
-    votingResponse: {  // User's voting response (optional)
-        type: String,
-        enum: ['agree', 'disagree', 'pending'],
-        default: 'pending'
     }
 });
 

@@ -56,7 +56,7 @@ const postSchema = new mongoose.Schema({
         required: false,
         default: [],
     },
-    
+
     comments: [
         {
             userId: {
@@ -67,6 +67,22 @@ const postSchema = new mongoose.Schema({
                 type: String,
                 required: true,
             },
+            replies: [
+                {
+                    userId: {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "User",
+                    },
+                    reply: {
+                        type: String,
+                        required: true,
+                    },
+                    createdAt: {
+                        type: Date,
+                        default: Date.now
+                    }
+                }
+            ]
         },
     ],
     expressions: [
@@ -101,22 +117,43 @@ const postSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    tedBlackGivers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    tedBlackCount: {
+        type: Number,
+        default: 0
+    },
     tedBlackCoinData: {
         givenBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
+            ref: "User",
+            required: true
         },
-        reason: String,
-        givenAt: Date,
-        votingEndsAt: Date,
-        votes: [{
-            user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-            vote: { type: String, enum: ['agree', 'disagree'] }
-        }],
-        status: {
+        reason: {
             type: String,
-            enum: ['pending', 'resolved'],
-            default: 'pending'
+            required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        },
+        voters: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }],
+        agree: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }],
+        disagree: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }],
+        isFinalized: {
+            type: Boolean,
+            default: false
         }
     },
     shareCount: {
