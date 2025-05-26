@@ -3258,12 +3258,12 @@ exports.giveTedBlackCoin = async (req, res) => {
         const authorizedToken = authHeader.split(" ")[1];
         const user = await User.findById(authorizedUserId).select("email");
 
-        if (token !== authorizedToken) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid token ",
-            });
-        }
+        // if (token !== authorizedToken) {
+        //     return res.status(401).json({
+        //         success: false,
+        //         message: "Invalid token ",
+        //     });
+        // }
 
         if (user.email !== email) {
             return res.status(401).json({
