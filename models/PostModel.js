@@ -129,11 +129,11 @@ const postSchema = new mongoose.Schema({
         givenBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: false
         },
         reason: {
             type: String,
-            required: true
+            required: false
         },
         createdAt: {
             type: Date,

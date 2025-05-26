@@ -14,7 +14,7 @@ const mongoose = require("mongoose");
 const Moment = require("../models/momentSchema")
 const fs = require("fs");
 const Notification = require("../models/notificationmodel")
-const admin = require("../firebase")
+ const admin = require("../firebase")
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -23,6 +23,22 @@ const transPorter = nodeMailer.createTransport({
         pass: process.env.SMTP_PASS,
     },
 });
+
+
+
+// const dotenv = require('dotenv');
+// dotenv.config();
+// const admin = require("firebase-admin");
+// const serviceAccount = require("../console.json"); // Download from Firebase Console
+// // const { initializeApp, applicationDefault } = require("firebase-admin/app")
+// // const { getMessaging } = require("firebase-admin/messaging")
+
+// process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+// admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount),
+//     projectId: "potion-for-creators"
+// });
 
 
 const twilioClient = twilio("AC3b5a0ffcf57ed5420c290c45e7623e9a", "67553f9d84ce300ed02ab5e7e130dff0")
@@ -89,7 +105,7 @@ exports.register = async (req, res) => {
             otp,
             otpExpires,
             userName,
-            fcmToken:randomSuffix,
+            fcmToken: randomSuffix,
         });
 
         await user.save();
@@ -447,7 +463,7 @@ exports.login = async (req, res) => {
 
 exports.loginOtpverify = async (req, res) => {
     try {
-        const { email, otp ,fcmToken } = req.body;
+        const { email, otp, fcmToken } = req.body;
 
         if (!email || !otp || !fcmToken) {
             return res.status(200).json({
@@ -1175,12 +1191,12 @@ exports.createPost = async (req, res) => {
         const userEmail = await User.findById(userId).select("email");
 
         // Compare provided token with authorized token
-        if (token !== authorizedToken) {
-            return res.status(403).json({
-                success: false,
-                message: "Provided token does not match authorized token",
-            });
-        }
+        // if (token !== authorizedToken) {
+        //     return res.status(403).json({
+        //         success: false,
+        //         message: "Provided token does not match authorized token",
+        //     });
+        // }
 
 
         if (userEmail.email !== email) {
@@ -3375,11 +3391,11 @@ exports.giveTedBlackCoin = async (req, res) => {
                 const { agree, disagree } = updatedPost.tedBlackCoinData;
                 const totalVotes = agree.length + disagree.length;
                 const agreePercentage = totalVotes > 0 ? (agree.length / totalVotes) * 100 : 0;
-                 console.log("Inside setTimeOut giveTedBlackCoin")
+                console.log("Inside setTimeOut giveTedBlackCoin")
 
                 if (agreePercentage >= 70) {
                     const postCreator = await User.findById(updatedPost.userId);
-                     console.log("Initial state black coin giveTedBlackCoin")
+                    console.log("Initial state black coin giveTedBlackCoin")
                     const updatedTiers = [
                         { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
                         { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
@@ -3407,7 +3423,7 @@ exports.giveTedBlackCoin = async (req, res) => {
 
                     await postCreator.save();
                     await updatedPost.save();
-                     console.log("Complited giving coin giveTedBlackCoin")
+                    console.log("Complited giving coin giveTedBlackCoin")
                 } else { }
 
                 updatedPost.tedBlackCoinData.isFinalized = true;

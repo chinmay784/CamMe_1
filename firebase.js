@@ -1,14 +1,8 @@
-const dotenv = require('dotenv');
-dotenv.config();
 const admin = require("firebase-admin");
-const serviceAccount = require("./console.json"); // Download from Firebase Console
-const {applicationDefault} = require("firebase-admin/app")
-
-process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const serviceAccount = require("./console.json"); // Adjust path as needed
 
 admin.initializeApp({
-  credential: applicationDefault(),
-  projectId:"potion-for-creators"
+  credential: admin.credential.cert(serviceAccount),
 });
 
 module.exports = admin;
