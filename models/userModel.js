@@ -112,6 +112,12 @@ const userSchema = new mongoose.Schema({
             sharedAt: { type: Date, default: Date.now }
         }
     ],
+    fcmToken: { type: String }, // store token from Flutter app
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
+    },
 },)
 
 // { strict: false }

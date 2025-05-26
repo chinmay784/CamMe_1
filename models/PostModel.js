@@ -154,6 +154,11 @@ const postSchema = new mongoose.Schema({
         isFinalized: {
             type: Boolean,
             default: false
+        },
+        hashTags: {
+            type: String,
+            enum: ["spam", "abuse", "misinformation"],
+            default:"spam",
         }
     },
     shareCount: {

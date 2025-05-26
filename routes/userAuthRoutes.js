@@ -370,8 +370,10 @@ router.post("/login", login);
  * @swagger
  * /user/loginOtpverify:
  *   post:
- *     summary: Verify OTP during login
- *     description: Verifies the OTP sent to the user's email/phone and logs them in by issuing a JWT token.
+ *     summary: Verify OTP for login
+ *     description: Verifies the OTP sent to the user's email and returns a JWT token if successful.
+ *     tags:
+ *       - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -381,16 +383,20 @@ router.post("/login", login);
  *             required:
  *               - email
  *               - otp
+ *               - fcmToken
  *             properties:
  *               email:
  *                 type: string
- *                 example: johndoe@example.com
+ *                 example: "user@example.com"
  *               otp:
  *                 type: string
- *                 example: 1234
+ *                 example: "123456"
+ *               fcmToken:
+ *                 type: string
+ *                 example: "fcm_token_here"
  *     responses:
  *       200:
- *         description: OTP verified successfully, user logged in
+ *         description: OTP verification result
  *         content:
  *           application/json:
  *             schema:
@@ -401,18 +407,27 @@ router.post("/login", login);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Login Otp Verify
+ *                   example: "Login Otp Verify"
  *                 user:
  *                   type: object
- *                   example:
- *                     _id: 609e125a5d1f4a1d3cfa7e3d
- *                     email: johndoe@example.com
- *                     userName: johnny98
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "60d3b41abdacab002f3c6b80"
+ *                     email:
+ *                       type: string
+ *                       example: "user@example.com"
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     fcmToken:
+ *                       type: string
+ *                       example: "fcm_token_here"
  *                 token:
  *                   type: string
- *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
- *       400:
- *         description: Invalid or expired OTP, or missing fields
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       500:
+ *         description: Internal server error during OTP verification
  *         content:
  *           application/json:
  *             schema:
@@ -423,9 +438,7 @@ router.post("/login", login);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Invalid Or Expired OTP
- *       500:
- *         description: Internal server error
+ *                   example: "error in loginverifyOtp controller"
  */
 router.post("/loginOtpverify", loginOtpverify);
 
@@ -2321,7 +2334,7 @@ router.post(
  * @swagger
  * /user/givetedBlackCoin:
  *   post:
- *     summary: Give a TedBlackCoin to a post and notify other coin givers for voting.
+ *     summary: Give a TedBlackCoin to a post with a reason and notify prior coin givers for voting.
  *     tags:
  *       - TedBlackCoin
  *     security:
@@ -2337,22 +2350,27 @@ router.post(
  *               - reason
  *               - email
  *               - token
+ *               - hashTags
  *             properties:
  *               postId:
  *                 type: string
- *                 description: ID of the post to give a TedBlackCoin to.
+ *                 description: ID of the post to give a TedBlackCoin.
  *               reason:
  *                 type: string
  *                 description: Reason for giving the TedBlackCoin.
  *               email:
  *                 type: string
- *                 description: Email of the authorized user giving the TedBlackCoin.
+ *                 description: Email of the user giving the coin (for verification).
  *               token:
  *                 type: string
- *                 description: Token from the Authorization header to verify identity.
+ *                 description: Authorization token for validation.
+ *               hashTags:
+ *                 type: string
+ *                 enum: [spam, abuse, misinformation]
+ *                 description: Hashtag category for the TedBlackCoin reason.
  *     responses:
  *       200:
- *         description: TedBlackCoin given successfully and notifications sent.
+ *         description: TedBlackCoin successfully given and notifications sent for voting.
  *         content:
  *           application/json:
  *             schema:
@@ -2362,8 +2380,12 @@ router.post(
  *                   type: boolean
  *                 message:
  *                   type: string
+ *       400:
+ *         description: Missing required fields or invalid hashTags.
+ *       401:
+ *         description: Invalid token or email mismatch.
  *       404:
- *         description: Post not found or user not found.
+ *         description: Post or post owner not found.
  *       500:
  *         description: Server error.
  */

@@ -14,6 +14,7 @@ const mongoose = require("mongoose");
 const Moment = require("../models/momentSchema")
 const fs = require("fs");
 const Notification = require("../models/notificationmodel")
+const admin = require("../firebase")
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -88,6 +89,7 @@ exports.register = async (req, res) => {
             otp,
             otpExpires,
             userName,
+            fcmToken:randomSuffix,
         });
 
         await user.save();
@@ -445,9 +447,9 @@ exports.login = async (req, res) => {
 
 exports.loginOtpverify = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        const { email, otp ,fcmToken } = req.body;
 
-        if (!email || !otp) {
+        if (!email || !otp || !fcmToken) {
             return res.status(200).json({
                 sucess: false,
                 message: "Please provide all details"
@@ -474,6 +476,7 @@ exports.loginOtpverify = async (req, res) => {
 
         user.otp = undefined;
         user.otpExpires = undefined;
+        user.fcmToken = fcmToken;
         await user.save()
 
         return res.status(200).json({
@@ -3238,88 +3241,64 @@ exports.giveTedBronzePost = async (req, res) => {
 
 
 
-
+// Most Important Thing For this Application
 exports.giveTedBlackCoin = async (req, res) => {
     try {
         const authorizedUserId = req.user.userId;
-        const { postId, reason, email, token } = req.body;
+        const { postId, reason, email, token, hashTags } = req.body;
 
-        if (!postId) {
-            return res.status(200).json({
-                sucess: false,
-                message: "Please provide PostId"
-            })
-        }
-
-        if (!reason) {
-            return res.status(200).json({
-                sucess: false,
-                message: "Please provide reason"
-            })
-        }
-
-
-        if (!email || !token) {
-            return res.status(200).json({
-                sucess: false,
-                message: "Please provide email and token"
-            })
+        if (!postId || !reason || !email || !token) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing postId, reason, email, or token",
+            });
         }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
-        const userEmail = await User.findById(authorizedUserId).select("email");
+        const user = await User.findById(authorizedUserId).select("email");
 
-        // Compare provided token with authorized token
         if (token !== authorizedToken) {
-            return res.status(200).json({
+            return res.status(401).json({
                 success: false,
-                message: "Provided token does not match authorized token",
+                message: "Invalid token ",
             });
         }
 
-        if (userEmail.email !== email) {
-            return res.status(200).json({
+        if (user.email !== email) {
+            return res.status(401).json({
                 success: false,
-                message: "Provided email does not match authorized email",
+                message: "Invalid  email",
             });
         }
-
 
         const post = await Postcreate.findById(postId);
         if (!post) {
-            return res.status(404).json({
-                success: false,
-                message: "Post not found"
-            });
+            return res.status(404).json({ success: false, message: "Post not found" });
         }
-
 
         if (post.tedBlackGivers?.includes(authorizedUserId)) {
             return res.status(200).json({
-                sucess: "false",
-                message: "You Have Already Given Black coin to this post",
-            })
+                success: false,
+                message: "You have already given a TedBlackCoin to this post",
+            });
         }
 
         const receiver = await User.findById(post.userId);
         if (!receiver) {
-            return re.status(200).json({
-                sucess: false,
-                message: "Post Owner Not Found "
-            })
+            return res.status(404).json({ success: false, message: "Post owner not found" });
         }
 
-        const giverStr = authorizedUserId.toString();
 
-        /* ---------- remove from Gold / Silver if present ---------- */
-        const tiers = [
-            { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
-            { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
-            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
-        ];
+        const allowedTags = ["spam", "abuse", "misinformation"];
 
-        // Save the TedBlackCoin data
+        if (!allowedTags.includes(hashTags)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid hashTags. Allowed values are: spam, abuse, misinformation",
+            });
+        }
+
         post.tedBlackCoinData = {
             givenBy: authorizedUserId,
             reason,
@@ -3327,55 +3306,80 @@ exports.giveTedBlackCoin = async (req, res) => {
             voters: [],
             agree: [],
             disagree: [],
-            isFinalized: false
+            isFinalized: false,
+            hashTags
         };
         await post.save();
 
-        // Combine all givers
         const allGivers = [
             ...post.tedGoldGivers,
             ...post.tedSilverGivers,
             ...post.tedBronzeGivers
         ];
 
-        // Remove duplicates
         const uniqueGivers = [...new Set(allGivers.map(g => g.toString()))];
 
-        // Send notifications to all givers
+        console.log("Unique Givers Print");
+
+        // 🔔 Notify all unique givers (excluding the blackCoin giver)
         for (const giverId of uniqueGivers) {
             if (giverId !== authorizedUserId) {
+                const giver = await User.findById(giverId);
+                if (!giver) continue;
+
                 await Notification.create({
                     userId: giverId,
                     postId: post._id,
                     type: "TedBlackCoinVote",
-                    message: `A TedBlackCoin has been given to a post you previously reacted to. Reason: ${reason}`,
+                    message: `A TedBlackCoin has been given to a post you reacted to. Reason: ${reason}`,
                     actions: ["Agree", "Disagree"]
                 });
+                console.log("Notification created for giver")
+
+                const blackCoinGiver = await User.findById(authorizedUserId).select("userName profilePic");
+
+                if (giver.fcmToken) {
+                    console.log("Sending FCM Notification to giver")
+                    await admin.messaging().send({
+                        token: giver.fcmToken,
+                        notification: {
+                            title: "Vote on TedBlackCoin",
+                            body: `A TedBlackCoin was given to a post you liked by ${blackCoinGiver.userName}. Reason: ${reason}`
+                        },
+                        data: {
+                            postId: post._id.toString(),
+                            reason,
+                            actionType: "TedBlackCoinVote",
+                            giverId: authorizedUserId.toString(),
+                            giverName: blackCoinGiver.userName,
+                            giverProfilePic: blackCoinGiver.profilePic || "",
+                            actions: JSON.stringify([
+                                { text: "Agree", action: "agree" },
+                                { text: "Disagree", action: "disagree" }
+                            ])
+                        }
+                    })
+                    console.log("Sending complited FCM Notification to giver")
+                }
             }
         }
 
-        // Schedule evaluation after 1 hour
+        // Schedule evaluation in 20 minutes
         const blackCoinGiverId = authorizedUserId;
-        console.log("Ouside SetTimeOut")
+
+        console.log("Outside setTimeOut giveTedBlackCoin")
         setTimeout(async () => {
             const updatedPost = await Postcreate.findById(postId);
 
             if (updatedPost && !updatedPost.tedBlackCoinData.isFinalized) {
                 const { agree, disagree } = updatedPost.tedBlackCoinData;
                 const totalVotes = agree.length + disagree.length;
-                console.log("Inside SetTimeOut")
                 const agreePercentage = totalVotes > 0 ? (agree.length / totalVotes) * 100 : 0;
+                 console.log("Inside setTimeOut giveTedBlackCoin")
 
                 if (agreePercentage >= 70) {
-                    console.log("Hello 70% complited")
                     const postCreator = await User.findById(updatedPost.userId);
-                    const postReceiver = await User.findById(updatedPost.userId); // Same as creator
-
-                    // postCreator.tedGold = Math.max(0, postCreator.tedGold - 1);
-                    // postCreator.tedSilver = Math.max(0, postCreator.tedSilver - 2);
-                    // postCreator.tedBronze = Math.max(0, postCreator.tedBronze - 3);
-
-
+                     console.log("Initial state black coin giveTedBlackCoin")
                     const updatedTiers = [
                         { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
                         { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
@@ -3386,8 +3390,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                         if (updatedPost[tier.arr]?.includes(blackCoinGiverId)) {
                             updatedPost[tier.arr] = updatedPost[tier.arr].filter(id => id.toString() !== blackCoinGiverId.toString());
                             updatedPost[tier.cnt] = Math.max((updatedPost[tier.cnt] || 1) - 1, 0);
-                            postReceiver.coinWallet[tier.wallet] =
-                                Math.max((postReceiver.coinWallet[tier.wallet] || 1) - 1, 0);
+                            postCreator.coinWallet[tier.wallet] = Math.max((postCreator.coinWallet[tier.wallet] || 1) - 1, 0);
                         }
                     }
 
@@ -3397,20 +3400,20 @@ exports.giveTedBlackCoin = async (req, res) => {
                     }
                     updatedPost.tedBlackCount = (updatedPost.tedBlackCount || 0) + 1;
 
-                    postReceiver.coinWallet.tedBlack = (postReceiver.coinWallet.tedBlack || 0) + 1;
-                    postReceiver.coinWallet.tedGold = (postReceiver.coinWallet.tedGold || 0) - 1;
-                    postReceiver.coinWallet.tedSilver = (postReceiver.coinWallet.tedSilver || 0) - 2;
-                    postReceiver.coinWallet.tedBronze = (postReceiver.coinWallet.tedBronze || 0) - 3;
+                    postCreator.coinWallet.tedBlack = (postCreator.coinWallet.tedBlack || 0) + 1;
+                    postCreator.coinWallet.tedGold = (postCreator.coinWallet.tedGold || 0) - 1;
+                    postCreator.coinWallet.tedSilver = (postCreator.coinWallet.tedSilver || 0) - 2;
+                    postCreator.coinWallet.tedBronze = (postCreator.coinWallet.tedBronze || 0) - 3;
 
                     await postCreator.save();
-                    await postReceiver.save();
                     await updatedPost.save();
-                }
+                     console.log("Complited giving coin giveTedBlackCoin")
+                } else { }
 
                 updatedPost.tedBlackCoinData.isFinalized = true;
                 await updatedPost.save();
             }
-        }, 20 * 60 * 1000); // 20 min
+        }, 20 * 60 * 1000); // 20 minutes
 
         return res.status(200).json({
             success: true,
@@ -3458,7 +3461,7 @@ exports.voteTedBlackCoin = async (req, res) => {
             return res.status(200).json({ success: false, message: "Vote type is required and must be either 'agree' or 'disagree'" });
         }
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
                 success: false,
                 message: "Please provide email and token",
