@@ -3576,10 +3576,11 @@ exports.getProfile = async (req, res) => {
 
 exports.sendNoti = async (req, res) => {
     try {
+        const {token} = req.body;
         console.log("Hello")
         let noti = await admin.messaging().send({
-             topic:"global",
-            // token:req.body.token,
+            // topic: "global",
+            token:token,
             notification: {
                 title: "Test Notification",
                 body: "This is a test notification from the server"
