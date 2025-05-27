@@ -1,5 +1,8 @@
+const dotenv = require("dotenv");
+dotenv.config()
 const admin = require("firebase-admin");
-const serviceAccount = require('./push-3292b-firebase-adminsdk-fbsvc-b5e877e874.json'); // Adjust path as needed
+const base64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+const serviceAccount = JSON.parse(Buffer.from(base64, 'base64').toString('utf8')); 
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
