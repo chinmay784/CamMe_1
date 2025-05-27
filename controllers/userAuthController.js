@@ -26,19 +26,6 @@ const transPorter = nodeMailer.createTransport({
 
 
 
-// const dotenv = require('dotenv');
-// dotenv.config();
-// const admin = require("firebase-admin");
-// const serviceAccount = require("../console.json"); // Download from Firebase Console
-// // const { initializeApp, applicationDefault } = require("firebase-admin/app")
-// // const { getMessaging } = require("firebase-admin/messaging")
-
-// process.env.GOOGLE_APPLICATION_CREDENTIALS;
-
-// admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount),
-//     projectId: "potion-for-creators"
-// });
 
 
 const twilioClient = twilio("AC3b5a0ffcf57ed5420c290c45e7623e9a", "67553f9d84ce300ed02ab5e7e130dff0")
@@ -3591,8 +3578,8 @@ exports.sendNoti = async (req, res) => {
     try {
         console.log("Hello")
         let noti = await admin.messaging().send({
-            topic:"global",
-
+             topic:"global",
+            // token:req.body.token,
             notification: {
                 title: "Test Notification",
                 body: "This is a test notification from the server"
