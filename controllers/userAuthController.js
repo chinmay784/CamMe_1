@@ -1191,12 +1191,12 @@ exports.createPost = async (req, res) => {
         const userEmail = await User.findById(userId).select("email");
 
         // Compare provided token with authorized token
-        // if (token !== authorizedToken) {
-        //     return res.status(403).json({
-        //         success: false,
-        //         message: "Provided token does not match authorized token",
-        //     });
-        // }
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
 
 
         if (userEmail.email !== email) {
@@ -3355,7 +3355,8 @@ exports.giveTedBlackCoin = async (req, res) => {
                 const blackCoinGiver = await User.findById(authorizedUserId).select("userName profilePic");
 
                 if (giver.fcmToken) {
-                    console.log("Sending FCM Notification to giver")
+                    console.log("Sending FCM Notification to giver");
+                    console.log("Notify user List")
                     await admin.messaging().send({
                         token: giver.fcmToken,
                         notification: {
@@ -3438,7 +3439,10 @@ exports.giveTedBlackCoin = async (req, res) => {
 
     } catch (error) {
         console.error("Error in giveTedBlackCoin:", error);
-        return res.status(500).json({ success: false, message: "Server error" });
+        return res.status(500).json({ 
+            success: false, 
+            message: `Server error ${error.message}` ,
+        });
     }
 };
 
