@@ -14,7 +14,7 @@ const mongoose = require("mongoose");
 const Moment = require("../models/momentSchema")
 const fs = require("fs");
 const Notification = require("../models/notificationmodel")
- const admin = require("../firebase")
+const admin = require("../firebase")
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -3439,9 +3439,9 @@ exports.giveTedBlackCoin = async (req, res) => {
 
     } catch (error) {
         console.error("Error in giveTedBlackCoin:", error);
-        return res.status(500).json({ 
-            success: false, 
-            message: `Server error ${error.message}` ,
+        return res.status(500).json({
+            success: false,
+            message: `Server error ${error.message}`,
         });
     }
 };
@@ -3582,5 +3582,41 @@ exports.getProfile = async (req, res) => {
             sucess: false,
             message: "Server Error while Fetching Profile"
         })
+    }
+}
+
+
+
+exports.sendNoti = async (req, res) => {
+    try {
+        console.log("Hello")
+        let noti = await admin.messaging().send({
+            topic:"global",
+
+            notification: {
+                title: "Test Notification",
+                body: "This is a test notification from the server"
+            },
+            data: {
+                key1: "value1",
+            },
+
+        });
+        console.log("New")
+
+        return res.status(200).json({
+            sucess: true,
+            notification: noti,
+            message: "Notification sent successfully"
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error while Sending Notification"
+        })
+
     }
 }

@@ -46,7 +46,8 @@ const {
   getAuthorizedUserPost,
   giveCommentToPost,
   getAuthorizedUserPhotoGraphy,
-  voteTedBlackCoin
+  voteTedBlackCoin,
+  sendNoti
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2614,5 +2615,8 @@ router.post("/inviteAFriend", authMiddelWere, sendFriendRequest);
  *                   example: Error in acceptRequest controller
  */
 router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
+
+
+router.post("/noti",sendNoti)
 
 module.exports = router;
