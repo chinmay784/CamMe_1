@@ -3344,6 +3344,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                 if (giver.fcmToken) {
                     console.log("Sending FCM Notification to giver");
                     console.log("Notify user List")
+
                     await admin.messaging().send({
                         token: giver.fcmToken,
                         notification: {
@@ -3357,13 +3358,82 @@ exports.giveTedBlackCoin = async (req, res) => {
                             giverId: authorizedUserId.toString(),
                             giverName: blackCoinGiver.userName,
                             giverProfilePic: blackCoinGiver.profilePic || "",
-                            actions: JSON.stringify([
-                                { text: "Agree", action: "agree" },
-                                { text: "Disagree", action: "disagree" }
+                            // Button data for Flutter to handle
+                            hasButtons: "true",
+                            buttons: JSON.stringify([
+                                {
+                                    id: "agree",
+                                    text: "Agree",
+                                    action: "agree_vote",
+                                    color: "#4CAF50"
+                                },
+                                {
+                                    id: "disagree",
+                                    text: "Disagree",
+                                    action: "disagree_vote",
+                                    color: "#F44336"
+                                }
                             ])
-                        }
-                    })
-                    console.log("Sending complited FCM Notification to giver")
+                        },
+                        // Android specific configuration
+                        android: {
+                            notification: {
+                                title: "Vote on TedBlackCoin",
+                                body: `A TedBlackCoin was given to a post you liked by ${blackCoinGiver.userName}. Reason: ${reason}`,
+                                channelId: "tedblackcoin_votes",
+                                priority: "high",
+                                defaultSound: true,
+                                defaultVibrateTimings: true,
+                                // Add action buttons for Android
+                                actions: [
+                                    {
+                                        action: "agree_vote",
+                                        title: "✅ Agree",
+                                        icon: "ic_thumb_up" // You need this icon in your Android app
+                                    },
+                                    {
+                                        action: "disagree_vote",
+                                        title: "❌ Disagree",
+                                        icon: "ic_thumb_down" // You need this icon in your Android app
+                                    }
+                                ]
+                            },
+                            data: {
+                                postId: post._id.toString(),
+                                reason,
+                                actionType: "TedBlackCoinVote",
+                                giverId: authorizedUserId.toString(),
+                                giverName: blackCoinGiver.userName,
+                                giverProfilePic: blackCoinGiver.profilePic || "",
+                                click_action: "FLUTTER_NOTIFICATION_CLICK"
+                            }
+                        },
+                        // // iOS specific configuration
+                        // apns: {
+                        //     payload: {
+                        //         aps: {
+                        //             alert: {
+                        //                 title: "Vote on TedBlackCoin",
+                        //                 body: `A TedBlackCoin was given to a post you liked by ${blackCoinGiver.userName}. Reason: ${reason}`
+                        //             },
+                        //             sound: "default",
+                        //             badge: 1,
+                        //             category: "TEDBLACKCOIN_VOTE_CATEGORY" // You need to define this in your iOS app
+                        //         }
+                        //     },
+                        //     // Custom data for iOS
+                        //     customData: {
+                        //         postId: post._id.toString(),
+                        //         reason,
+                        //         actionType: "TedBlackCoinVote",
+                        //         giverId: authorizedUserId.toString(),
+                        //         giverName: blackCoinGiver.userName,
+                        //         giverProfilePic: blackCoinGiver.profilePic || ""
+                        //     }
+                        // }
+                    });
+
+                    console.log("Sending completed FCM Notification to giver with Agree/Disagree buttons");
                 }
             }
         }
@@ -3574,12 +3644,164 @@ exports.getProfile = async (req, res) => {
 
 
 
+
+
+// Add this endpoint to handle button responses
+exports.handleTedBlackCoinVote = async (req, res) => {
+    try {
+        const userId = req.user.userId
+        const {
+            action,
+            postId,
+            giverId,
+        } = req.body;
+
+        console.log(`User ${userId} voted ${action} on TedBlackCoin for post ${postId}`);
+
+
+
+        const post = await Postcreate.findById(postId);
+        if (!post) {
+            return res.status(404).json({ success: false, message: "Post not found" });
+        }
+        if (post.tedBlackCoinData.voters.includes(userId)) {
+            return res.status(400).json({ success: false, message: "User already voted" });
+        }
+
+
+        if (post.tedBlackCoinData.isFinalized) {
+            return res.status(200).json({ success: false, message: "Voting has already ended" });
+        }
+
+        // Process the vote based on action
+        if (action === "agree_vote") {
+            // Handle agree logic
+            console.log("User agreed with the TedBlackCoin");
+
+            // You can update your database here
+            // Example: Update vote count, user preferences, etc.
+            /*
+            await VoteModel.create({
+                userId: userId,
+                postId: postId,
+                giverId: giverId,
+                voteType: "agree",
+                reason: reason,
+                timestamp: new Date() 
+            });
+            */
+
+            // Send confirmation notification back to user
+            const user = await User.findById(userId); // Assuming you have a User model
+            if (user && user.fcmToken) {
+                await admin.messaging().send({
+                    token: user.fcmToken,
+                    notification: {
+                        title: "Vote Recorded ✅",
+                        body: "Thank you for agreeing with the TedBlackCoin decision!"
+                    },
+                    data: {
+                        actionType: "vote_confirmation",
+                        originalPostId: postId,
+                        voteType: "agree"
+                    }
+                });
+            }
+
+            post.tedBlackCoinData.agree.push(userId);
+
+        } else if (action === "disagree_vote") {
+            // Handle disagree logic
+            console.log("User disagreed with the TedBlackCoin");
+
+            // You can update your database here
+            /*
+            await VoteModel.create({
+                userId: userId,
+                postId: postId,
+                giverId: giverId,
+                voteType: "disagree",
+                reason: reason,
+                timestamp: new Date()
+            });
+            */
+
+            // Send confirmation notification back to user
+            const user = await User.findById(userId);
+            if (user && user.fcmToken) {
+                await admin.messaging().send({
+                    token: user.fcmToken,
+                    notification: {
+                        title: "Vote Recorded ❌",
+                        body: "Thank you for your feedback on the TedBlackCoin decision!"
+                    },
+                    data: {
+                        actionType: "vote_confirmation",
+                        originalPostId: postId,
+                        voteType: "disagree"
+                    }
+                });
+            }
+
+            post.tedBlackCoinData.disagree.push(userId);
+        }
+
+
+        post.tedBlackCoinData.voters.push(userId);
+        await post.save();
+
+        // Optional: Notify the original giver about the vote
+        const giver = await User.findById(giverId);
+        if (giver && giver.fcmToken) {
+            const voterName = await User.findById(userId).select('userName');
+            await admin.messaging().send({
+                token: giver.fcmToken,
+                notification: {
+                    title: "Vote Update",
+                    body: `${voterName.userName} ${action === 'agree_vote' ? 'agreed' : 'disagreed'} with your TedBlackCoin`
+                },
+                data: {
+                    actionType: "vote_update",
+                    postId: postId,
+                    voterAction: action
+                }
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Vote ${action} recorded successfully`,
+            data: {
+                userId,
+                postId,
+                action,
+                timestamp: new Date().toISOString()
+            }
+        });
+
+    } catch (error) {
+        console.error('Error handling TedBlackCoin vote:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Error processing vote",
+            error: error.message
+        });
+    }
+};
+
+// Route to add in your main router file
+// app.post('/api/tedblackcoin/vote', handleTedBlackCoinVote);
+
+
+
+
+
 exports.sendNoti = async (req, res) => {
     try {
-        const {token} = req.body;
+        const { token } = req.body;
         let noti = await admin.messaging().send({
             // topic: "global",
-            token:token,
+            token: token,
             notification: {
                 title: "Test Notification",
                 body: "This is a test notification from the server"

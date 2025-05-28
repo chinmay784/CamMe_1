@@ -47,7 +47,8 @@ const {
   giveCommentToPost,
   getAuthorizedUserPhotoGraphy,
   voteTedBlackCoin,
-  sendNoti
+  sendNoti,
+  handleTedBlackCoinVote
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2616,6 +2617,7 @@ router.post("/inviteAFriend", authMiddelWere, sendFriendRequest);
  */
 router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
 
+router.post("/handleTedBlackCoinVote",authMiddelWere,handleTedBlackCoinVote)
 
 router.post("/noti",sendNoti)
 
