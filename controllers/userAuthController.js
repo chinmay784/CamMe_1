@@ -3360,20 +3360,23 @@ exports.giveTedBlackCoin = async (req, res) => {
                             giverProfilePic: blackCoinGiver.profilePic || "",
                             // Button data for Flutter to handle
                             hasButtons: "true",
+                            buttonType: "agree_disagree",
                             buttons: JSON.stringify([
                                 {
                                     id: "agree",
-                                    text: "Agree",
+                                    text: "✅ Agree",
                                     action: "agree_vote",
                                     color: "#4CAF50"
                                 },
                                 {
                                     id: "disagree",
-                                    text: "Disagree",
+                                    text: "❌ Disagree",
                                     action: "disagree_vote",
                                     color: "#F44336"
                                 }
-                            ])
+                            ]),
+                            // Add click action for Android
+                            click_action: "FLUTTER_NOTIFICATION_CLICK"
                         },
                         // Android specific configuration
                         android: {
@@ -3384,19 +3387,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                                 priority: "high",
                                 defaultSound: true,
                                 defaultVibrateTimings: true,
-                                // Add action buttons for Android
-                                actions: [
-                                    {
-                                        action: "agree_vote",
-                                        title: "✅ Agree",
-                                        icon: "ic_thumb_up" // You need this icon in your Android app
-                                    },
-                                    {
-                                        action: "disagree_vote",
-                                        title: "❌ Disagree",
-                                        icon: "ic_thumb_down" // You need this icon in your Android app
-                                    }
-                                ]
+                                clickAction: "FLUTTER_NOTIFICATION_CLICK"
                             },
                             data: {
                                 postId: post._id.toString(),
@@ -3405,10 +3396,11 @@ exports.giveTedBlackCoin = async (req, res) => {
                                 giverId: authorizedUserId.toString(),
                                 giverName: blackCoinGiver.userName,
                                 giverProfilePic: blackCoinGiver.profilePic || "",
-                                click_action: "FLUTTER_NOTIFICATION_CLICK"
+                                hasButtons: "true",
+                                buttonType: "agree_disagree"
                             }
                         },
-                        // // iOS specific configuration
+                        // iOS specific configuration
                         // apns: {
                         //     payload: {
                         //         aps: {
@@ -3417,8 +3409,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                         //                 body: `A TedBlackCoin was given to a post you liked by ${blackCoinGiver.userName}. Reason: ${reason}`
                         //             },
                         //             sound: "default",
-                        //             badge: 1,
-                        //             category: "TEDBLACKCOIN_VOTE_CATEGORY" // You need to define this in your iOS app
+                        //             badge: 1
                         //         }
                         //     },
                         //     // Custom data for iOS
@@ -3428,12 +3419,14 @@ exports.giveTedBlackCoin = async (req, res) => {
                         //         actionType: "TedBlackCoinVote",
                         //         giverId: authorizedUserId.toString(),
                         //         giverName: blackCoinGiver.userName,
-                        //         giverProfilePic: blackCoinGiver.profilePic || ""
+                        //         giverProfilePic: blackCoinGiver.profilePic || "",
+                        //         hasButtons: "true",
+                        //         buttonType: "agree_disagree"
                         //     }
                         // }
                     });
 
-                    console.log("Sending completed FCM Notification to giver with Agree/Disagree buttons");
+                    console.log("Sending completed FCM Notification to giver with button data");
                 }
             }
         }
