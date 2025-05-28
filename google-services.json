@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "976211807074",
+    "project_id": "camme-9a681",
+    "storage_bucket": "camme-9a681.firebasestorage.app"
+},
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:976211807074:android:c303444162de84d93f7a3b",
+        "android_client_info": {
+          "package_name": "com.lensup.www.cam_me"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTvG4EhkdwBiBjJdIgcXI-7-OSdTYYedw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

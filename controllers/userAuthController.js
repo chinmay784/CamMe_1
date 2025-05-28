@@ -3579,8 +3579,8 @@ exports.sendNoti = async (req, res) => {
         const {token} = req.body;
         console.log("Hello")
         let noti = await admin.messaging().send({
-            topic: "global",
-            //token:token,
+            // topic: "global",
+            token:token,
             notification: {
                 title: "Test Notification",
                 body: "This is a test notification from the server"
