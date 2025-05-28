@@ -3577,7 +3577,6 @@ exports.getProfile = async (req, res) => {
 exports.sendNoti = async (req, res) => {
     try {
         const {token} = req.body;
-        console.log("Hello")
         let noti = await admin.messaging().send({
             // topic: "global",
             token:token,
@@ -3590,7 +3589,6 @@ exports.sendNoti = async (req, res) => {
             },
 
         });
-        console.log("New")
 
         return res.status(200).json({
             sucess: true,
