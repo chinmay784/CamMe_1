@@ -3699,7 +3699,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
-        const user = await User.findById(userId).select("email");
+        const users = await User.findById(userId).select("email");
 
         if (token !== authorizedToken) {
             return res.status(200).json({
@@ -3708,7 +3708,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             });
         }
 
-        if (user.email !== email) {
+        if (users.email !== email) {
             return res.status(200).json({
                 success: false,
                 message: "Invalid  email",
