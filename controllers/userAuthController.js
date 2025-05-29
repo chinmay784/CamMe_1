@@ -3263,14 +3263,14 @@ exports.giveTedBlackCoin = async (req, res) => {
         const user = await User.findById(authorizedUserId).select("email");
 
         if (token !== authorizedToken) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid token ",
             });
         }
 
         if (user.email !== email) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid  email",
             });
@@ -3278,7 +3278,7 @@ exports.giveTedBlackCoin = async (req, res) => {
 
         const post = await Postcreate.findById(postId);
         if (!post) {
-            return res.status(404).json({ success: false, message: "Post not found" });
+            return res.status(200).json({ success: false, message: "Post not found" });
         }
 
         if (post.tedBlackGivers?.includes(authorizedUserId)) {
@@ -3290,14 +3290,14 @@ exports.giveTedBlackCoin = async (req, res) => {
 
         const receiver = await User.findById(post.userId);
         if (!receiver) {
-            return res.status(404).json({ success: false, message: "Post owner not found" });
+            return res.status(200).json({ success: false, message: "Post owner not found" });
         }
 
 
         const allowedTags = ["spam", "abuse", "misinformation"];
 
         if (!allowedTags.includes(hashTags)) {
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid hashTags. Allowed values are: spam, abuse, misinformation",
             });
@@ -3447,7 +3447,7 @@ exports.giveTedBlackCoin = async (req, res) => {
             }
         }
 
-        // Schedule evaluation in 20 minutes
+        // Schedule evaluation in 40 minutes
         const blackCoinGiverId = authorizedUserId;
 
         console.log("Outside setTimeOut giveTedBlackCoin")
@@ -3470,8 +3470,8 @@ exports.giveTedBlackCoin = async (req, res) => {
 
 
 
-                tedBlackRecord.agree = agree.length;
-                tedBlackRecord.disAgree = disagree.length;
+                tedBlackRecord.agree = agree.length ? agree.length : 0;
+                tedBlackRecord.disAgree = disagree.length ? disagree.length : 0;
 
 
                 if (agreePercentage >= 70) {
@@ -3515,7 +3515,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                 updatedPost.tedBlackCoinData.isFinalized = true;
                 await updatedPost.save();
             }
-        }, 20 * 60 * 1000); // 20 minutes
+        }, 40 * 60 * 1000); // 40 minutes
 
         return res.status(200).json({
             success: true,
@@ -3689,7 +3689,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
         console.log(`User ${userId} voted ${action} on TedBlackCoin for post ${postId}`);
 
         if (!action || !postId || !giverId || !token || email) {
-            return res.status.json({
+            return res.status(200).json({
                 sucess: false,
                 message: "Please Provide all fields"
             })
@@ -3701,14 +3701,14 @@ exports.handleTedBlackCoinVote = async (req, res) => {
         const user = await User.findById(userId).select("email");
 
         if (token !== authorizedToken) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid token ",
             });
         }
 
         if (user.email !== email) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid  email",
             });
@@ -3717,10 +3717,10 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 
         const post = await Postcreate.findById(postId);
         if (!post) {
-            return res.status(404).json({ success: false, message: "Post not found" });
+            return res.status(200).json({ success: false, message: "Post not found" });
         }
         if (post.tedBlackCoinData.voters.includes(userId)) {
-            return res.status(400).json({ success: false, message: "User already voted" });
+            return res.status(200).json({ success: false, message: "User already voted" });
         }
 
 
@@ -3878,14 +3878,14 @@ exports.getBlackCoinReactionsToMyPosts = async (req, res) => {
         const user = await User.findById(myUserId).select("email");
 
         if (token !== authorizedToken) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid token ",
             });
         }
 
         if (user.email !== email) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid  email",
             });
@@ -3935,14 +3935,14 @@ exports.getBlackCoinReactionsByMe = async (req, res) => {
         const user = await User.findById(myUserId).select("email");
 
         if (token !== authorizedToken) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid token ",
             });
         }
 
         if (user.email !== email) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid  email",
             });
