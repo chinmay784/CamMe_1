@@ -3374,7 +3374,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                             giverId: authorizedUserId.toString(),
                             giverName: blackCoinGiver.userName,
                             giverProfilePic: blackCoinGiver.profilePic || "",
-                            createdAt:post.tedBlackCoinData.createdAt,
+                            createdAt: post.tedBlackCoinData?.createdAt?.toString() || new Date().toISOString(),
                             // Button data for Flutter to handle
                             hasButtons: "true",
                             buttonType: "agree_disagree",
