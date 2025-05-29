@@ -3736,13 +3736,20 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             createdAt: post.tedBlackCoinData.createdAt
         });
 
+        if (!blackerRecord) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Black record data not found"
+            })
+        }
+
 
         // Process the vote based on action
         if (action === "agree_vote") {
             // Handle agree logic
             console.log("User agreed with the TedBlackCoin");
 
-            blackerRecord.agree = (blackerRecord.agree || 0)+1;
+            blackerRecord.agree = (blackerRecord.agree || 0) + 1;
             // You can update your database here
             // Example: Update vote count, user preferences, etc.
             /*
@@ -3779,7 +3786,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             // Handle disagree logic
             console.log("User disagreed with the TedBlackCoin");
 
-            blackerRecord.disAgree = ( blackerRecord.disAgree || 0)+1;
+            blackerRecord.disAgree = (blackerRecord.disAgree || 0) + 1;
             // You can update your database here
             /*
             await VoteModel.create({
@@ -3858,6 +3865,31 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 // Route to add in your main router file
 // app.post('/api/tedblackcoin/vote', handleTedBlackCoinVote);
 
+exports.count = async (req, res) => {
+    try {
+        const blackerRecord = await TedBlackers.find()
+
+        if (!blackerRecord) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Black record data not found"
+            })
+        }
+        blackerRecord.agree = (blackerRecord.agree || 0) + 1;
+        blackerRecord.disAgree = (blackerRecord.disAgree || 0) + 1;
+        return res.status(200).json({
+            sucess: true,
+            blackerRecord
+        })
+
+    } catch(error) {
+        console.log(error);
+        return res.status(500).json({
+            sucess: false,
+            message: "Error in controller"
+        })
+    }
+}
 
 
 exports.getBlackCoinReactionsToMyPosts = async (req, res) => {

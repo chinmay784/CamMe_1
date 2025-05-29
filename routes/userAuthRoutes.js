@@ -50,7 +50,8 @@ const {
   sendNoti,
   handleTedBlackCoinVote,
   getBlackCoinReactionsToMyPosts,
-  getBlackCoinReactionsByMe
+  getBlackCoinReactionsByMe,
+  count
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2837,5 +2838,7 @@ router.post("/getBlackCoinReactionsToMyPosts",authMiddelWere,getBlackCoinReactio
  *         description: Server error while fetching reactions
  */
 router.post("/getBlackCoinReactionsByMe", authMiddelWere ,getBlackCoinReactionsByMe);
+
+router.post("/count",count)
 
 module.exports = router;                       
