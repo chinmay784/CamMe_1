@@ -3731,13 +3731,16 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 
 
         const blackerRecord = await TedBlackers.findOne({
-            userId: post.userId,
+            userId: userId,
             // userPostId: post._id,
+            postUserId: post.userId,
+            userPostId: postId,
         });
 
         console.log("Searching for blacker record with:", {
             userId: post.userId,
-            userPostId: post._id,
+            postUserId: post.userId,
+            userPostId: postId,
         });
 
         if (!blackerRecord) {
