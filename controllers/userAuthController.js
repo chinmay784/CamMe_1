@@ -3742,7 +3742,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             // Handle agree logic
             console.log("User agreed with the TedBlackCoin");
 
-            blackerRecord.agree += 1;
+            blackerRecord.agree = (blackerRecord.agree || 0)+1;
             // You can update your database here
             // Example: Update vote count, user preferences, etc.
             /*
@@ -3779,7 +3779,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             // Handle disagree logic
             console.log("User disagreed with the TedBlackCoin");
 
-            blackerRecord.disAgree += 1;
+            blackerRecord.disAgree = ( blackerRecord.disAgree || 0)+1;
             // You can update your database here
             /*
             await VoteModel.create({
