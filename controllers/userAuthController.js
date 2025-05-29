@@ -3262,12 +3262,12 @@ exports.giveTedBlackCoin = async (req, res) => {
         const authorizedToken = authHeader.split(" ")[1];
         const user = await User.findById(authorizedUserId).select("email");
 
-        // if (token !== authorizedToken) {
-        //     return res.status(401).json({
-        //         success: false,
-        //         message: "Invalid token ",
-        //     });
-        // }
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid token ",
+            });
+        }
 
         if (user.email !== email) {
             return res.status(401).json({
@@ -3330,8 +3330,8 @@ exports.giveTedBlackCoin = async (req, res) => {
         // userPostId
         await TedBlackers.create({
             userId: authorizedUserId, // Post creator (the one being accused)
-            postUserId:post.userId,
-            userPostId:postId,
+            postUserId: post.userId,
+            userPostId: postId,
             status: "OnGoing",
             notiFied: uniqueGivers.length,
             agree: 0,
@@ -3674,7 +3674,7 @@ exports.getProfile = async (req, res) => {
 
 
 
-// Add this endpoint to handle button responses
+// Add this endpoint to handle button responses 
 exports.handleTedBlackCoinVote = async (req, res) => {
     try {
         const userId = req.user.userId
@@ -3682,10 +3682,37 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             action,
             postId,
             giverId,
+            token,
+            email,
         } = req.body;
 
         console.log(`User ${userId} voted ${action} on TedBlackCoin for post ${postId}`);
 
+        if (!action || !postId || !giverId || !token || email) {
+            return res.status.json({
+                sucess: false,
+                message: "Please Provide all fields"
+            })
+        }
+
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId).select("email");
+
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid token ",
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid  email",
+            });
+        }
 
 
         const post = await Postcreate.findById(postId);
@@ -3832,18 +3859,117 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 
 
 
-
-exports.getTedBlackersList = async (req,res) =>{
+exports.getBlackCoinReactionsToMyPosts = async (req, res) => {
     try {
-        
+        const myUserId = req.user.userId;
+
+        const { token, email } = req.body;
+
+        if (!token || !email) {
+            return res.status.json({
+                sucess: false,
+                message: "Please Provide all token and email"
+            })
+        }
+
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(myUserId).select("email");
+
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid token ",
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid  email",
+            });
+        }
+
+        const reactions = await TedBlackers.find({ postUserId: myUserId })
+            .populate("userId", "userName profilePic email")  // who gave the black coin
+            .populate("userPostId", "content hashTag createdAt") // the post that got the black coin
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            count: reactions.length,
+            data: reactions
+        });
+
     } catch (error) {
-        console.log(error.message);
-        return res.status.json({
-            sucess:false,
-            message :"Error in fetching in TedBlackers"
-        })
+        console.error("Error fetching black coin reactions to your posts:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch black coin reactions.",
+            error: error.message
+        });
     }
-}
+};
+
+
+
+
+// Add Swagger Ui
+exports.getBlackCoinReactionsByMe = async (req, res) => {
+    try {
+        const myUserId = req.user.userId;
+
+        const { token, email } = req.body;
+
+        if (!token || !email) {
+            return res.status.json({
+                sucess: false,
+                message: "Please Provide all token and email"
+            })
+        }
+
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(myUserId).select("email");
+
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid token ",
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid  email",
+            });
+        }
+
+        const reactions = await TedBlackers.find({ userId: myUserId })
+            .populate("userPostId", "content createdAt")
+            .populate("postUserId", "userName profilePic")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            count: reactions.length,
+            data: reactions,
+        });
+
+    } catch (error) {
+        console.error("Error fetching black coin reactions by user:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch TedBlack reactions made by you.",
+            error: error.message
+        });
+    }
+};
+
+
 
 
 

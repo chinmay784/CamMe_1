@@ -48,7 +48,9 @@ const {
   getAuthorizedUserPhotoGraphy,
   voteTedBlackCoin,
   sendNoti,
-  handleTedBlackCoinVote
+  handleTedBlackCoinVote,
+  getBlackCoinReactionsToMyPosts,
+  getBlackCoinReactionsByMe
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2620,8 +2622,7 @@ router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
  * @swagger
  * /user/handleTedBlackCoinVote:
  *   post:
- *     summary: Handle vote for a TedBlackCoin (Agree/Disagree)
- *     description: Authenticated users can vote (agree or disagree) on a TedBlackCoin assigned to a post.
+ *     summary: Handle TedBlackCoin vote (agree/disagree) by a user
  *     tags:
  *       - TedBlackCoin
  *     security:
@@ -2636,20 +2637,28 @@ router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
  *               - action
  *               - postId
  *               - giverId
+ *               - token
+ *               - email
  *             properties:
  *               action:
  *                 type: string
  *                 enum: [agree_vote, disagree_vote]
- *                 description: The action the user wants to take (vote agree or disagree).
+ *                 example: agree_vote
  *               postId:
  *                 type: string
- *                 description: The ID of the post receiving the TedBlackCoin.
+ *                 example: 665b5e0d7dd99f7d2cfddf3a
  *               giverId:
  *                 type: string
- *                 description: The ID of the user who gave the TedBlackCoin.
+ *                 example: 665b5e0d7dd99f7d2cfddf99
+ *               token:
+ *                 type: string
+ *                 description: JWT token for verification
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
  *     responses:
  *       200:
- *         description: Vote recorded successfully or voting already finalized.
+ *         description: Vote recorded successfully
  *         content:
  *           application/json:
  *             schema:
@@ -2670,18 +2679,163 @@ router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
  *                       type: string
  *                     timestamp:
  *                       type: string
- *                       format: date-time
  *       400:
- *         description: User already voted or invalid action.
+ *         description: Validation or duplicate vote error
  *       401:
- *         description: Unauthorized or invalid token.
+ *         description: Unauthorized - invalid token or email
  *       404:
- *         description: Post not found or giver not found.
+ *         description: Post not found
  *       500:
- *         description: Server error while processing the vote.
+ *         description: Server error
  */
 router.post("/handleTedBlackCoinVote",authMiddelWere,handleTedBlackCoinVote)
 
 router.post("/noti",sendNoti)
+
+
+/**
+ * @swagger
+ * /user/getBlackCoinReactionsToMyPosts:
+ *   post:
+ *     summary: Get list of users who gave TedBlackCoin to my posts
+ *     tags:
+ *       - TedBlackCoin
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - email
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: JWT token of the logged-in user
+ *               email:
+ *                 type: string
+ *                 description: Email of the logged-in user
+ *                 example: myemail@example.com
+ *     responses:
+ *       200:
+ *         description: List of black coin reactions to the user's posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: number
+ *                   description: Number of reactions
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userId:
+ *                         type: object
+ *                         properties:
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       userPostId:
+ *                         type: object
+ *                         properties:
+ *                           content:
+ *                             type: object
+ *                           hashTag:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *       400:
+ *         description: Missing token or email
+ *       401:
+ *         description: Unauthorized - Invalid token or email
+ *       500:
+ *         description: Server error while fetching reactions
+ */
+router.post("/getBlackCoinReactionsToMyPosts",authMiddelWere,getBlackCoinReactionsToMyPosts);
+/**
+ * @swagger
+ * /user/getBlackCoinReactionsByMe:
+ *   post:
+ *     summary: Get all posts where I have given a TedBlackCoin
+ *     tags:
+ *       - TedBlackCoin
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - email
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: JWT token of the logged-in user
+ *               email:
+ *                 type: string
+ *                 description: Email of the logged-in user
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: List of posts reacted to with TedBlackCoin by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userPostId:
+ *                         type: object
+ *                         properties:
+ *                           content:
+ *                             type: object
+ *                             description: Content of the post
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                       postUserId:
+ *                         type: object
+ *                         properties:
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *       400:
+ *         description: Missing token or email
+ *       401:
+ *         description: Unauthorized - Invalid token or email
+ *       500:
+ *         description: Server error while fetching reactions
+ */
+router.post("/getBlackCoinReactionsByMe", authMiddelWere ,getBlackCoinReactionsByMe);
 
 module.exports = router;                       
