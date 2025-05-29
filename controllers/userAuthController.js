@@ -3374,6 +3374,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                             giverId: authorizedUserId.toString(),
                             giverName: blackCoinGiver.userName,
                             giverProfilePic: blackCoinGiver.profilePic || "",
+                            createdAt:post.tedBlackCoinData.createdAt,
                             // Button data for Flutter to handle
                             hasButtons: "true",
                             buttonType: "agree_disagree",
@@ -3471,7 +3472,7 @@ exports.giveTedBlackCoin = async (req, res) => {
 
 
                 tedBlackRecord.agree = agree.length || 0;
-                tedBlackRecord.disagree = disagree.length || 0;
+                tedBlackRecord.disAgree = disagree.length || 0;
 
 
                 if (agreePercentage >= 70) {
