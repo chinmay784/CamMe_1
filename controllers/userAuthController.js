@@ -15,6 +15,7 @@ const Moment = require("../models/momentSchema")
 const fs = require("fs");
 const Notification = require("../models/notificationmodel")
 const admin = require("../firebase")
+const TedBlackers = require("../models/TedBlackersModel")
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -3324,6 +3325,17 @@ exports.giveTedBlackCoin = async (req, res) => {
 
         console.log("Unique Givers Print");
 
+        // 🆕 Save tracking record in TedBlackers
+        await TedBlackers.create({
+            userId: post.userId, // Post creator (the one being accused)
+            status: "OnGoing",
+            notiFied: uniqueGivers.length,
+            agree: 0,
+            disAgree: 0,
+            reasone: reason,
+            hashTags: hashTags
+        });
+
         // 🔔 Notify all unique givers (excluding the blackCoin giver)
         for (const giverId of uniqueGivers) {
             if (giverId !== authorizedUserId) {
@@ -3444,6 +3456,20 @@ exports.giveTedBlackCoin = async (req, res) => {
                 const agreePercentage = totalVotes > 0 ? (agree.length / totalVotes) * 100 : 0;
                 console.log("Inside setTimeOut giveTedBlackCoin")
 
+
+                // 🎯 Update TedBlackers record
+                const tedBlackRecord = await TedBlackers.findOne({
+                    userId: updatedPost.userId,
+                    reasone: updatedPost.tedBlackCoinData.reason,
+                    createdAt: updatedPost.tedBlackCoinData.createdAt
+                });
+
+
+
+                tedBlackRecord.agree = agree.length;
+                tedBlackRecord.disAgree = disagree.length;
+
+
                 if (agreePercentage >= 70) {
                     const postCreator = await User.findById(updatedPost.userId);
                     console.log("Initial state black coin giveTedBlackCoin")
@@ -3461,6 +3487,8 @@ exports.giveTedBlackCoin = async (req, res) => {
                         }
                     }
 
+                    tedBlackRecord.status = "Accept TedBlack";
+
                     updatedPost.tedBlackGivers = updatedPost.tedBlackGivers || [];
                     if (!updatedPost.tedBlackGivers.includes(blackCoinGiverId)) {
                         updatedPost.tedBlackGivers.push(blackCoinGiverId);
@@ -3475,8 +3503,11 @@ exports.giveTedBlackCoin = async (req, res) => {
                     await postCreator.save();
                     await updatedPost.save();
                     console.log("Complited giving coin giveTedBlackCoin")
-                } else { }
+                } else {
+                    tedBlackRecord.status = "Reject TedBlack";
+                }
 
+                await tedBlackRecord.save();
                 updatedPost.tedBlackCoinData.isFinalized = true;
                 await updatedPost.save();
             }
@@ -3666,11 +3697,20 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             return res.status(200).json({ success: false, message: "Voting has already ended" });
         }
 
+
+        const blackerRecord = await TedBlackers.findOne({
+            userId: post.userId,
+            reasone: post.tedBlackCoinData.reason,
+            createdAt: post.tedBlackCoinData.createdAt
+        });
+
+
         // Process the vote based on action
         if (action === "agree_vote") {
             // Handle agree logic
             console.log("User agreed with the TedBlackCoin");
 
+            blackerRecord.agree += 1;
             // You can update your database here
             // Example: Update vote count, user preferences, etc.
             /*
@@ -3707,6 +3747,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             // Handle disagree logic
             console.log("User disagreed with the TedBlackCoin");
 
+            blackerRecord.disAgree += 1;
             // You can update your database here
             /*
             await VoteModel.create({
@@ -3739,7 +3780,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             post.tedBlackCoinData.disagree.push(userId);
         }
 
-
+        await blackerRecord.save();
         post.tedBlackCoinData.voters.push(userId);
         await post.save();
 
