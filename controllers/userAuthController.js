@@ -3326,8 +3326,12 @@ exports.giveTedBlackCoin = async (req, res) => {
         console.log("Unique Givers Print");
 
         // 🆕 Save tracking record in TedBlackers
+        // postUserId
+        // userPostId
         await TedBlackers.create({
-            userId: post.userId, // Post creator (the one being accused)
+            userId: authorizedUserId, // Post creator (the one being accused)
+            postUserId:post.userId,
+            userPostId:postId,
             status: "OnGoing",
             notiFied: uniqueGivers.length,
             agree: 0,
@@ -3826,6 +3830,20 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 // Route to add in your main router file
 // app.post('/api/tedblackcoin/vote', handleTedBlackCoinVote);
 
+
+
+
+exports.getTedBlackersList = async (req,res) =>{
+    try {
+        
+    } catch (error) {
+        console.log(error.message);
+        return res.status.json({
+            sucess:false,
+            message :"Error in fetching in TedBlackers"
+        })
+    }
+}
 
 
 

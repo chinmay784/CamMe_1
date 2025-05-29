@@ -6,6 +6,14 @@ const BlackerSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+    userPostId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Postcreate",
+    },
+    postUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     status: {
         type: String,
         enum: ["OnGoing", "Accept TedBlack", "Reject TedBlack"],
@@ -39,4 +47,4 @@ const BlackerSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 
-module.exports = mongoose.model("TedBlackers" , BlackerSchema);
+module.exports = mongoose.model("TedBlackers", BlackerSchema);
