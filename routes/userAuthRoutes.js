@@ -2392,72 +2392,72 @@ router.post(
  *         description: Server error.
  */
 router.post("/givetedBlackCoin", authMiddelWere, giveTedBlackCoin);
-/**
- * @swagger
- * /user/voteTedBlackCoin:
- *   post:
- *     summary: Vote on a TedBlackCoin action
- *     tags:
- *       - TedBlackCoin
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - postId
- *               - voteType
- *               - email
- *               - token
- *             properties:
- *               postId:
- *                 type: string
- *                 description: ID of the post to vote on
- *                 example: "665094f23d2ae18a37f04eaa"
- *               voteType:
- *                 type: string
- *                 enum: [agree, disagree]
- *                 description: The vote type ("agree" or "disagree")
- *                 example: "agree"
- *               email:
- *                 type: string
- *                 description: Email of the user casting the vote
- *                 example: "user@example.com"
- *               token:
- *                 type: string
- *                 description: JWT token of the user
- *                 example: "your.jwt.token.here"
- *     responses:
- *       200:
- *         description: Vote recorded successfully or validation message
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Vote recorded successfully"
- *       500:
- *         description: Server error while voting
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Server error while voting"
- */
+// /**
+//  * @swagger
+//  * /user/voteTedBlackCoin:
+//  *   post:
+//  *     summary: Vote on a TedBlackCoin action
+//  *     tags:
+//  *       - TedBlackCoin
+//  *     security:
+//  *       - bearerAuth: []
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         application/json:
+//  *           schema:
+//  *             type: object
+//  *             required:
+//  *               - postId
+//  *               - voteType
+//  *               - email
+//  *               - token
+//  *             properties:
+//  *               postId:
+//  *                 type: string
+//  *                 description: ID of the post to vote on
+//  *                 example: "665094f23d2ae18a37f04eaa"
+//  *               voteType:
+//  *                 type: string
+//  *                 enum: [agree, disagree]
+//  *                 description: The vote type ("agree" or "disagree")
+//  *                 example: "agree"
+//  *               email:
+//  *                 type: string
+//  *                 description: Email of the user casting the vote
+//  *                 example: "user@example.com"
+//  *               token:
+//  *                 type: string
+//  *                 description: JWT token of the user
+//  *                 example: "your.jwt.token.here"
+//  *     responses:
+//  *       200:
+//  *         description: Vote recorded successfully or validation message
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: true
+//  *                 message:
+//  *                   type: string
+//  *                   example: "Vote recorded successfully"
+//  *       500:
+//  *         description: Server error while voting
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: false
+//  *                 message:
+//  *                   type: string
+//  *                   example: "Server error while voting"
+//  */
 router.post("/voteTedBlackCoin",authMiddelWere,voteTedBlackCoin)
 
 /**
