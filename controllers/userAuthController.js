@@ -3732,8 +3732,8 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 
         const blackerRecord = await TedBlackers.findOne({
             userId: post.userId,
-            reasone: post.tedBlackCoinData.reason,
-            createdAt: post.tedBlackCoinData.createdAt
+            userPostId: post._id,
+            reasone: post.tedBlackCoinData.reason
         });
 
         if (!blackerRecord) {
@@ -3882,7 +3882,7 @@ exports.count = async (req, res) => {
             blackerRecord
         })
 
-    } catch(error) {
+    } catch (error) {
         console.log(error);
         return res.status(500).json({
             sucess: false,
