@@ -2616,9 +2616,72 @@ router.post("/inviteAFriend", authMiddelWere, sendFriendRequest);
  *                   example: Error in acceptRequest controller
  */
 router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
-
+/**
+ * @swagger
+ * /user/handleTedBlackCoinVote:
+ *   post:
+ *     summary: Handle vote for a TedBlackCoin (Agree/Disagree)
+ *     description: Authenticated users can vote (agree or disagree) on a TedBlackCoin assigned to a post.
+ *     tags:
+ *       - TedBlackCoin
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - action
+ *               - postId
+ *               - giverId
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [agree_vote, disagree_vote]
+ *                 description: The action the user wants to take (vote agree or disagree).
+ *               postId:
+ *                 type: string
+ *                 description: The ID of the post receiving the TedBlackCoin.
+ *               giverId:
+ *                 type: string
+ *                 description: The ID of the user who gave the TedBlackCoin.
+ *     responses:
+ *       200:
+ *         description: Vote recorded successfully or voting already finalized.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     postId:
+ *                       type: string
+ *                     action:
+ *                       type: string
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: User already voted or invalid action.
+ *       401:
+ *         description: Unauthorized or invalid token.
+ *       404:
+ *         description: Post not found or giver not found.
+ *       500:
+ *         description: Server error while processing the vote.
+ */
 router.post("/handleTedBlackCoinVote",authMiddelWere,handleTedBlackCoinVote)
 
 router.post("/noti",sendNoti)
 
-module.exports = router;
+module.exports = router;                       
