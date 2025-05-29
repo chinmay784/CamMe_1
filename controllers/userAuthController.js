@@ -3689,7 +3689,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 
         console.log(`User ${userId} voted ${action} on TedBlackCoin for post ${postId}`);
 
-        if (!action || !postId || !giverId || !token || email) {
+        if (!action || !postId || !giverId || !token || !email) {
             return res.status(200).json({
                 sucess: false,
                 message: "Please Provide all fields"
