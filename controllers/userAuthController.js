@@ -3448,7 +3448,7 @@ exports.giveTedBlackCoin = async (req, res) => {
             }
         }
 
-        // Schedule evaluation in 40 minutes
+        // Schedule evaluation in 29 minutes
         const blackCoinGiverId = authorizedUserId;
 
         console.log("Outside setTimeOut giveTedBlackCoin")
@@ -3466,7 +3466,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                 const tedBlackRecord = await TedBlackers.findOne({
                     userId: updatedPost.userId,
                     reasone: updatedPost.tedBlackCoinData.reason,
-                    createdAt: updatedPost.tedBlackCoinData.createdAt
+                    // createdAt: updatedPost.tedBlackCoinData.createdAt
                 });
 
 
@@ -3516,7 +3516,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                 updatedPost.tedBlackCoinData.isFinalized = true;
                 await updatedPost.save();
             }
-        }, 40 * 60 * 1000); // 40 minutes
+        }, 29 * 60 * 1000); // 29 minutes
 
         return res.status(200).json({
             success: true,
