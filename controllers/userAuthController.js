@@ -3851,12 +3851,12 @@ exports.handleTedBlackCoinVote = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: `Vote ${action} recorded successfully`,
-            data: {
-                userId,
-                postId,
-                action,
-                timestamp: new Date().toISOString()
-            }
+            // data: {
+            //     userId,
+            //     postId,
+            //     action,
+            //     timestamp: new Date().toISOString()
+            // }
         });
 
     } catch (error) {
