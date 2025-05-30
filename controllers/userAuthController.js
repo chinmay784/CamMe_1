@@ -3731,21 +3731,21 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 
 
         const blackerRecord = await TedBlackers.findOne({
-            userId: userId,
+            userId: giverId,
             // userPostId: post._id,
             postUserId: post.userId,
             userPostId: postId,
         });
 
         console.log("Searching for blacker record with:", {
-            userId: post.userId,
+            userId: giverId,
             postUserId: post.userId,
             userPostId: postId,
         });
 
         if (!blackerRecord) {
             return res.status(200).json({
-                sucess: false,
+                success: false,
                 message: "Black record data not found"
             })
         }

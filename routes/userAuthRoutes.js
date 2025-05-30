@@ -2689,7 +2689,7 @@ router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
  *       500:
  *         description: Server error
  */
-router.post("/handleTedBlackCoinVote",authMiddelWere,handleTedBlackCoinVote)
+router.post("/handleTedBlackCoinVote",handleTedBlackCoinVote)
 
 router.post("/noti",sendNoti)
 
