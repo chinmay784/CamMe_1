@@ -16,6 +16,8 @@ const fs = require("fs");
 const Notification = require("../models/notificationmodel")
 const admin = require("../firebase")
 const TedBlackers = require("../models/TedBlackersModel")
+const cron = require('node-cron');
+
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -3246,6 +3248,291 @@ exports.giveTedBronzePost = async (req, res) => {
 
 
 // Most Important Thing For this Application
+// exports.giveTedBlackCoin = async (req, res) => {
+//     try {
+//         const authorizedUserId = req.user.userId;
+//         const { postId, reason, email, token, hashTags } = req.body;
+
+//         if (!postId || !reason || !email || !token) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Missing postId, reason, email, or token",
+//             });
+//         }
+
+//         const authHeader = req.headers.authorization;
+//         const authorizedToken = authHeader.split(" ")[1];
+//         const user = await User.findById(authorizedUserId).select("email");
+
+//         if (token !== authorizedToken) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Invalid token ",
+//             });
+//         }
+
+//         if (user.email !== email) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Invalid  email",
+//             });
+//         }
+
+//         const post = await Postcreate.findById(postId);
+//         if (!post) {
+//             return res.status(200).json({ success: false, message: "Post not found" });
+//         }
+
+//         if (post.tedBlackGivers?.includes(authorizedUserId)) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "You have already given a TedBlackCoin to this post",
+//             });
+//         }
+
+//         const receiver = await User.findById(post.userId);
+//         if (!receiver) {
+//             return res.status(200).json({ success: false, message: "Post owner not found" });
+//         }
+
+
+//         const allowedTags = ["spam", "abuse", "misinformation"];
+
+//         if (!allowedTags.includes(hashTags)) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Invalid hashTags. Allowed values are: spam, abuse, misinformation",
+//             });
+//         }
+
+//         post.tedBlackCoinData = {
+//             givenBy: authorizedUserId,
+//             reason,
+//             createdAt: new Date(),
+//             voters: [],
+//             agree: [],
+//             disagree: [],
+//             isFinalized: false,
+//             hashTags
+//         };
+//         await post.save();
+
+//         const allGivers = [
+//             ...post.tedGoldGivers,
+//             ...post.tedSilverGivers,
+//             ...post.tedBronzeGivers
+//         ];
+
+//         const uniqueGivers = [...new Set(allGivers.map(g => g.toString()))];
+
+//         console.log("Unique Givers Print");
+
+//         // 🆕 Save tracking record in TedBlackers
+//         // postUserId
+//         // userPostId
+//         await TedBlackers.create({
+//             userId: authorizedUserId, // Post creator (the one being accused)
+//             postUserId: post.userId,
+//             userPostId: postId,
+//             status: "OnGoing",
+//             notiFied: uniqueGivers.length,
+//             agree: 0,
+//             disAgree: 0,
+//             reasone: reason,
+//             hashTags: hashTags
+//         });
+
+//         // 🔔 Notify all unique givers (excluding the blackCoin giver)
+//         for (const giverId of uniqueGivers) {
+//             if (giverId !== authorizedUserId) {
+//                 const giver = await User.findById(giverId);
+//                 if (!giver) continue;
+
+//                 await Notification.create({
+//                     userId: giverId,
+//                     postId: post._id,
+//                     type: "TedBlackCoinVote",
+//                     message: `A TedBlackCoin has been given to a post you reacted to. Reason: ${reason}`,
+//                     actions: ["Agree", "Disagree"]
+//                 });
+//                 console.log("Notification created for giver")
+
+//                 const blackCoinGiver = await User.findById(authorizedUserId).select("userName profilePic");
+
+//                 if (giver.fcmToken) {
+//                     console.log("Sending FCM Notification to giver");
+//                     console.log("Notify user List")
+
+//                     await admin.messaging().send({
+//                         token: giver.fcmToken,
+//                         notification: {
+//                             title: "Vote on TedBlackCoin",
+//                             body: `A TedBlackCoin was given to a post you liked by ${blackCoinGiver.userName}. Reason: ${reason}`
+//                         },
+//                         data: {
+//                             postId: post._id.toString(),
+//                             reason,
+//                             actionType: "TedBlackCoinVote",
+//                             giverId: authorizedUserId.toString(),
+//                             giverName: blackCoinGiver.userName,
+//                             giverProfilePic: blackCoinGiver.profilePic || "",
+//                             createdAt: post.tedBlackCoinData?.createdAt?.toString() || new Date().toISOString(),
+//                             // Button data for Flutter to handle
+//                             hasButtons: "true",
+//                             buttonType: "agree_disagree",
+//                             buttons: JSON.stringify([
+//                                 {
+//                                     id: "agree",
+//                                     text: "✅ Agree",
+//                                     action: "agree_vote",
+//                                     color: "#4CAF50"
+//                                 },
+//                                 {
+//                                     id: "disagree",
+//                                     text: "❌ Disagree",
+//                                     action: "disagree_vote",
+//                                     color: "#F44336"
+//                                 }
+//                             ]),
+//                             // Add click action for Android
+//                             click_action: "FLUTTER_NOTIFICATION_CLICK"
+//                         },
+//                         // Android specific configuration
+//                         android: {
+//                             notification: {
+//                                 title: "Vote on TedBlackCoin",
+//                                 body: `A TedBlackCoin was given to a post you liked by ${blackCoinGiver.userName}. Reason: ${reason}`,
+//                                 channelId: "tedblackcoin_votes",
+//                                 priority: "high",
+//                                 defaultSound: true,
+//                                 defaultVibrateTimings: true,
+//                                 clickAction: "FLUTTER_NOTIFICATION_CLICK"
+//                             },
+//                             data: {
+//                                 postId: post._id.toString(),
+//                                 reason,
+//                                 actionType: "TedBlackCoinVote",
+//                                 giverId: authorizedUserId.toString(),
+//                                 giverName: blackCoinGiver.userName,
+//                                 giverProfilePic: blackCoinGiver.profilePic || "",
+//                                 hasButtons: "true",
+//                                 buttonType: "agree_disagree"
+//                             }
+//                         },
+//                         // iOS specific configuration
+//                         // apns: {
+//                         //     payload: {
+//                         //         aps: {
+//                         //             alert: {
+//                         //                 title: "Vote on TedBlackCoin",
+//                         //                 body: `A TedBlackCoin was given to a post you liked by ${blackCoinGiver.userName}. Reason: ${reason}`
+//                         //             },
+//                         //             sound: "default",
+//                         //             badge: 1
+//                         //         }
+//                         //     },
+//                         //     // Custom data for iOS
+//                         //     customData: {
+//                         //         postId: post._id.toString(),
+//                         //         reason,
+//                         //         actionType: "TedBlackCoinVote",
+//                         //         giverId: authorizedUserId.toString(),
+//                         //         giverName: blackCoinGiver.userName,
+//                         //         giverProfilePic: blackCoinGiver.profilePic || "",
+//                         //         hasButtons: "true",
+//                         //         buttonType: "agree_disagree"
+//                         //     }
+//                         // }
+//                     });
+
+//                     console.log("Sending completed FCM Notification to giver with button data");
+//                 }
+//             }
+//         }
+
+//         // Schedule evaluation in 20 minutes
+//         const blackCoinGiverId = authorizedUserId;
+
+//         console.log("Outside setTimeOut giveTedBlackCoin")
+//         setTimeout(async () => {
+//             const updatedPost = await Postcreate.findById(postId);
+
+//             if (updatedPost && !updatedPost.tedBlackCoinData.isFinalized) {
+//                 const { agree, disagree } = updatedPost.tedBlackCoinData;
+//                 const totalVotes = agree.length + disagree.length;
+//                 const agreePercentage = totalVotes > 0 ? (agree.length / totalVotes) * 100 : 0;
+//                 console.log("Inside setTimeOut giveTedBlackCoin")
+
+
+//                 // 🎯 Update TedBlackers record
+//                 const tedBlackRecord = await TedBlackers.findOne({
+//                     userId: updatedPost.userId,
+//                     reasone: updatedPost.tedBlackCoinData.reason,
+//                     // createdAt: updatedPost.tedBlackCoinData.createdAt
+//                 });
+
+
+
+//                 tedBlackRecord.agree = agree.length || 0;
+//                 tedBlackRecord.disAgree = disagree.length || 0;
+
+
+//                 if (agreePercentage >= 70) {
+//                     const postCreator = await User.findById(updatedPost.userId);
+//                     console.log("Initial state black coin giveTedBlackCoin")
+//                     const updatedTiers = [
+//                         { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
+//                         { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
+//                         { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
+//                     ];
+
+//                     for (const tier of updatedTiers) {
+//                         if (updatedPost[tier.arr]?.includes(blackCoinGiverId)) {
+//                             updatedPost[tier.arr] = updatedPost[tier.arr].filter(id => id.toString() !== blackCoinGiverId.toString());
+//                             updatedPost[tier.cnt] = Math.max((updatedPost[tier.cnt] || 1) - 1, 0);
+//                             postCreator.coinWallet[tier.wallet] = Math.max((postCreator.coinWallet[tier.wallet] || 1) - 1, 0);
+//                         }
+//                     }
+
+//                     tedBlackRecord.status = "Accept TedBlack";
+
+//                     updatedPost.tedBlackGivers = updatedPost.tedBlackGivers || [];
+//                     if (!updatedPost.tedBlackGivers.includes(blackCoinGiverId)) {
+//                         updatedPost.tedBlackGivers.push(blackCoinGiverId);
+//                     }
+//                     updatedPost.tedBlackCount = (updatedPost.tedBlackCount || 0) + 1;
+
+//                     postCreator.coinWallet.tedBlack = (postCreator.coinWallet.tedBlack || 0) + 1;
+//                     postCreator.coinWallet.tedGold = (postCreator.coinWallet.tedGold || 0) - 1;
+//                     postCreator.coinWallet.tedSilver = (postCreator.coinWallet.tedSilver || 0) - 2;
+//                     postCreator.coinWallet.tedBronze = (postCreator.coinWallet.tedBronze || 0) - 3;
+
+//                     await postCreator.save();
+//                     await updatedPost.save();
+//                     console.log("Complited giving coin giveTedBlackCoin")
+//                 } else {
+//                     tedBlackRecord.status = "Reject TedBlack";
+//                 }
+
+//                 await tedBlackRecord.save();
+//                 updatedPost.tedBlackCoinData.isFinalized = true;
+//                 await updatedPost.save();
+//             }
+//         }, 20 * 60 * 1000); // 20 minutes
+
+//         return res.status(200).json({
+//             success: true,
+//             message: "TedBlackCoin given and notifications sent for voting."
+//         });
+
+//     } catch (error) {
+//         console.error("Error in giveTedBlackCoin:", error);
+//         return res.status(500).json({
+//             success: false,
+//             message: `Server error ${error.message}`,
+//         });
+//     }
+// };
 exports.giveTedBlackCoin = async (req, res) => {
     try {
         const authorizedUserId = req.user.userId;
@@ -3272,7 +3559,7 @@ exports.giveTedBlackCoin = async (req, res) => {
         if (user.email !== email) {
             return res.status(200).json({
                 success: false,
-                message: "Invalid  email",
+                message: "Invalid email",
             });
         }
 
@@ -3292,7 +3579,6 @@ exports.giveTedBlackCoin = async (req, res) => {
         if (!receiver) {
             return res.status(200).json({ success: false, message: "Post owner not found" });
         }
-
 
         const allowedTags = ["spam", "abuse", "misinformation"];
 
@@ -3316,21 +3602,19 @@ exports.giveTedBlackCoin = async (req, res) => {
         await post.save();
 
         const allGivers = [
-            ...post.tedGoldGivers,
-            ...post.tedSilverGivers,
-            ...post.tedBronzeGivers
+            ...(post.tedGoldGivers || []),
+            ...(post.tedSilverGivers || []),
+            ...(post.tedBronzeGivers || [])
         ];
 
         const uniqueGivers = [...new Set(allGivers.map(g => g.toString()))];
 
         console.log("Unique Givers Print");
 
-        // 🆕 Save tracking record in TedBlackers
-        // postUserId
-        // userPostId
-        await TedBlackers.create({
-            userId: authorizedUserId, // Post creator (the one being accused)
-            postUserId: post.userId,
+        // Save tracking record in TedBlackers
+        const tedBlackRecord = await TedBlackers.create({
+            userId: authorizedUserId, // The user who gave the TedBlackCoin
+            postUserId: post.userId, // The user who created the post
             userPostId: postId,
             status: "OnGoing",
             notiFied: uniqueGivers.length,
@@ -3340,9 +3624,9 @@ exports.giveTedBlackCoin = async (req, res) => {
             hashTags: hashTags
         });
 
-        // 🔔 Notify all unique givers (excluding the blackCoin giver)
+        // Notify all unique givers (excluding the blackCoin giver)
         for (const giverId of uniqueGivers) {
-            if (giverId !== authorizedUserId) {
+            if (giverId.toString() !== authorizedUserId.toString()) { // Ensure comparison is safe
                 const giver = await User.findById(giverId);
                 if (!giver) continue;
 
@@ -3374,8 +3658,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                             giverId: authorizedUserId.toString(),
                             giverName: blackCoinGiver.userName,
                             giverProfilePic: blackCoinGiver.profilePic || "",
-                            createdAt: post.tedBlackCoinData?.createdAt?.toString() || new Date().toISOString(),
-                            // Button data for Flutter to handle
+                            createdAt: post.tedBlackCoinData?.createdAt?.toISOString() || new Date().toISOString(),
                             hasButtons: "true",
                             buttonType: "agree_disagree",
                             buttons: JSON.stringify([
@@ -3392,10 +3675,8 @@ exports.giveTedBlackCoin = async (req, res) => {
                                     color: "#F44336"
                                 }
                             ]),
-                            // Add click action for Android
                             click_action: "FLUTTER_NOTIFICATION_CLICK"
                         },
-                        // Android specific configuration
                         android: {
                             notification: {
                                 title: "Vote on TedBlackCoin",
@@ -3417,110 +3698,95 @@ exports.giveTedBlackCoin = async (req, res) => {
                                 buttonType: "agree_disagree"
                             }
                         },
-                        // iOS specific configuration
-                        // apns: {
-                        //     payload: {
-                        //         aps: {
-                        //             alert: {
-                        //                 title: "Vote on TedBlackCoin",
-                        //                 body: `A TedBlackCoin was given to a post you liked by ${blackCoinGiver.userName}. Reason: ${reason}`
-                        //             },
-                        //             sound: "default",
-                        //             badge: 1
-                        //         }
-                        //     },
-                        //     // Custom data for iOS
-                        //     customData: {
-                        //         postId: post._id.toString(),
-                        //         reason,
-                        //         actionType: "TedBlackCoinVote",
-                        //         giverId: authorizedUserId.toString(),
-                        //         giverName: blackCoinGiver.userName,
-                        //         giverProfilePic: blackCoinGiver.profilePic || "",
-                        //         hasButtons: "true",
-                        //         buttonType: "agree_disagree"
-                        //     }
-                        // }
                     });
-
                     console.log("Sending completed FCM Notification to giver with button data");
                 }
             }
         }
 
-        // Schedule evaluation in 20 minutes
+        // Schedule evaluation using node-cron for 20 minutes from now
         const blackCoinGiverId = authorizedUserId;
+        const evaluationTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
 
-        console.log("Outside setTimeOut giveTedBlackCoin")
-        setTimeout(async () => {
-            const updatedPost = await Postcreate.findById(postId);
+        // Create a unique cron job name for each task
+        const cronJobName = `tedBlackCoinEvaluation_${postId}_${Date.now()}`;
 
-            if (updatedPost && !updatedPost.tedBlackCoinData.isFinalized) {
-                const { agree, disagree } = updatedPost.tedBlackCoinData;
-                const totalVotes = agree.length + disagree.length;
-                const agreePercentage = totalVotes > 0 ? (agree.length / totalVotes) * 100 : 0;
-                console.log("Inside setTimeOut giveTedBlackCoin")
+        cron.schedule(evaluationTime.toLocaleString('en-US', { minute: '2-digit', hour: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', second: '2-digit' }), async () => {
+            console.log(`Running scheduled job for postId: ${postId}`);
+            try {
+                const updatedPost = await Postcreate.findById(postId);
 
+                if (updatedPost && updatedPost.tedBlackCoinData && !updatedPost.tedBlackCoinData.isFinalized) {
+                    const { agree, disagree } = updatedPost.tedBlackCoinData;
+                    const totalVotes = agree.length + disagree.length;
+                    const agreePercentage = totalVotes > 0 ? (agree.length / totalVotes) * 100 : 0;
+                    console.log(`Inside node-cron job for postId: ${postId}`);
 
-                // 🎯 Update TedBlackers record
-                const tedBlackRecord = await TedBlackers.findOne({
-                    userId: updatedPost.userId,
-                    reasone: updatedPost.tedBlackCoinData.reason,
-                    // createdAt: updatedPost.tedBlackCoinData.createdAt
-                });
+                    const tedBlackRecord = await TedBlackers.findOne({
+                        userPostId: postId,
+                        reasone: updatedPost.tedBlackCoinData.reason,
+                        status: "OnGoing" // Ensure we're updating the correct ongoing record
+                    });
 
+                    if (tedBlackRecord) {
+                        tedBlackRecord.agree = agree.length || 0;
+                        tedBlackRecord.disAgree = disagree.length || 0;
 
+                        if (agreePercentage >= 70) {
+                            const postCreator = await User.findById(updatedPost.userId);
+                            if (postCreator) {
+                                console.log("Initial state black coin giveTedBlackCoin");
+                                const updatedTiers = [
+                                    { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
+                                    { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
+                                    { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
+                                ];
 
-                tedBlackRecord.agree = agree.length || 0;
-                tedBlackRecord.disAgree = disagree.length || 0;
+                                for (const tier of updatedTiers) {
+                                    if (updatedPost[tier.arr] && updatedPost[tier.arr].includes(blackCoinGiverId)) {
+                                        updatedPost[tier.arr] = updatedPost[tier.arr].filter(id => id.toString() !== blackCoinGiverId.toString());
+                                        updatedPost[tier.cnt] = Math.max((updatedPost[tier.cnt] || 1) - 1, 0);
+                                        postCreator.coinWallet[tier.wallet] = Math.max((postCreator.coinWallet[tier.wallet] || 1) - 1, 0);
+                                    }
+                                }
 
+                                tedBlackRecord.status = "Accept TedBlack";
 
-                if (agreePercentage >= 70) {
-                    const postCreator = await User.findById(updatedPost.userId);
-                    console.log("Initial state black coin giveTedBlackCoin")
-                    const updatedTiers = [
-                        { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
-                        { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
-                        { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
-                    ];
+                                updatedPost.tedBlackGivers = updatedPost.tedBlackGivers || [];
+                                if (!updatedPost.tedBlackGivers.includes(blackCoinGiverId)) {
+                                    updatedPost.tedBlackGivers.push(blackCoinGiverId);
+                                }
+                                updatedPost.tedBlackCount = (updatedPost.tedBlackCount || 0) + 1;
 
-                    for (const tier of updatedTiers) {
-                        if (updatedPost[tier.arr]?.includes(blackCoinGiverId)) {
-                            updatedPost[tier.arr] = updatedPost[tier.arr].filter(id => id.toString() !== blackCoinGiverId.toString());
-                            updatedPost[tier.cnt] = Math.max((updatedPost[tier.cnt] || 1) - 1, 0);
-                            postCreator.coinWallet[tier.wallet] = Math.max((postCreator.coinWallet[tier.wallet] || 1) - 1, 0);
+                                postCreator.coinWallet.tedBlack = (postCreator.coinWallet.tedBlack || 0) + 1;
+                                postCreator.coinWallet.tedGold = Math.max((postCreator.coinWallet.tedGold || 0) - 1, 0);
+                                postCreator.coinWallet.tedSilver = Math.max((postCreator.coinWallet.tedSilver || 0) - 2, 0);
+                                postCreator.coinWallet.tedBronze = Math.max((postCreator.coinWallet.tedBronze || 0) - 3, 0);
+
+                                await postCreator.save();
+                                console.log("Completed giving coin giveTedBlackCoin");
+                            }
+                        } else {
+                            tedBlackRecord.status = "Reject TedBlack";
                         }
+                        await tedBlackRecord.save();
                     }
 
-                    tedBlackRecord.status = "Accept TedBlack";
-
-                    updatedPost.tedBlackGivers = updatedPost.tedBlackGivers || [];
-                    if (!updatedPost.tedBlackGivers.includes(blackCoinGiverId)) {
-                        updatedPost.tedBlackGivers.push(blackCoinGiverId);
-                    }
-                    updatedPost.tedBlackCount = (updatedPost.tedBlackCount || 0) + 1;
-
-                    postCreator.coinWallet.tedBlack = (postCreator.coinWallet.tedBlack || 0) + 1;
-                    postCreator.coinWallet.tedGold = (postCreator.coinWallet.tedGold || 0) - 1;
-                    postCreator.coinWallet.tedSilver = (postCreator.coinWallet.tedSilver || 0) - 2;
-                    postCreator.coinWallet.tedBronze = (postCreator.coinWallet.tedBronze || 0) - 3;
-
-                    await postCreator.save();
+                    updatedPost.tedBlackCoinData.isFinalized = true;
                     await updatedPost.save();
-                    console.log("Complited giving coin giveTedBlackCoin")
-                } else {
-                    tedBlackRecord.status = "Reject TedBlack";
                 }
-
-                await tedBlackRecord.save();
-                updatedPost.tedBlackCoinData.isFinalized = true;
-                await updatedPost.save();
+            } catch (cronError) {
+                console.error(`Error in scheduled TedBlackCoin evaluation for postId ${postId}:`, cronError);
             }
-        }, 20 * 60 * 1000); // 20 minutes
+        }, {
+            scheduled: true,
+            timezone: "Asia/Kolkata", // Set your appropriate timezone
+            name: cronJobName // Assign a unique name to the job
+        });
 
         return res.status(200).json({
             success: true,
-            message: "TedBlackCoin given and notifications sent for voting."
+            message: "TedBlackCoin given and notifications sent for voting. Evaluation scheduled.",
         });
 
     } catch (error) {
@@ -3531,6 +3797,7 @@ exports.giveTedBlackCoin = async (req, res) => {
         });
     }
 };
+
 
 
 
