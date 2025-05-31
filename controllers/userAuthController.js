@@ -3533,7 +3533,6 @@ exports.giveTedBronzePost = async (req, res) => {
 //         });
 //     }
 // };
-
 exports.giveTedBlackCoin = async (req, res) => {
     try {
         const authorizedUserId = req.user.userId;
@@ -3707,22 +3706,26 @@ exports.giveTedBlackCoin = async (req, res) => {
 
         // Schedule evaluation using node-cron for 20 minutes from now
         const blackCoinGiverId = authorizedUserId;
-        const evaluationTime = new Date(Date.now() + 20 * 60 * 1000); // 20 minutes from now
+        const now = new Date();
+        const futureTime = new Date(now.getTime() + 20 * 60 * 1000); // 20 minutes from now
 
-        // --- ADDED VALIDATION HERE ---
-        if (isNaN(evaluationTime.getTime())) {
-            console.error("Error: evaluationTime is an Invalid Date object.");
-            return res.status(500).json({
-                success: false,
-                message: "Failed to schedule TedBlackCoin evaluation: Invalid time value.",
-            });
-        }
-        // --- END ADDED VALIDATION ---
+        // Get the specific minute, hour, day of month, month, and day of week for the cron string
+        const minute = futureTime.getMinutes();
+        const hour = futureTime.getHours();
+        const dayOfMonth = futureTime.getDate();
+        const month = futureTime.getMonth() + 1; // getMonth() is 0-indexed
+        const dayOfWeek = futureTime.getDay(); // Sunday - 0, Saturday - 6
+
+        // Construct the cron string for the exact time
+        // M H D M W (Minute, Hour, Day of Month, Month, Day of Week)
+        const cronPattern = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
+
+        console.log(`Scheduling cron job with pattern: "${cronPattern}" for postId: ${postId}`);
 
         // Create a unique cron job name for each task
         const cronJobName = `tedBlackCoinEvaluation_${postId}_${Date.now()}`;
 
-        cron.schedule(evaluationTime, async () => {
+        cron.schedule(cronPattern, async () => { // <--- CHANGE IS HERE: Pass the cron string
             console.log(`Running scheduled job for postId: ${postId} at ${new Date()}`);
             try {
                 const updatedPost = await Postcreate.findById(postId);
