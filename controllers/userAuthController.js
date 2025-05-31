@@ -3339,7 +3339,10 @@ exports.giveTedBlackCoin = async (req, res) => {
             agree: 0,
             disAgree: 0,
             reasone: reason,
-            hashTags: hashTags
+            hashTags: hashTags,
+            notifyUser:[...uniqueGivers],
+            agreeUser:[],
+            disAgreeUser:[],
         });
 
         // 🔔 Notify all unique givers (excluding the blackCoin giver)
@@ -4038,6 +4041,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             console.log("User agreed with the TedBlackCoin");
 
             blackerRecord.agree = (blackerRecord.agree || 0) + 1;
+            blackerRecord.agreeUser.push(userId)
             // You can update your database here
             // Example: Update vote count, user preferences, etc.
             /*
@@ -4075,6 +4079,7 @@ exports.handleTedBlackCoinVote = async (req, res) => {
             console.log("User disagreed with the TedBlackCoin");
 
             blackerRecord.disAgree = (blackerRecord.disAgree || 0) + 1;
+            blackerRecord.disAgreeUser.push(userId)
             // You can update your database here
             /*
             await VoteModel.create({

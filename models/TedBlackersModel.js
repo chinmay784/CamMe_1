@@ -39,6 +39,18 @@ const BlackerSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    notifyUser: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }],
+    agreeUser: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }],
+    disAgreeUser: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }],
 }, { timestamps: true })
 
 
