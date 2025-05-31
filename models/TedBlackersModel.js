@@ -39,11 +39,6 @@ const BlackerSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
-    // createdAt: {
-    //     type: Date,
-    //     default: Date.now,
-    //     expires: 3600 // 1 hour = 3600 seconds
-    // },
 }, { timestamps: true })
 
 
