@@ -633,6 +633,56 @@ router.post("/addAccount", authMiddelWere, addAccount)
 router.get("/account-link/approve/:userId/:requesterId", approveLinkAccount);
 router.post("/account-link/verify-otp", finalizeLinkAccount);
 router.post("/account-link/reject/:userId/:requesterId", rejectLinkAccount);
+/**
+ * @swagger
+ * /user/logout:
+ *   post:
+ *     summary: Logs out a user and blacklists their token
+ *     description: 
+ *       Logs out the user by blacklisting their JWT token and verifying their password before logout.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - password
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 example: yourPassword123
+ *     responses:
+ *       200:
+ *         description: Logout successful or token not provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User logged out successfully.
+ *       401:
+ *         description: Unauthorized - password does not match
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: user Password and input password is not match
+ *       500:
+ *         description: Internal server error
+ */
 router.post("/logout", checkBlacklist, logoutUser);
 router.get("/getMatchIntrested", authMiddelWere, getMatchedIntrested);
 router.get("/getHashTagContent", authMiddelWere, getHashTagContent);

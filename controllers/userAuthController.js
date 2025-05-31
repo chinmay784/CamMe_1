@@ -830,7 +830,7 @@ exports.logoutUser = async (req, res) => {
         const user = await User.findById(req.user.userId);
         const { password } = req.body;
         // if(user.password === )
-        const isMatch = bcrypt.compare(user.password, password);
+        const isMatch = await bcrypt.compare(user.password, password);
 
         if (!isMatch) {
             return re.status(200).json({
