@@ -3706,13 +3706,13 @@ exports.giveTedBlackCoin = async (req, res) => {
 
         // Schedule evaluation using node-cron for 20 minutes from now
         const blackCoinGiverId = authorizedUserId;
-        const evaluationTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
+        const evaluationTime = new Date(Date.now() + 20 * 60 * 1000); // 20 minutes from now
 
         // Create a unique cron job name for each task
         const cronJobName = `tedBlackCoinEvaluation_${postId}_${Date.now()}`;
 
-        cron.schedule(evaluationTime.toLocaleString('en-US', { minute: '2-digit', hour: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', second: '2-digit' }), async () => {
-            console.log(`Running scheduled job for postId: ${postId}`);
+        cron.schedule(evaluationTime, async () => { // <--- CHANGE IS HERE: Pass the Date object directly
+            console.log(`Running scheduled job for postId: ${postId} at ${new Date()}`);
             try {
                 const updatedPost = await Postcreate.findById(postId);
 
@@ -3780,9 +3780,10 @@ exports.giveTedBlackCoin = async (req, res) => {
             }
         }, {
             scheduled: true,
-            timezone: "Asia/Kolkata", // Set your appropriate timezone
-            name: cronJobName // Assign a unique name to the job
+            timezone: "Asia/Kolkata",
+            name: cronJobName
         });
+
 
         return res.status(200).json({
             success: true,
