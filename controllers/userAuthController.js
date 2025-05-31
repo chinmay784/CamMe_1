@@ -3533,6 +3533,7 @@ exports.giveTedBronzePost = async (req, res) => {
 //         });
 //     }
 // };
+
 exports.giveTedBlackCoin = async (req, res) => {
     try {
         const authorizedUserId = req.user.userId;
@@ -3708,10 +3709,20 @@ exports.giveTedBlackCoin = async (req, res) => {
         const blackCoinGiverId = authorizedUserId;
         const evaluationTime = new Date(Date.now() + 20 * 60 * 1000); // 20 minutes from now
 
+        // --- ADDED VALIDATION HERE ---
+        if (isNaN(evaluationTime.getTime())) {
+            console.error("Error: evaluationTime is an Invalid Date object.");
+            return res.status(500).json({
+                success: false,
+                message: "Failed to schedule TedBlackCoin evaluation: Invalid time value.",
+            });
+        }
+        // --- END ADDED VALIDATION ---
+
         // Create a unique cron job name for each task
         const cronJobName = `tedBlackCoinEvaluation_${postId}_${Date.now()}`;
 
-        cron.schedule(evaluationTime, async () => { // <--- CHANGE IS HERE: Pass the Date object directly
+        cron.schedule(evaluationTime, async () => {
             console.log(`Running scheduled job for postId: ${postId} at ${new Date()}`);
             try {
                 const updatedPost = await Postcreate.findById(postId);
@@ -3725,7 +3736,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                     const tedBlackRecord = await TedBlackers.findOne({
                         userPostId: postId,
                         reasone: updatedPost.tedBlackCoinData.reason,
-                        status: "OnGoing" // Ensure we're updating the correct ongoing record
+                        status: "OnGoing"
                     });
 
                     if (tedBlackRecord) {
@@ -3783,7 +3794,6 @@ exports.giveTedBlackCoin = async (req, res) => {
             timezone: "Asia/Kolkata",
             name: cronJobName
         });
-
 
         return res.status(200).json({
             success: true,
