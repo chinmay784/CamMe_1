@@ -3340,9 +3340,9 @@ exports.giveTedBlackCoin = async (req, res) => {
             disAgree: 0,
             reasone: reason,
             hashTags: hashTags,
-            notifyUser:[...uniqueGivers],
-            agreeUser:[],
-            disAgreeUser:[],
+            notifyUser: [...uniqueGivers],
+            agreeUser: [],
+            disAgreeUser: [],
         });
 
         // 🔔 Notify all unique givers (excluding the blackCoin giver)
@@ -4192,34 +4192,36 @@ exports.getBlackCoinReactionsToMyPosts = async (req, res) => {
         const { token, email } = req.body;
 
         if (!token || !email) {
-            return res.status.json({
-                sucess: false,
-                message: "Please Provide all token and email"
-            })
+            return res.status(400).json({
+                success: false,
+                message: "Please provide both token and email."
+            });
         }
 
-
         const authHeader = req.headers.authorization;
-        const authorizedToken = authHeader.split(" ")[1];
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
         const user = await User.findById(myUserId).select("email");
 
         if (token !== authorizedToken) {
-            return res.status(200).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid token ",
+                message: "Invalid token.",
             });
         }
 
         if (user.email !== email) {
-            return res.status(200).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid  email",
+                message: "Invalid email.",
             });
         }
 
         const reactions = await TedBlackers.find({ postUserId: myUserId })
-            .populate("userId", "userName profilePic email")  // who gave the black coin
-            .populate("userPostId", "content hashTag createdAt") // the post that got the black coin
+            .populate("userId", "userName profilePic email")              // Who gave the black coin
+            .populate("userPostId", "content hashTag createdAt")          // The post that received the black coin
+            .populate("notifyUser", "userName profilePic email")          // Users who were notified
+            .populate("agreeUser", "userName profilePic email")           // Users who agreed
+            .populate("disAgreeUser", "userName profilePic email")        // Users who disagreed
             .sort({ createdAt: -1 });
 
         return res.status(200).json({
@@ -4241,42 +4243,44 @@ exports.getBlackCoinReactionsToMyPosts = async (req, res) => {
 
 
 
+
 // Add Swagger Ui
 exports.getBlackCoinReactionsByMe = async (req, res) => {
     try {
         const myUserId = req.user.userId;
-
         const { token, email } = req.body;
 
         if (!token || !email) {
-            return res.status.json({
-                sucess: false,
-                message: "Please Provide all token and email"
-            })
+            return res.status(400).json({
+                success: false,
+                message: "Please provide both token and email."
+            });
         }
 
-
         const authHeader = req.headers.authorization;
-        const authorizedToken = authHeader.split(" ")[1];
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
         const user = await User.findById(myUserId).select("email");
 
         if (token !== authorizedToken) {
-            return res.status(200).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid token ",
+                message: "Invalid token.",
             });
         }
 
         if (user.email !== email) {
-            return res.status(200).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid  email",
+                message: "Invalid email.",
             });
         }
 
         const reactions = await TedBlackers.find({ userId: myUserId })
-            .populate("userPostId", "content createdAt")
-            .populate("postUserId", "userName profilePic")
+            .populate("userPostId", "content hashTag createdAt")          // The post that received the TedBlackCoin
+            .populate("postUserId", "userName profilePic email")          // The post's creator
+            .populate("notifyUser", "userName profilePic email")          // Users who were notified
+            .populate("agreeUser", "userName profilePic email")           // Users who agreed
+            .populate("disAgreeUser", "userName profilePic email")        // Users who disagreed
             .sort({ createdAt: -1 });
 
         return res.status(200).json({
@@ -4294,6 +4298,7 @@ exports.getBlackCoinReactionsByMe = async (req, res) => {
         });
     }
 };
+
 
 
 
