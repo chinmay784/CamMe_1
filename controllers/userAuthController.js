@@ -822,6 +822,7 @@ exports.rejectLinkAccount = async (req, res) => {
 
 exports.logoutUser = async (req, res) => {
     try {
+        const userId = req.user.userId
         const token = req.header("Authorization"); // Bearer <token>
         if (!token) return res.status(200).json({ message: "Token not provided." });
 
@@ -831,7 +832,7 @@ exports.logoutUser = async (req, res) => {
         const blacklisted = new BlacklistedToken({ token, expiresAt });
         await blacklisted.save();
 
-        const user = await User.findById(req.user.userId);
+        const user = await User.findById(userId);
         const { password } = req.body;
         // if(user.password === )
         const isMatch = await bcrypt.compare(user.password, password);
