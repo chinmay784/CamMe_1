@@ -484,6 +484,7 @@ exports.loginOtpverify = async (req, res) => {
         user.otpExpires = undefined;
         user.fcmToken = fcmToken;
         await user.save()
+        console.log(user.fcmToken)
 
         return res.status(200).json({
             sucess: true,
