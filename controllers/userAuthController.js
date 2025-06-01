@@ -3480,8 +3480,8 @@ exports.giveTedBlackCoin = async (req, res) => {
 
 
 
-                tedBlackRecord.agree = agree.length || 0;
-                tedBlackRecord.disAgree = disagree.length || 0;
+                // tedBlackRecord.agree = agree.length || 0;
+                // tedBlackRecord.disAgree = disagree.length || 0;
 
 
                 if (agreePercentage >= 70) {
