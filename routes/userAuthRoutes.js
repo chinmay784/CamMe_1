@@ -683,7 +683,7 @@ router.post("/account-link/reject/:userId/:requesterId", rejectLinkAccount);
  *       500:
  *         description: Internal server error
  */
-router.post("/logout",authMiddelWere, checkBlacklist, logoutUser);
+router.post("/logout",checkBlacklist,authMiddelWere, logoutUser);
 router.get("/getMatchIntrested", authMiddelWere, getMatchedIntrested);
 router.get("/getHashTagContent", authMiddelWere, getHashTagContent);
 router.get("/getLocation", authMiddelWere, getAllowLocation);
