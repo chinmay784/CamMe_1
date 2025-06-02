@@ -3457,7 +3457,7 @@ exports.giveTedBlackCoin = async (req, res) => {
             }
         }
 
-        // Schedule evaluation in 5 minutes
+        // Schedule evaluation in 29 minutes
         const blackCoinGiverId = authorizedUserId;
 
         console.log("Outside setTimeOut giveTedBlackCoin")
@@ -3526,7 +3526,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                 console.log("Black Coin Voting Ended SucessFully")
                 await updatedPost.save();
             }
-        }, 5 * 60 * 1000); // 5 minutes
+        }, 29 * 60 * 1000); // 29 minutes
 
         return res.status(200).json({
             success: true,
