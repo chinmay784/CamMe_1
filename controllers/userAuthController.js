@@ -3473,7 +3473,7 @@ exports.giveTedBlackCoin = async (req, res) => {
 
                 // 🎯 Update TedBlackers record
                 const tedBlackRecord = await TedBlackers.findOne({
-                    userId: updatedPost.userId,
+                    postUserId: updatedPost.userId,
                     reasone: updatedPost.tedBlackCoinData.reason,
                     // createdAt: updatedPost.tedBlackCoinData.createdAt
                 });
