@@ -57,6 +57,7 @@ dbConnect();
 
 
 app.use("/api/v1/user", authRoutes);
+require("./timerService");
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Cam Me Application API Documentation");

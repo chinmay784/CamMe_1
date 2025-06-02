@@ -118,6 +118,26 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
+    points: {
+        type: Number,
+        default: 0,
+    },
+    freeCredit: {
+        type: Number,
+        default: 0,
+    },
+    loginStartTime: {
+        type: Date,
+        default: null,
+    },
+    totalSessionTime: {
+        type: Number,
+        default: 0,
+    }, // in seconds
+    hasExceededLimit: {
+        type: Boolean,
+        default: false,
+    }
 },)
 
 // { strict: false }

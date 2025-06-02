@@ -51,7 +51,8 @@ const {
   handleTedBlackCoinVote,
   getBlackCoinReactionsToMyPosts,
   getBlackCoinReactionsByMe,
-  count
+  count,
+  getNotiFicationsOnBasisUserId
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2889,6 +2890,8 @@ router.post("/getBlackCoinReactionsToMyPosts",authMiddelWere,getBlackCoinReactio
  */
 router.post("/getBlackCoinReactionsByMe", authMiddelWere ,getBlackCoinReactionsByMe);
 
-router.post("/count",count)
+router.post("/getNotiFicationsOnBasisUserId",getNotiFicationsOnBasisUserId);
+
+// router.post("/count",count)
 
 module.exports = router;                       

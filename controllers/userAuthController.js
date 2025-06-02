@@ -483,6 +483,8 @@ exports.loginOtpverify = async (req, res) => {
         user.otp = undefined;
         user.otpExpires = undefined;
         user.fcmToken = fcmToken;
+        user.loginStartTime = new Date();
+        user.hasExceededLimit = false; // reset on login
         await user.save()
         console.log(fcmToken)
         console.log(user.fcmToken)
@@ -844,6 +846,15 @@ exports.logoutUser = async (req, res) => {
                 message: "user Password and input password is not match"
             })
         }
+
+
+        const now = new Date();
+
+        const sessionDuration = Math.floor((now - user.loginStartTime) / 1000);
+
+        user.totalSessionTime += sessionDuration;
+        user.loginStartTime = null; // stop the session timer
+        user.hasExceededLimit = false; // reset for next login
 
         return res.status(200).json({ message: "User logged out successfully." });
 
@@ -2650,6 +2661,22 @@ exports.giveCommentToPost = async (req, res) => {
             });
         }
 
+        if (userEmail.posts.length >= 10) {
+            userEmail.points = (userEmail.points || 0) + 7;
+            await userEmail.save();
+        }
+
+        if (userEmail.posts.length <= 10) {
+            userEmail.points = (userEmail.points || 0) + 7;
+            await userEmail.save();
+        }
+
+        const creditsEarned = Math.floor(userEmail.points / 500); // 1 credit per 500 points
+        if (creditsEarned > 0) {
+            userEmail.credits = (userEmail.credits || 0) + creditsEarned;
+            await userEmail.save();
+        }
+
         post.comments.push({ userId, comment });
         await post.save();
         return res.status(200).json({
@@ -2943,6 +2970,25 @@ exports.giveTedGoldToPost = async (req, res) => {
         if (post.tedGoldGivers?.includes(giverId))
             return res.status(200).json({ success: false, message: "Already gave Gold" });
 
+
+        if (giver.posts.length >= 10) {
+            giver.points = (giver.points || 0) + 5; // Increment points 
+            await giver.save();
+        }
+
+        if (giver.posts.length <= 10) {
+            giver.points = (giver.points || 0) + 5; // Increment points 
+            await giver.save();
+        }
+
+        const creditsEarned = Math.floor(giver.points / 500); // 1 credit per 500 points
+        if (creditsEarned > 0) {
+            giver.freeCredit += creditsEarned;
+            await giver.save();
+            // // Deduct points that were converted to credits
+            // giver.points = giver.points % 500;
+        }
+
         const giverIdStr = giverId.toString();
 
         // ---------- remove from lower tiers if present ----------
@@ -3070,6 +3116,23 @@ exports.giveTedSilverPost = async (req, res) => {
         const receiver = await User.findById(post.userId);
         if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
+
+        if (giver.posts.length >= 10) {
+            giver.points = (giver.points || 0) + 5; // Increment points
+            await giver.save();
+        }
+
+        if (giver.posts.length <= 10) {
+            giver.points = (giver.points || 0) + 5; // Increment points
+            await giver.save();
+        }
+
+        const creditsEarned = Math.floor(giver.points / 500); // 1 credit per 500 points
+        if (creditsEarned > 0) {
+            giver.freeCredit += creditsEarned;
+            await giver.save();
+        }
+
         const giverStr = giverId.toString();
 
         /* ---------- remove from Gold / Bronze tiers if present ---------- */
@@ -3194,6 +3257,23 @@ exports.giveTedBronzePost = async (req, res) => {
         const receiver = await User.findById(post.userId);
         if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
+
+        if (giver.posts.length >= 10) {
+            giver.points = (giver.points || 0) + 5; // Increment points
+            await giver.save();
+        }
+
+        if (giver.posts.length <= 10) {
+            giver.points = (giver.points || 0) + 5; // Increment points
+            await giver.save();
+        }
+
+        const creditsEarned = Math.floor(giver.points / 500); // 1 credit per 500 points
+        if (creditsEarned > 0) {
+            giver.freeCredit += creditsEarned;
+            await giver.save();
+        }
+
         const giverStr = giverId.toString();
 
         /* ---------- remove from Gold / Silver if present ---------- */
@@ -3299,6 +3379,22 @@ exports.giveTedBlackCoin = async (req, res) => {
             return res.status(200).json({ success: false, message: "Post owner not found" });
         }
 
+
+        if (user.posts.length >= 10) {
+            user.points = (user.points || 0) + 5; // Increment points
+            await user.save();
+        }
+
+        if (user.posts.length <= 10) {
+            user.points = (user.points || 0) + 5; // Increment points
+            await user.save();
+        }
+
+        const creditsEarned = Math.floor(user.points / 500); // 1 credit per 500 points
+        if (creditsEarned > 0) {
+            user.freeCredit += creditsEarned;
+            await user.save();
+        }
 
         const allowedTags = ["spam", "abuse", "misinformation"];
 
@@ -4019,6 +4115,23 @@ exports.handleTedBlackCoinVote = async (req, res) => {
         }
 
 
+        if (users.posts.length >= 10) {
+            users.points = (users.points || 0) + 15;
+            await users.save();
+        }
+
+        if (users.posts.length <= 10) {
+            users.points = (users.points || 0) + 15;
+            await users.save();
+        }
+
+        const creditsEarned = Math.floor(users.points / 500);
+        if (creditsEarned) {
+            users.freeCredit = (users.freeCredit || 0) + creditsEarned;
+            await users.save();
+        }
+
+
         const blackerRecord = await TedBlackers.findOne({
             userId: giverId,
             // userPostId: post._id,
@@ -4163,31 +4276,31 @@ exports.handleTedBlackCoinVote = async (req, res) => {
 // Route to add in your main router file
 // app.post('/api/tedblackcoin/vote', handleTedBlackCoinVote);
 
-exports.count = async (req, res) => {
-    try {
-        const blackerRecord = await TedBlackers.find()
+// exports.count = async (req, res) => {
+//     try {
+//         const blackerRecord = await TedBlackers.find()
 
-        if (!blackerRecord) {
-            return res.status(200).json({
-                sucess: false,
-                message: "Black record data not found"
-            })
-        }
-        blackerRecord.agree = (blackerRecord.agree || 0) + 1;
-        blackerRecord.disAgree = (blackerRecord.disAgree || 0) + 1;
-        return res.status(200).json({
-            sucess: true,
-            blackerRecord
-        })
+//         if (!blackerRecord) {
+//             return res.status(200).json({
+//                 sucess: false,
+//                 message: "Black record data not found"
+//             })
+//         }
+//         blackerRecord.agree = (blackerRecord.agree || 0) + 1;
+//         blackerRecord.disAgree = (blackerRecord.disAgree || 0) + 1;
+//         return res.status(200).json({
+//             sucess: true,
+//             blackerRecord
+//         })
 
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            sucess: false,
-            message: "Error in controller"
-        })
-    }
-}
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({
+//             sucess: false,
+//             message: "Error in controller"
+//         })
+//     }
+// }
 
 
 exports.getBlackCoinReactionsToMyPosts = async (req, res) => {
@@ -4306,6 +4419,58 @@ exports.getBlackCoinReactionsByMe = async (req, res) => {
 
 
 
+
+exports.getNotiFicationsOnBasisUserId = async (req, res) => {
+    try {
+        // const userId = req.user.userId;
+        const { userId } = req.body
+        const { token, email } = req.body;
+
+        // const authHeader = req.headers.authorization;
+        // const authorizedToken = authHeader && authHeader.split(" ")[1];
+        // const user = await User.findById(userId).select("email");
+
+        // if(token !== authorizedToken){
+        //     return res.status(200).json({
+        //         sucess:false,
+        //         message:"InValid Token"
+        //     })
+        // }
+
+
+        // if(user.email !== email){
+        //     return res.status(200).json({
+        //         sucess:false,
+        //         message:"User Email Mis-Match"
+        //     })
+        // }
+
+        const notification = await Notification.find({ userId: userId })
+            .sort({ createdAt: -1 })
+            .populate("userId", "userName profilePic email")
+        //.populate("postId", "content descriptionText is_photography colorMatrix createdAt")
+
+        if (!notification || notification.length === 0) {
+            return res.status(200).json({
+                sucess: false,
+                message: "No notifications found for this user"
+            });
+        }
+
+        return res.status(200).json({
+            sucess: true,
+            count: notification.length,
+            notification: notification
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in Fetch Notifications"
+        })
+    }
+}
 
 
 
