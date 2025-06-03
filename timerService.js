@@ -7,36 +7,30 @@ setInterval(async () => {
 
     for (const user of users) {
         const elapsedSeconds = Math.floor((now - user.loginStartTime) / 1000);
-
         user.totalSessionTime = elapsedSeconds;
 
         if (elapsedSeconds > 9300) { // 2h 35m
             console.log(`⚠️ User ${user._id} exceeded time limit (2h 35m).`);
 
-            if(user.posts.length >= 10){
-                user.points = (user.points || 0) + 25;
-                await user.save();
-                console.log(`✅ User ${user._id} awarded 25 points for having 10 posts.`);
-            }
+            // ✅ Prevent repeated point addition by setting this first
+            user.hasExceededLimit = true;
 
-            if(user.posts.length <= 10){
-                user.points = (user.points || 0) + 25;
-                await user.save();
-                console.log(`✅ User ${user._id} awarded 25 points for having 10 posts.`);
-            }
+            // Award 25 points
+            user.points = (user.points || 0) + 25;
+            console.log(`✅ User ${user._id} awarded 25 points for session time.`);
 
-            const creditsEarned = Math.floor(user.points / 500) ;
-            if(creditsEarned > 0) {
+            // Award free credits for every 500 points
+            const creditsEarned = Math.floor(user.points / 500);
+            if (creditsEarned > 0) {
                 user.freeCredit = (user.freeCredit || 0) + creditsEarned;
-                // user.points -= creditsEarned * 500; // Deduct points used for credits
+                user.points = user.points % 500; // Optional: deduct used points
                 console.log(`✅ User ${user._id} earned ${creditsEarned} free credits.`);
-                await user.save();
             }
 
-            // Optionally notify the user or take action
-           // user.hasExceededLimit = true;
+            await user.save(); // ✅ Save all at once
+        } else {
+            // Save total session time if needed
+            await user.save();
         }
-
-        await user.save();
     }
 }, 60 * 1000); // Runs every 1 minute
