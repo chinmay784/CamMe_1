@@ -1041,50 +1041,50 @@ router.post("/reportPost/:postId", authMiddelWere, report);
 
 
 router.post("/moments", authMiddelWere, upload.array('image', 10), createMoment);
-/**
- * @swagger
- * /user/friends:
- *   get:
- *     summary: Get all friends of the authenticated user
- *     tags:
- *       - Friends
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of friends retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 friends:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                         example: "60f7ad94c2b6e4b55c1b4567"
- *                       fullName:
- *                         type: string
- *                         example: "John Doe"
- *                       userName:
- *                         type: string
- *                         example: "john_doe"
- *                       profilePic:
- *                         type: string
- *                         example: "https://cloudinary.com/images/user.png"
- *       401:
- *         description: Unauthorized - JWT token required
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
+// /**
+//  * @swagger
+//  * /user/friends:
+//  *   get:
+//  *     summary: Get all friends of the authenticated user
+//  *     tags:
+//  *       - Friends
+//  *     security:
+//  *       - bearerAuth: []
+//  *     responses:
+//  *       200:
+//  *         description: List of friends retrieved successfully
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: true
+//  *                 friends:
+//  *                   type: array
+//  *                   items:
+//  *                     type: object
+//  *                     properties:
+//  *                       _id:
+//  *                         type: string
+//  *                         example: "60f7ad94c2b6e4b55c1b4567"
+//  *                       fullName:
+//  *                         type: string
+//  *                         example: "John Doe"
+//  *                       userName:
+//  *                         type: string
+//  *                         example: "john_doe"
+//  *                       profilePic:
+//  *                         type: string
+//  *                         example: "https://cloudinary.com/images/user.png"
+//  *       401:
+//  *         description: Unauthorized - JWT token required
+//  *       404:
+//  *         description: User not found
+//  *       500:
+//  *         description: Internal server error
+//  */
 
 router.get('/friends', authMiddelWere, getAllFriends);
 
