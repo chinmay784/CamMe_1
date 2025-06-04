@@ -1137,8 +1137,6 @@ exports.sendFriendRequest = async (req, res) => {
                     reciverId: reciverId.toString(),
                     senderName: userEmail.userName,
                     senderProfilePic: userEmail.profilePic || "",
-
-                   
                 },
                 // Android specific configuration
                 android: {
@@ -1380,6 +1378,23 @@ exports.acceptFriendRequest = async (req, res) => {
         // }
 
         // Send Notification to requestId
+        const reqsender = await User.findById(requestId);
+        if (reqsender.fcmToken) {
+            await admin.messaging().send({
+                token: reqsender.fcmToken,
+                notification: {
+                    title: " Accept Friend Request",
+                    body: `${reqsender.userName} has Accept friend request.`,
+                },
+                data: {
+                    actionType: "AcceptFriendRequest",
+                    senderId: userEmail._id.toString(),
+                    reciverId: requestId.toString(),
+                    senderName: userEmail.userName,
+                    senderProfilePic: userEmail.profilePic || "",
+                },
+            })
+        }
 
         return res.status(200).json({
             success: true,
