@@ -52,7 +52,11 @@ const {
   getBlackCoinReactionsToMyPosts,
   getBlackCoinReactionsByMe,
   count,
-  getNotiFicationsOnBasisUserId
+  getNotiFicationsOnBasisUserId,
+  requested,
+  requestedme,
+  IrequEst,
+  rejectFriendRequest
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -685,9 +689,147 @@ router.post("/account-link/reject/:userId/:requesterId", rejectLinkAccount);
  *         description: Internal server error
  */
 router.post("/logout",checkBlacklist,authMiddelWere, logoutUser);
-router.get("/getMatchIntrested", authMiddelWere, getMatchedIntrested);
-router.get("/getHashTagContent", authMiddelWere, getHashTagContent);
-router.get("/getLocation", authMiddelWere, getAllowLocation);
+/**
+ * @swagger
+ * /user/getMatchIntrested:
+ *   post:
+ *     summary: Get matched users based on interest fields
+ *     description: Retrieves users whose interest fields match those of the authenticated user, excluding the user themselves.
+ *     tags:
+ *       - Matching
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Bearer token for verification
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user
+ *             required:
+ *               - token
+ *               - email
+ *     responses:
+ *       200:
+ *         description: Success response with matched users or appropriate message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 userInterestedFields:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 matchedUsers:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       403:
+ *         description: Provided token does not match authorized token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+router.post("/getMatchIntrested",authMiddelWere, getMatchedIntrested);
+/**
+ * @swagger
+ * /user/getHashTagContent:
+ *   post:
+ *     summary: Get users with matching hashtags
+ *     description: Retrieves other users whose hashtag filters match any of the authenticated user's hashtags, excluding the user themselves.
+ *     tags:
+ *       - Hashtag Matching
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Bearer token for verification
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user
+ *             required:
+ *               - token
+ *               - email
+ *     responses:
+ *       200:
+ *         description: Success response with matched hashtag users or appropriate message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 tags:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 matchedTags:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/UserFilter'
+ *       403:
+ *         description: Provided token does not match authorized token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+router.post("/getHashTagContent",authMiddelWere, getHashTagContent);
+router.post("/getLocation", authMiddelWere, getAllowLocation);
 /**
  * @swagger
  * /user/createpost:
@@ -2591,7 +2733,7 @@ router.post("/voteTedBlackCoin",authMiddelWere,voteTedBlackCoin)
  *                   type: string
  *                   example: Error in inviteAFriend Route
  */
-router.post("/inviteAFriend", authMiddelWere, sendFriendRequest);
+router.post("/inviteAFriend",authMiddelWere, sendFriendRequest);
 /**
  * @swagger
  * user/acceptFriendRequest:
@@ -2669,7 +2811,209 @@ router.post("/inviteAFriend", authMiddelWere, sendFriendRequest);
  *                   type: string
  *                   example: Error in acceptRequest controller
  */
-router.post("/acceptFriendRequest", authMiddelWere, acceptFriendRequest);
+router.post("/acceptFriendRequest",authMiddelWere, acceptFriendRequest);
+/**
+ * @swagger
+ * /user/rejectFriendRequest:
+ *   post:
+ *     summary: Reject a friend request
+ *     description: Allows the authenticated user to reject a friend request sent to them.
+ *     tags:
+ *       - Friend Requests
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Bearer token for verification
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user
+ *               requestId:
+ *                 type: string
+ *                 description: User ID of the person who sent the friend request
+ *             required:
+ *               - token
+ *               - email
+ *               - requestId
+ *     responses:
+ *       200:
+ *         description: Friend request successfully rejected or appropriate message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       403:
+ *         description: Provided token does not match authorized token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+router.post("/rejectFriendRequest",authMiddelWere,rejectFriendRequest)
+/**
+ * @swagger
+ * /user/requestedme:
+ *   post:
+ *     summary: Get all pending friend requests sent to the authenticated user
+ *     description: Returns a list of users who have sent a friend request to the currently logged-in user (receiver).
+ *     tags:
+ *       - Friend Requests
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Bearer token for verification
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user
+ *             required:
+ *               - token
+ *               - email
+ *     responses:
+ *       200:
+ *         description: Success response with list of friend requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                 length:
+ *                   type: integer
+ *                   description: Number of pending friend requests
+ *                 request:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       403:
+ *         description: Provided token does not match authorized token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+router.post("/requestedme",authMiddelWere,requestedme);
+/**
+ * @swagger
+ * /user/IrequEst:
+ *   post:
+ *     summary: Get all friend requests sent by the authenticated user
+ *     description: Returns a list of friend requests that the currently logged-in user (sender) has sent to others.
+ *     tags:
+ *       - Friend Requests
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Bearer token for verification
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user
+ *             required:
+ *               - token
+ *               - email
+ *     responses:
+ *       200:
+ *         description: Success response with list of sent friend requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                 length:
+ *                   type: integer
+ *                   description: Number of requests sent
+ *                 requistI:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       403:
+ *         description: Provided token does not match authorized token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+router.post("/IrequEst",authMiddelWere,IrequEst)
+
+
 /**
  * @swagger
  * /user/handleTedBlackCoinVote:

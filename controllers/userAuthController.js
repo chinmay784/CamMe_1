@@ -868,6 +868,7 @@ exports.logoutUser = async (req, res) => {
 
 exports.getMatchedIntrested = async (req, res) => {
     try {
+        const { token, email } = req.body;
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(200).json({
@@ -875,6 +876,26 @@ exports.getMatchedIntrested = async (req, res) => {
                 message: "User not found",
             });
         }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(req.user.userId).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        };
 
         const userFilter = await ConnectionFilter.findOne({ userId: user._id });
         if (!userFilter) {
@@ -919,6 +940,7 @@ exports.getMatchedIntrested = async (req, res) => {
 
 exports.getHashTagContent = async (req, res) => {
     try {
+        const { token, email } = req.body;
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(200).json({
@@ -926,6 +948,27 @@ exports.getHashTagContent = async (req, res) => {
                 message: "User not found",
             });
         }
+
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(req.user.userId).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        };
 
         // Get the logged-in user's filter
         const userFilter = await ConnectionFilter.findOne({ userId: user._id });
@@ -950,18 +993,18 @@ exports.getHashTagContent = async (req, res) => {
         const matchedFilters = await ConnectionFilter.find({
             userId: { $ne: user._id },
             hashTag: { $in: userHashTags },
-        });
+        }).populate("userId"); // Populate user details
 
-        // Collect all matching hashtags from those users
-        const matchedTags = matchedFilters.flatMap(filter =>
-            filter.hashTag.filter(tag => userHashTags.includes(tag))
-        );
+        // // Collect all matching hashtags from those users
+        // const matchedTags = matchedFilters.flatMap(filter =>
+        //     filter.hashTag.filter(tag => userHashTags.includes(tag))
+        // );
 
-        const uniqueTags = [...new Set(matchedTags)];
+        // const uniqueTags = [...new Set(matchedTags)];
 
         return res.status(200).json({
             success: true,
-            matchedTags: uniqueTags,
+            matchedTags: matchedFilters,
         });
 
     } catch (error) {
@@ -1071,14 +1114,63 @@ exports.sendFriendRequest = async (req, res) => {
             receiver: reciverId
         });
 
-        const receiverSocketId = global.onlineUsers.get(reciverId.toString());
 
-        if (receiverSocketId) {
-            global.io.to(receiverSocketId).emit("Receive_friend_request", {
-                senderId: user,
-                requestId: request._id
-            })
+        await Notification.create({
+            userId: reciverId,
+            type: "FriendRequest",
+            message: `${userEmail.userName} has sent you a friend request.`,
+        });
+
+        // Notify the receiver via Firebase Cloud Messaging
+
+        const reciv = await User.findById(reciverId);
+        if (reciv.fcmToken) {
+            await admin.messaging().send({
+                token: reciv.fcmToken,
+                notification: {
+                    title: "Friend Request",
+                    body: `${userEmail.userName} has sent you a friend request.`,
+                },
+                data: {
+                    actionType: "FriendRequest",
+                    senderId: userEmail._id.toString(),
+                    reciverId: reciverId.toString(),
+                    senderName: userEmail.userName,
+                    senderProfilePic: userEmail.profilePic || "",
+
+                   
+                },
+                // Android specific configuration
+                android: {
+                    notification: {
+                        title: "Send Friend Request",
+                        body: `${userEmail.userName} has sent you a friend request.`,
+                        channelId: "Friend Request_votes",
+                        priority: "high",
+                        defaultSound: true,
+                        defaultVibrateTimings: true,
+                        clickAction: "FLUTTER_NOTIFICATION_CLICK"
+                    },
+                    data: {
+                        actionType: "FriendRequest",
+                        senderId: userEmail._id.toString(),
+                        reciverId: reciverId.toString(),
+                        senderName: userEmail.userName,
+                        senderProfilePic: userEmail.profilePic || "",
+                    }
+                },
+            });
         }
+
+
+        // const receiverSocketId = global.onlineUsers.get(reciverId.toString());
+
+        // if (receiverSocketId) {
+        //     global.io.to(receiverSocketId).emit("Receive_friend_request", {
+        //         senderId: user,
+        //         requestId: request._id
+        //     })
+        // }
 
         return res.status(200).json({
             sucess: true,
@@ -1096,12 +1188,140 @@ exports.sendFriendRequest = async (req, res) => {
 
 
 
+
+//it will br for requested
+exports.requestedme = async (req, res) => {
+    try {
+        const { token, email } = req.body;
+
+        const senderId = req.user.userId
+        if (!senderId) {
+            return res.status(200).json({
+                sucess: false,
+                message: " Please provide senderId"
+            })
+        }
+
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(senderId).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        };
+
+        const request = await FriendRequest.find({
+            receiver: senderId,
+            status: "pending"
+        }).populate("sender")
+
+        if (!request) {
+            return res.status(200).json({
+                sucess: false,
+                message: " Request Not found"
+            })
+        }
+
+        return res.status(200).json({
+            sucess: true,
+            length: request.length,
+            request
+        })
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: " Server Error in requested "
+        })
+    }
+}
+
+
+
+// done
+exports.IrequEst = async (req, res) => {
+    try {
+        const { token, email } = req.body;
+        const senderId = req.user.userId;
+        if (!senderId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please Provide all Details"
+            })
+        }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(senderId).select("email");
+
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        };
+
+        const requistI = await FriendRequest.find({
+            sender: senderId,
+            //status: "pending",
+        }).populate("receiver");
+
+
+        if (!requistI) {
+            return res.status(200).json({
+                sucess: false,
+                message: " Request Not found"
+            })
+        }
+
+        return res.status(200).json({
+            sucess: true,
+            length: requistI.length,
+            requistI
+        })
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in Irequest"
+        })
+    }
+}
+
+
+
+
+
 exports.acceptFriendRequest = async (req, res) => {
     try {
         //const { requestId } = req.params;
         const user = req.user.userId;
 
         const { email, token, requestId } = req.body;
+        //const { requestId, user } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -1130,7 +1350,7 @@ exports.acceptFriendRequest = async (req, res) => {
             });
         }
 
-        const request = await FriendRequest.findOne({ sender: requestId });
+        const request = await FriendRequest.findOne({ sender: requestId, receiver: user });
 
         if (!request) {
             return res.status(200).json({
@@ -1151,13 +1371,15 @@ exports.acceptFriendRequest = async (req, res) => {
         });
 
 
-        const senderSocketId = global.onlineUsers.get(request.sender.toString());
+        // const senderSocketId = global.onlineUsers.get(request.sender.toString());
 
-        if (senderSocketId) {
-            global.io.to(senderSocketId).emit("friend_request_accepted", {
-                friendId: user,
-            });
-        }
+        // if (senderSocketId) {
+        //     global.io.to(senderSocketId).emit("friend_request_accepted", {
+        //         friendId: user,
+        //     });
+        // }
+
+        // Send Notification to requestId
 
         return res.status(200).json({
             success: true,
@@ -1170,6 +1392,66 @@ exports.acceptFriendRequest = async (req, res) => {
             success: false,
             message: "Error in acceptRequest controller"
         });
+    }
+}
+
+
+
+
+exports.rejectFriendRequest = async (req, res) => {
+    try {
+        const user = req.user.userId;
+        const { email, token, requestId } = req.body;
+        // const {  requestId, user } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(user).select("email");
+
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        };
+
+
+        if (!requestId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide requestId"
+            });
+        }
+
+
+        const request = await FriendRequest.findOne({ sender: requestId, receiver: user });
+
+        request.status = "rejected";
+        // 5. Delete the friend request (reject it)
+        // await FriendRequest.deleteOne({ _id: request._id });
+        await request.save();
+
+        // send Notification to requestId
+
+        return res.status(200).json({
+            success: true,
+            message: "Friend request rejected"
+        });
+
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server error in rejectFriendRequest"
+        })
     }
 }
 
@@ -2661,15 +2943,17 @@ exports.giveCommentToPost = async (req, res) => {
             });
         }
 
-        if (userEmail.posts.length >= 10) {
-            userEmail.points = (userEmail.points || 0) + 7;
-            await userEmail.save();
-        }
+        // if (userEmail.posts.length >= 10) {
+        //     userEmail.points = (userEmail.points || 0) + 7;
+        //     await userEmail.save();
+        // }
 
-        if (userEmail.posts.length <= 10) {
-            userEmail.points = (userEmail.points || 0) + 7;
-            await userEmail.save();
-        }
+        // if (userEmail.posts.length <= 10) {
+        //     userEmail.points = (userEmail.points || 0) + 7;
+        //     await userEmail.save();
+        // }
+
+        userEmail.points = (userEmail.points || 0) + 7;
 
         const creditsEarned = Math.floor(userEmail.points / 500); // 1 credit per 500 points
         if (creditsEarned > 0) {
@@ -2971,15 +3255,17 @@ exports.giveTedGoldToPost = async (req, res) => {
             return res.status(200).json({ success: false, message: "Already gave Gold" });
 
 
-        if (giver.posts.length >= 10) {
-            giver.points = (giver.points || 0) + 5; // Increment points 
-            await giver.save();
-        }
+        // if (giver.posts.length >= 10) {
+        //     giver.points = (giver.points || 0) + 5; // Increment points 
+        //     await giver.save();
+        // }
 
-        if (giver.posts.length <= 10) {
-            giver.points = (giver.points || 0) + 5; // Increment points 
-            await giver.save();
-        }
+        // if (giver.posts.length <= 10) {
+        //     giver.points = (giver.points || 0) + 5; // Increment points 
+        //     await giver.save();
+        // }
+
+        giver.points = (giver.points || 0) + 5; // Increment points 
 
         const creditsEarned = Math.floor(giver.points / 500); // 1 credit per 500 points
         if (creditsEarned > 0) {
@@ -3117,15 +3403,17 @@ exports.giveTedSilverPost = async (req, res) => {
         if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
 
-        if (giver.posts.length >= 10) {
-            giver.points = (giver.points || 0) + 5; // Increment points
-            await giver.save();
-        }
+        // if (giver.posts.length >= 10) {
+        //     giver.points = (giver.points || 0) + 5; // Increment points
+        //     await giver.save();
+        // }
 
-        if (giver.posts.length <= 10) {
-            giver.points = (giver.points || 0) + 5; // Increment points
-            await giver.save();
-        }
+        // if (giver.posts.length <= 10) {
+        //     giver.points = (giver.points || 0) + 5; // Increment points
+        //     await giver.save();
+        // }
+
+        giver.points = (giver.points || 0) + 5; // Increment points
 
         const creditsEarned = Math.floor(giver.points / 500); // 1 credit per 500 points
         if (creditsEarned > 0) {
@@ -3258,15 +3546,17 @@ exports.giveTedBronzePost = async (req, res) => {
         if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
 
 
-        if (giver.posts.length >= 10) {
-            giver.points = (giver.points || 0) + 5; // Increment points
-            await giver.save();
-        }
+        // if (giver.posts.length >= 10) {
+        //     giver.points = (giver.points || 0) + 5; // Increment points
+        //     await giver.save();
+        // }
 
-        if (giver.posts.length <= 10) {
-            giver.points = (giver.points || 0) + 5; // Increment points
-            await giver.save();
-        }
+        // if (giver.posts.length <= 10) {
+        //     giver.points = (giver.points || 0) + 5; // Increment points
+        //     await giver.save();
+        // }
+
+        giver.points = (giver.points || 0) + 5; // Increment points
 
         const creditsEarned = Math.floor(giver.points / 500); // 1 credit per 500 points
         if (creditsEarned > 0) {
@@ -3380,15 +3670,17 @@ exports.giveTedBlackCoin = async (req, res) => {
         }
 
 
-        if (user.posts.length >= 10) {
-            user.points = (user.points || 0) + 5; // Increment points
-            await user.save();
-        }
+        // if (user.posts.length >= 10) {
+        //     user.points = (user.points || 0) + 5; // Increment points
+        //     await user.save();
+        // }
 
-        if (user.posts.length <= 10) {
-            user.points = (user.points || 0) + 5; // Increment points
-            await user.save();
-        }
+        // if (user.posts.length <= 10) {
+        //     user.points = (user.points || 0) + 5; // Increment points
+        //     await user.save();
+        // }
+
+        user.points = (user.points || 0) + 5; // Increment points
 
         const creditsEarned = Math.floor(user.points / 500); // 1 credit per 500 points
         if (creditsEarned > 0) {
@@ -4419,7 +4711,7 @@ exports.getBlackCoinReactionsByMe = async (req, res) => {
 
 
 
-
+// Not complited Properly
 exports.getNotiFicationsOnBasisUserId = async (req, res) => {
     try {
         // const userId = req.user.userId;
