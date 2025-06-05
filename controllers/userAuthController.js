@@ -17,6 +17,7 @@ const Notification = require("../models/notificationmodel")
 const admin = require("../firebase")
 const TedBlackers = require("../models/TedBlackersModel")
 const cron = require('node-cron');
+const recent = require("../models/recentFriendSchema");
 
 
 const transPorter = nodeMailer.createTransport({
@@ -1424,7 +1425,7 @@ exports.rejectFriendRequest = async (req, res) => {
         const userEmail = await User.findById(user).select("email");
 
         if (token !== authorizedToken) {
-            return res.status(403).json({
+            return res.status(200).json({
                 success: false,
                 message: "Provided token does not match authorized token",
             });
@@ -1470,6 +1471,154 @@ exports.rejectFriendRequest = async (req, res) => {
     }
 }
 
+
+
+
+
+exports.unFriend = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token, unFriendUserId } = req.body;
+        //const { unFriendUserId, userId } = req.body;
+        if (!email || !token || !unFriendUserId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please Provide All Details - email and token and unFriendUserId",
+            })
+        }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        if (authorizedToken !== token) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        };
+
+        if (!userId || !unFriendUserId) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide userId and unFriendUserId"
+            });
+        }
+
+        // 1. Remove unFriendUserId from user's friend list
+        await User.findByIdAndUpdate(userId, {
+            $pull: { userAllFriends: unFriendUserId }
+        });
+
+        // 2. (Optional) Remove userId from unFriendUserId's friend list
+        // await User.findByIdAndUpdate(unFriendUserId, {
+        //     $pull: { userAllFriends: userId }
+        // });
+
+        // 3. Add to 'recent' unfriended list
+        const existingRecent = await recent.findOne({ userId });
+
+        if (existingRecent) {
+            await recent.findOneAndUpdate(
+                { userId },
+                { $addToSet: { recentId: unFriendUserId } }
+            );
+        } else {
+            await recent.create({
+                userId,
+                recentId: [unFriendUserId]
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Successfully unfriended"
+        });
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in UnFriend"
+        })
+    }
+}
+
+
+
+
+exports.makeAfriend = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token, friendId } = req.body;
+        // const { userId, friendId } = req.body;
+        if (!email || !token || !friendId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please Provide All Details - email, token and friendId",
+            });
+        }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+
+        if (!userId || !friendId) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide both userId and friendId",
+            });
+        }
+
+        // 1. Add each other as friends (bi-directional)
+        await User.findByIdAndUpdate(userId, {
+            $addToSet: { userAllFriends: friendId }
+        });
+
+        // await User.findByIdAndUpdate(friendId, {
+        //     $addToSet: { userAllFriends: userId }
+        // });
+
+        // 2. Remove friendId from the recent unfriended list of userId
+        await recent.findOneAndUpdate(
+            { userId },
+            { $pull: { recentId: friendId } }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Successfully made a friend"
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in makeAfriend",
+        });
+    }
+}
 
 
 

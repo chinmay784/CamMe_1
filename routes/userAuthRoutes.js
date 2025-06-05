@@ -56,7 +56,9 @@ const {
   requested,
   requestedme,
   IrequEst,
-  rejectFriendRequest
+  rejectFriendRequest,
+  unFriend,
+  makeAfriend
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2819,7 +2821,7 @@ router.post("/acceptFriendRequest",authMiddelWere, acceptFriendRequest);
  *     summary: Reject a friend request
  *     description: Allows the authenticated user to reject a friend request sent to them.
  *     tags:
- *       - Friend Requests
+ *       - Friends
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -2885,7 +2887,7 @@ router.post("/rejectFriendRequest",authMiddelWere,rejectFriendRequest)
  *     summary: Get all pending friend requests sent to the authenticated user
  *     description: Returns a list of users who have sent a friend request to the currently logged-in user (receiver).
  *     tags:
- *       - Friend Requests
+ *       - Friends
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -2952,7 +2954,7 @@ router.post("/requestedme",authMiddelWere,requestedme);
  *     summary: Get all friend requests sent by the authenticated user
  *     description: Returns a list of friend requests that the currently logged-in user (sender) has sent to others.
  *     tags:
- *       - Friend Requests
+ *       - Friends
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -3012,7 +3014,117 @@ router.post("/requestedme",authMiddelWere,requestedme);
  *                   type: string
  */
 router.post("/IrequEst",authMiddelWere,IrequEst)
-
+/**
+ * @swagger
+ * /user/unFriend:
+ *   post:
+ *     summary: Unfriend a user and store the action in recent list
+ *     description: 
+ *       Unfriends a user by removing them from the current user's friend list. 
+ *       Also logs the unfriended user in the "recent" collection for tracking.
+ *     tags:
+ *       - Friends
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - unFriendUserId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: jwt-token-string
+ *               unFriendUserId:
+ *                 type: string
+ *                 format: ObjectId
+ *                 example: 60c72b2f9b1d8c3a3c8d1a2b
+ *     responses:
+ *       200:
+ *         description: Successfully unfriended
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Successfully unfriended
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Unauthorized or token mismatch
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/unFriend",authMiddelWere,unFriend)
+/**
+ * @swagger
+ * /user/makeAfriend:
+ *   post:
+ *     summary: Make a friend and remove from recent unfriended list
+ *     description: 
+ *       Adds a user to the current user's friend list, and removes the user from the "recent" unfriended list if present.
+ *     tags:
+ *       - Friends
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - friendId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: jwt-token-string
+ *               friendId:
+ *                 type: string
+ *                 format: ObjectId
+ *                 example: 60c72b2f9b1d8c3a3c8d1a2b
+ *     responses:
+ *       200:
+ *         description: Successfully made a friend
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Successfully made a friend
+ *       400:
+ *         description: Missing required fields
+ *       403:
+ *         description: Unauthorized - Token mismatch
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/makeAfriend",authMiddelWere,makeAfriend)
 
 /**
  * @swagger
