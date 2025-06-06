@@ -10,7 +10,12 @@ const recentModelSchema = new mongoose.Schema({
     recentId: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
-    }]
+    }],
+    status: {
+        type: String,
+        enum: ["unfriend", "cancleRequest"],
+        default: "unfriend"
+    }
 });
 
 

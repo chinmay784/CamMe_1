@@ -58,7 +58,8 @@ const {
   IrequEst,
   rejectFriendRequest,
   unFriend,
-  makeAfriend
+  makeAfriend,
+  getAll_Matches_OnBasisOf_Intrest_HashTag_Location
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -831,7 +832,116 @@ router.post("/getMatchIntrested",authMiddelWere, getMatchedIntrested);
  *                   type: string
  */
 router.post("/getHashTagContent",authMiddelWere, getHashTagContent);
-router.post("/getLocation", authMiddelWere, getAllowLocation);
+/**
+ * @swagger
+ * /user/getLocation:
+ *   post:
+ *     summary: Get all users with the same location as the logged-in user (excluding the current user)
+ *     tags:
+ *       - Location
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             example: {}
+ *     responses:
+ *       200:
+ *         description: List of users matching the logged-in user's location
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 matchedFilters:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: object
+ *                         description: Populated user object
+ *                       location:
+ *                         type: object
+ *                         properties:
+ *                           lattitude:
+ *                             type: number
+ *                           longitude:
+ *                             type: number
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *       500:
+ *         description: Server error in getAllowLocation
+ */
+router.post("/getLocation",authMiddelWere, getAllowLocation);
+/**
+ * @swagger
+ * /user/getAll_Matches_OnBasisOf_Intrest_HashTag_Location:
+ *   post:
+ *     summary: Get matched users based on Interests, Hashtags, and Location
+ *     tags:
+ *       - Match
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: your-jwt-token
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Successfully fetched matched users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 filtersUsed:
+ *                   type: object
+ *                   properties:
+ *                     intrestedFiled:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     hashTag:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     location:
+ *                       type: object
+ *                       properties:
+ *                         lattitude:
+ *                           type: number
+ *                         longitude:
+ *                           type: number
+ *                 matchedUsers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: Filtered user details populated from ConnectionFilter
+ *       403:
+ *         description: Unauthorized or token/email mismatch
+ *       500:
+ *         description: Server error occurred
+ */
+router.post("/getAll_Matches_OnBasisOf_Intrest_HashTag_Location",authMiddelWere,getAll_Matches_OnBasisOf_Intrest_HashTag_Location)
 /**
  * @swagger
  * /user/createpost:
@@ -3345,8 +3455,79 @@ router.post("/getBlackCoinReactionsToMyPosts",authMiddelWere,getBlackCoinReactio
  *         description: Server error while fetching reactions
  */
 router.post("/getBlackCoinReactionsByMe", authMiddelWere ,getBlackCoinReactionsByMe);
-
-router.post("/getNotiFicationsOnBasisUserId",getNotiFicationsOnBasisUserId);
+/**
+ * @swagger
+ * /user/getNotiFicationsOnBasisUserId:
+ *   post:
+ *     summary: Get notifications for a user
+ *     description: Returns a list of notifications for the logged-in user, filtered by token and email verification.
+ *     tags:
+ *       - Notifications
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: your-jwt-token
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved notifications or relevant message.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 count:
+ *                   type: number
+ *                 notification:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userId:
+ *                         type: object
+ *                         properties:
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       postId:
+ *                         type: object
+ *                         properties:
+ *                           content:
+ *                             type: string
+ *                           descriptionText:
+ *                             type: string
+ *                           is_photography:
+ *                             type: boolean
+ *                           colorMatrix:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post("/getNotiFicationsOnBasisUserId",authMiddelWere,getNotiFicationsOnBasisUserId);
 
 // router.post("/count",count)
 

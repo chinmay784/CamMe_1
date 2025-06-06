@@ -1023,7 +1023,53 @@ exports.getHashTagContent = async (req, res) => {
 
 exports.getAllowLocation = async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId);
+        //const { user } = req.body;
+        const user = req.user.userId;
+        if (!user) {
+            return res.status(200).json({
+                success: false,
+                message: "User ID is required",
+            });
+        }
+
+        const userFilter = await ConnectionFilter.findOne({ userId: user });
+        if (!userFilter || !userFilter.location) {
+            return res.status(200).json({
+                success: false,
+                message: "User's location filter not found",
+            });
+        }
+
+        const { lattitude, longitude } = userFilter.location;
+
+        const matchedFilters = await ConnectionFilter.find({
+            userId: { $ne: user }, // Exclude the logged-in user
+            "location.lattitude": lattitude,
+            "location.longitude": longitude,
+        }).populate("userId");
+
+        return res.status(200).json({
+            success: true,
+            matchedFilters,
+        });
+
+    } catch (error) {
+        console.error("Error in getAllowLocation:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error in getAllowLocation",
+        });
+    }
+};
+
+
+
+exports.getAll_Matches_OnBasisOf_Intrest_HashTag_Location = async (req, res) => {
+    try {
+        const { token, email } = req.body;
+        const userId = req.user.userId;
+        // const {userId} = req.body;
+        const user = await User.findById(userId);
         if (!user) {
             return res.status(200).json({
                 success: false,
@@ -1031,32 +1077,84 @@ exports.getAllowLocation = async (req, res) => {
             });
         }
 
-        const userFilter = await ConnectionFilter.findOne({ userId: user._id });
-        if (!userFilter) {
-            return res.status(200).json({
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader?.split(" ")[1];
+
+        const userEmail = await User.findById(userId).select("email");
+        if (token !== authorizedToken) {
+            return res.status(403).json({
                 success: false,
-                message: "User's location filter not found",
+                message: "Provided token does not match authorized token",
             });
         }
 
-        const userLocation = userFilter.location;
+        if (userEmail.email !== email) {
+            return res.status(403).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
 
-        const matchedFilters = await ConnectionFilter.find({
-            userId: { $ne: user._id },
-            "location.lattitude": userLocation.lattitude,
-            "location.longitude": userLocation.longitude,
-        }).populate("userId");
+        const userFilter = await ConnectionFilter.findOne({ userId });
+        if (!userFilter) {
+            return res.status(200).json({
+                success: false,
+                message: "User's filter not found",
+            });
+        }
+
+        const {
+            intrestedFiled = [],
+            hashTag = [],
+            location = {}
+        } = userFilter;
+
+        const query = {
+            userId: { $ne: userId },
+            $or: []
+        };
+
+        if (intrestedFiled.length > 0) {
+            query.$or.push({ intrestedFiled: { $in: intrestedFiled } });
+        }
+
+        if (hashTag.length > 0) {
+            query.$or.push({ hashTag: { $in: hashTag } });
+        }
+
+        if (location?.lattitude && location?.longitude) {
+            query.$or.push({
+                "location.lattitude": location.lattitude,
+                "location.longitude": location.longitude
+            });
+        }
+
+        if (query.$or.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No filters to match",
+                matchedUsers: []
+            });
+        }
+
+        const matchedFilters = await ConnectionFilter.find(query)
+            .populate("userId");
 
         return res.status(200).json({
             success: true,
-            matchedFilters,
+            filtersUsed: {
+                intrestedFiled,
+                hashTag,
+                location,
+            },
+            matchedUsers: matchedFilters
         });
     } catch (error) {
-        console.error("Error in getAllowLocation:", error);
+        console.log(error, error.message);
         return res.status(500).json({
-            success: false,
-            message: "Server error in getAllowLocation",
-        });
+            sucess: false,
+            message: "Server Error in "
+        })
     }
 };
 
@@ -1523,17 +1621,18 @@ exports.unFriend = async (req, res) => {
         // });
 
         // 3. Add to 'recent' unfriended list
-        const existingRecent = await recent.findOne({ userId });
+        const existingRecent = await recent.findOne({ userId, status: "unfriend" });
 
         if (existingRecent) {
             await recent.findOneAndUpdate(
                 { userId },
-                { $addToSet: { recentId: unFriendUserId } }
+                { $addToSet: { recentId: unFriendUserId }, status: "unfriend" }
             );
         } else {
             await recent.create({
                 userId,
-                recentId: [unFriendUserId]
+                recentId: [unFriendUserId],
+                status: "unfriend"
             });
         }
 
@@ -1617,6 +1716,76 @@ exports.makeAfriend = async (req, res) => {
             sucess: false,
             message: "Server Error in makeAfriend",
         });
+    }
+}
+
+
+
+// One Logic Api I will write Here Name is (Fetch Recent Page Friends);
+
+
+
+// Not Complited
+exports.cancleMyRequest = async (req, res) => {
+    try {
+        // const userId = req.user.userId;
+        const { userId, friendId } = req.body;
+        if (!userId || !friendId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please provide userId & friendId"
+            })
+        };
+
+
+        const fetchRequest = await FriendRequest.findOne({
+            sender: userId,
+            receiver: friendId,
+            status: "pending"
+        });
+
+        if (!fetchRequest) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Request Not Found"
+            })
+        };
+
+        await FriendRequest.deleteOne({
+            sender: userId,
+            receiver: friendId,
+            status: "pending"
+        });
+
+        const existingRecent = await recent.findOne({ userId, status: "cancleRequest" });
+
+        if (existingRecent) {
+            await recent.findOneAndUpdate(
+                { userId },
+                {
+                    $addToSet: { recentId: friendId },
+                    status: "cancleRequest"
+                }
+            );
+        } else {
+            await recent.create({
+                userId,
+                recentId: [friendId],
+                status: "cancleRequest"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Request Cancelled Successfully"
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in cancleMyRequest"
+        })
     }
 }
 
@@ -4729,34 +4898,8 @@ exports.handleTedBlackCoinVote = async (req, res) => {
     }
 };
 
-// Route to add in your main router file
-// app.post('/api/tedblackcoin/vote', handleTedBlackCoinVote);
 
-// exports.count = async (req, res) => {
-//     try {
-//         const blackerRecord = await TedBlackers.find()
 
-//         if (!blackerRecord) {
-//             return res.status(200).json({
-//                 sucess: false,
-//                 message: "Black record data not found"
-//             })
-//         }
-//         blackerRecord.agree = (blackerRecord.agree || 0) + 1;
-//         blackerRecord.disAgree = (blackerRecord.disAgree || 0) + 1;
-//         return res.status(200).json({
-//             sucess: true,
-//             blackerRecord
-//         })
-
-//     } catch (error) {
-//         console.log(error);
-//         return res.status(500).json({
-//             sucess: false,
-//             message: "Error in controller"
-//         })
-//     }
-// }
 
 
 exports.getBlackCoinReactionsToMyPosts = async (req, res) => {
@@ -4875,36 +5018,36 @@ exports.getBlackCoinReactionsByMe = async (req, res) => {
 
 
 
-// Not complited Properly
+// Not complited Properly (Extra Add On Notification )
 exports.getNotiFicationsOnBasisUserId = async (req, res) => {
     try {
-        // const userId = req.user.userId;
-        const { userId } = req.body
+        const userId = req.user.userId;
+        // const { userId } = req.body
         const { token, email } = req.body;
 
-        // const authHeader = req.headers.authorization;
-        // const authorizedToken = authHeader && authHeader.split(" ")[1];
-        // const user = await User.findById(userId).select("email");
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+        const user = await User.findById(userId).select("email");
 
-        // if(token !== authorizedToken){
-        //     return res.status(200).json({
-        //         sucess:false,
-        //         message:"InValid Token"
-        //     })
-        // }
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                sucess: false,
+                message: "InValid Token"
+            })
+        }
 
 
-        // if(user.email !== email){
-        //     return res.status(200).json({
-        //         sucess:false,
-        //         message:"User Email Mis-Match"
-        //     })
-        // }
+        if (user.email !== email) {
+            return res.status(200).json({
+                sucess: false,
+                message: "User Email Mis-Match"
+            })
+        }
 
         const notification = await Notification.find({ userId: userId })
             .sort({ createdAt: -1 })
             .populate("userId", "userName profilePic email")
-        //.populate("postId", "content descriptionText is_photography colorMatrix createdAt")
+            .populate("postId", "content descriptionText is_photography colorMatrix createdAt");
 
         if (!notification || notification.length === 0) {
             return res.status(200).json({
