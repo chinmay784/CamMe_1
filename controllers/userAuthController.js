@@ -1235,29 +1235,11 @@ exports.sendFriendRequest = async (req, res) => {
                     actionType: "FriendRequest",
                     senderId: userEmail._id.toString(),
                     reciverId: reciverId.toString(),
-                    senderName: userEmail.userName,
-                    senderProfilePic: userEmail.profilePic || "",
+                    senderName: String(userEmail.userName), // in case it's not a string
+                    senderProfilePic: String(userEmail.profilePic || ""),
                 },
-                // // Android specific configuration
-                // android: {
-                //     notification: {
-                //         title: "Send Friend Request",
-                //         body: `${userEmail.userName} has sent you a friend request.`,
-                //         channelId: "Friend Request_votes",
-                //         priority: "high",
-                //         defaultSound: true,
-                //         defaultVibrateTimings: true,
-                //         clickAction: "FLUTTER_NOTIFICATION_CLICK"
-                //     },
-                //     data: {
-                //         actionType: "FriendRequest",
-                //         senderId: userEmail._id.toString(),
-                //         reciverId: reciverId.toString(),
-                //         senderName: userEmail.userName,
-                //         senderProfilePic: userEmail.profilePic || "",
-                //     }
-                // },
             });
+
         }
 
 
