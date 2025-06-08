@@ -59,7 +59,8 @@ const {
   rejectFriendRequest,
   unFriend,
   makeAfriend,
-  getAll_Matches_OnBasisOf_Intrest_HashTag_Location
+  getAll_Matches_OnBasisOf_Intrest_HashTag_Location,
+  getProfileBasedOnUserId
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2845,7 +2846,7 @@ router.post("/voteTedBlackCoin",authMiddelWere,voteTedBlackCoin)
  *                   type: string
  *                   example: Error in inviteAFriend Route
  */
-router.post("/inviteAFriend",authMiddelWere, sendFriendRequest);
+router.post("/inviteAFriend",authMiddelWere,sendFriendRequest);
 /**
  * @swagger
  * user/acceptFriendRequest:
@@ -3528,7 +3529,97 @@ router.post("/getBlackCoinReactionsByMe", authMiddelWere ,getBlackCoinReactionsB
  *         description: Internal Server Error
  */
 router.post("/getNotiFicationsOnBasisUserId",authMiddelWere,getNotiFicationsOnBasisUserId);
-
-// router.post("/count",count)
+/**
+ * @swagger
+ * /user/getProfileBasedOnUserId:
+ *   post:
+ *     summary: Get a user's profile and posts based on userId
+ *     tags:
+ *       - Profile
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: The ID of the user whose profile is to be fetched
+ *                 example: 6643a295e7a91b2e0db7b123
+ *     responses:
+ *       200:
+ *         description: Successfully fetched user profile and posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Fetched user profile
+ *                 userProfile:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     userName:
+ *                       type: string
+ *                     profilePic:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     userAllFriends:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                     posts:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           content:
+ *                             type: string
+ *                           descriptionText:
+ *                             type: string
+ *                           is_photography:
+ *                             type: boolean
+ *                           colorMatrix:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           comments:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 userId:
+ *                                   type: object
+ *                                   properties:
+ *                                     userName:
+ *                                       type: string
+ *                                     profilePic:
+ *                                       type: string
+ *                                     email:
+ *                                       type: string
+ *       500:
+ *         description: Server error while fetching profile
+ */
+router.post("/getProfileBasedOnUserId",getProfileBasedOnUserId)
 
 module.exports = router;                       

@@ -1224,6 +1224,7 @@ exports.sendFriendRequest = async (req, res) => {
 
         const reciv = await User.findById(reciverId);
         if (reciv.fcmToken) {
+            console.log("Sending FCM notification to:", reciv.fcmToken);
             await admin.messaging().send({
                 token: reciv.fcmToken,
                 notification: {
@@ -1237,25 +1238,25 @@ exports.sendFriendRequest = async (req, res) => {
                     senderName: userEmail.userName,
                     senderProfilePic: userEmail.profilePic || "",
                 },
-                // Android specific configuration
-                android: {
-                    notification: {
-                        title: "Send Friend Request",
-                        body: `${userEmail.userName} has sent you a friend request.`,
-                        channelId: "Friend Request_votes",
-                        priority: "high",
-                        defaultSound: true,
-                        defaultVibrateTimings: true,
-                        clickAction: "FLUTTER_NOTIFICATION_CLICK"
-                    },
-                    data: {
-                        actionType: "FriendRequest",
-                        senderId: userEmail._id.toString(),
-                        reciverId: reciverId.toString(),
-                        senderName: userEmail.userName,
-                        senderProfilePic: userEmail.profilePic || "",
-                    }
-                },
+                // // Android specific configuration
+                // android: {
+                //     notification: {
+                //         title: "Send Friend Request",
+                //         body: `${userEmail.userName} has sent you a friend request.`,
+                //         channelId: "Friend Request_votes",
+                //         priority: "high",
+                //         defaultSound: true,
+                //         defaultVibrateTimings: true,
+                //         clickAction: "FLUTTER_NOTIFICATION_CLICK"
+                //     },
+                //     data: {
+                //         actionType: "FriendRequest",
+                //         senderId: userEmail._id.toString(),
+                //         reciverId: reciverId.toString(),
+                //         senderName: userEmail.userName,
+                //         senderProfilePic: userEmail.profilePic || "",
+                //     }
+                // },
             });
         }
 
@@ -1788,6 +1789,7 @@ exports.cancleMyRequest = async (req, res) => {
         })
     }
 }
+
 
 
 
@@ -4622,29 +4624,15 @@ exports.voteTedBlackCoin = async (req, res) => {
 
 
 
-exports.getProfile = async (req, res) => {
+exports.getProfileBasedOnUserId = async (req, res) => {
     try {
-        const { email, token, userId } = req.body;
-
-        const authHeader = req.headers.authorization;
-        const authorizedToken = authHeader.split(" ")[1];
-        const userEmail = await User.findById(userId).select("email");
-
-        // Compare provided token with authorized token
-        if (token !== authorizedToken) {
+        const { userId } = req.body;
+        if (!userId) {
             return res.status(200).json({
                 success: false,
-                message: "Provided token does not match authorized token",
+                message: "Please provide userId",
             });
         }
-
-        if (userEmail.email !== email) {
-            return res.status(200).json({
-                success: false,
-                message: "Provided email does not match authorized email",
-            });
-        }
-
         const userProfile = await User.findById(userId)
             .populate("userAllFriends", "userName profilePic email")
             .populate("userAllFriends.userId", "userName profilePic email");
