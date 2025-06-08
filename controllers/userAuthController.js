@@ -1171,7 +1171,7 @@ exports.sendFriendRequest = async (req, res) => {
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
-        const userEmail = await User.findById(user).select("email");
+        const userEmail = await User.findById(user).select("email userName profilePic");
 
         // Compare provided token with authorized token
         if (token !== authorizedToken) {
@@ -1405,7 +1405,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
-        const userEmail = await User.findById(user).select("email");
+        const userEmail = await User.findById(user).select("email userName profilePic");
 
 
         // Compare provided token with authorized token
