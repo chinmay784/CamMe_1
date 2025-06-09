@@ -3547,6 +3547,116 @@ exports.getAuthorizedUserPost = async (req, res) => {
 
 
 
+exports.deleteAPost = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+        if (!email || !token) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please provide Email And Token"
+            })
+        }
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+            });
+        }
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+        }
+        
+        const { postId } = req.body;
+
+        if (!userId || !postId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide userId and postId",
+            });
+        }
+
+        const post = await Postcreate.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found",
+            });
+        }
+
+        if (post.userId.toString() !== userId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to delete this post",
+            });
+        }
+
+        const { tedBlackCount, tedGoldCount, tedSilverCount, tedBronzeCount } = post;
+
+        if (tedBlackCount > 10) {
+            const postOwner = await User.findById(userId);
+            if (!postOwner) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Post owner not found",
+                });
+            }
+
+            // Subtract the post's coins from the owner's wallet (but don't let it go below 0)
+            postOwner.coinWallet.tedGold = Math.max((postOwner.coinWallet.tedGold || 0) - (tedGoldCount || 0), 0);
+            postOwner.coinWallet.tedSilver = Math.max((postOwner.coinWallet.tedSilver || 0) - (tedSilverCount || 0), 0);
+            postOwner.coinWallet.tedBronze = Math.max((postOwner.coinWallet.tedBronze || 0) - (tedBronzeCount || 0), 0);
+
+            // Recalculate totalTedCoin (if you're using this logic)
+            const goldUnits = Math.floor(postOwner.coinWallet.tedGold / 75);
+            const silverUnits = Math.floor(postOwner.coinWallet.tedSilver / 50);
+            const bronzeUnits = Math.floor(postOwner.coinWallet.tedBronze / 25);
+
+            postOwner.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+
+            await postOwner.save();
+        }
+
+
+        // Delete the post
+        await Postcreate.deleteOne({
+            _id: postId
+        });
+
+        // Optionally, you can also remove the post from the user's posts array if you have one
+        const user = await User.findById(userId);
+        if (user) {
+            user.posts = user.posts.filter(post => post.toString() !== postId);
+            await user.save();
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Post evaluated successfully",
+            tedBlackCount,
+            tedGoldCount,
+            tedSilverCount,
+            tedBronzeCount,
+        });
+
+    } catch (error) {
+        console.error("deleteAPost error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error in deleteAPost",
+        });
+    }
+};
+
+
 
 
 exports.getAuthorizedUserPhotoGraphy = async (req, res) => {
@@ -3956,7 +4066,7 @@ exports.giveTedSilverPost = async (req, res) => {
         const silverUnits = Math.floor(tedSilverCount / 50);
         const bronzeUnits = Math.floor(tedBronzeCount / 25);
         postOwner.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
-
+        console.log("Before Silver", postOwner.coinWallet);
         postOwner.markModified('coinWallet');
 
         await giver.save();
@@ -4105,7 +4215,7 @@ exports.giveTedBronzePost = async (req, res) => {
 
         // totalTedCoin still depends only on Gold, Silver, Bronze units (black excluded)
         postOwner.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
-
+        console.log("Before Bronze", postOwner.coinWallet);
         await giver.save();
         await postOwner.save();
         await post.save();
@@ -4508,7 +4618,7 @@ exports.giveTedBlackCoin = async (req, res) => {
             }
         }
 
-        // Schedule evaluation in 29 minutes
+        // Schedule evaluation in 60 minutes
         const blackCoinGiverId = authorizedUserId;
 
         console.log("Outside setTimeOut giveTedBlackCoin")
@@ -4601,7 +4711,7 @@ exports.giveTedBlackCoin = async (req, res) => {
                 console.log("Black Coin Voting Ended SucessFully")
                 await updatedPost.save();
             }
-        }, 5 * 60 * 1000); // 29 minutes
+        }, 60 * 60 * 1000); // 60 minutes
 
         return res.status(200).json({
             success: true,

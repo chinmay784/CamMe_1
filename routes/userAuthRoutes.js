@@ -64,7 +64,8 @@ const {
   TEST,
   cancleMyRequest,
   fetchAllRecentUserAllFriends,
-  fetchAllRecentCancleRequest
+  fetchAllRecentCancleRequest,
+  deleteAPost
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -3821,5 +3822,65 @@ router.post("/getNotiFicationsOnBasisUserId",authMiddelWere,getNotiFicationsOnBa
 router.post("/getProfileBasedOnUserId",getProfileBasedOnUserId)
 
 router.post("/test",TEST)
+/**
+ * @swagger
+ * /user/deleteAPost:
+ *   post:
+ *     tags:
+ *       - Posts
+ *     summary: Delete a post by its owner
+ *     description: |
+ *       Deletes the specified post if the user is the owner and deducts
+ *       TedCoin balances (gold, silver, bronze) from the user's wallet
+ *       if the post has over 10 TedBlack coins.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - postId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               token:
+ *                 type: string
+ *               postId:
+ *                 type: string
+ *                 description: MongoDB ObjectId of the post to delete
+ *     responses:
+ *       '200':
+ *         description: Post evaluated (and deleted) successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 tedBlackCount:
+ *                   type: integer
+ *                 tedGoldCount:
+ *                   type: integer
+ *                 tedSilverCount:
+ *                   type: integer
+ *                 tedBronzeCount:
+ *                   type: integer
+ *       '403':
+ *         description: Not authorized – user is not the post owner.
+ *       '404':
+ *         description: Post or user not found.
+ *       '500':
+ *         description: Server error.
+ */
+router.post("/deleteAPost",authMiddelWere,deleteAPost)
 
 module.exports = router;                       
