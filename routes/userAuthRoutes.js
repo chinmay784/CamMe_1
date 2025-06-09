@@ -2427,7 +2427,7 @@ router.post("/giveCommentToPost", authMiddelWere, giveCommentToPost)
  *                   type: string
  *                   example: Internal Server Error in giveTedGoldToPost
  */
-router.post("/giveTedGoldcoin", giveTedGoldToPost);
+router.post("/giveTedGoldcoin",authMiddelWere, giveTedGoldToPost);
 /**
  * @swagger
  * /user/giveTedSilvercoin:
@@ -2502,7 +2502,7 @@ router.post("/giveTedGoldcoin", giveTedGoldToPost);
  *                   type: string
  *                   example: error in giveTedSilverPost controller
  */
-router.post("/giveTedSilvercoin", giveTedSilverPost);
+router.post("/giveTedSilvercoin", authMiddelWere, giveTedSilverPost);
 /**
  * @swagger
  * /user/giveTedBronzeCoin:
