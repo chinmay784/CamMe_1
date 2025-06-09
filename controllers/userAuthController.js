@@ -3616,7 +3616,7 @@ exports.getAuthorizedUserPhotoGraphy = async (req, res) => {
 exports.giveTedGoldToPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
-        const { postId, email , token } = req.body;
+        const { postId, email, token } = req.body;
 
         if (!email || !token) {
             return res.status(200).json({
@@ -3628,10 +3628,10 @@ exports.giveTedGoldToPost = async (req, res) => {
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
-    
+
         const giver = await User.findById(giverId).select("email userName profilePic points freeCredit");
 
-        if(token !== authorizedToken) {
+        if (token !== authorizedToken) {
             return res.status(200).json({
                 success: false,
                 message: "Provided token does not match authorized token",
@@ -3850,7 +3850,7 @@ exports.TEST = async (req, res) => {
 exports.giveTedSilverPost = async (req, res) => {
     try {
         const giverId = req.user.userId;
-        const { postId, email , token } = req.body;
+        const { postId, email, token } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -3863,7 +3863,7 @@ exports.giveTedSilverPost = async (req, res) => {
         }
 
         const giver = await User.findById(giverId).select("email userName profilePic points freeCredit");
-        if(token !== authorizedToken) {
+        if (token !== authorizedToken) {
             return res.status(200).json({
 
                 success: false,
@@ -3996,10 +3996,10 @@ exports.giveTedSilverPost = async (req, res) => {
 exports.giveTedBronzePost = async (req, res) => {
     try {
         const giverId = req.user.userId;
-        const { postId, email , token  } = req.body;
+        const { postId, email, token } = req.body;
 
         const authHeader = req.headers.authorization;
-        const authorizedToken = authHeader.split(" ")[1]; 
+        const authorizedToken = authHeader.split(" ")[1];
 
         if (!postId || !giverId) {
             return res.status(200).json({
@@ -4009,15 +4009,15 @@ exports.giveTedBronzePost = async (req, res) => {
         }
 
         const giver = await User.findById(giverId).select("email userName profilePic points freeCredit");
-        if(token !== authorizedToken) {
+        if (token !== authorizedToken) {
             return res.status(200).json({
                 success: false,
                 message: "Provided token does not match authorized token",
             });
         }
 
-        if(email !== giver.email){
-             return res.status(200).json({
+        if (email !== giver.email) {
+            return res.status(200).json({
                 success: false,
                 message: "Provided eMail misMatch ",
             });
@@ -5080,15 +5080,12 @@ exports.handleTedBlackCoinVote = async (req, res) => {
         }
 
 
-        if (users.posts.length >= 10) {
-            users.points = (users.points || 0) + 15;
-            await users.save();
-        }
 
-        if (users.posts.length <= 10) {
-            users.points = (users.points || 0) + 15;
-            await users.save();
-        }
+
+
+        users.points = (users.points || 0) + 15;
+        await users.save();
+
 
         const creditsEarned = Math.floor(users.points / 500);
         if (creditsEarned) {
