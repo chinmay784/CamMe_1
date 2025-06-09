@@ -1472,8 +1472,8 @@ exports.acceptFriendRequest = async (req, res) => {
                     actionType: "AcceptFriendRequest",
                     senderId: userEmail._id.toString(),
                     reciverId: requestId.toString(),
-                    senderName: userEmail.userName,
-                    senderProfilePic: userEmail.profilePic || "",
+                    senderName: String(userEmail.userName), // in case it's not a string
+                    senderProfilePic: String(userEmail.profilePic) || "",
                 },
             })
         }
@@ -1708,17 +1708,38 @@ exports.makeAfriend = async (req, res) => {
 
 
 
-// Not Complited
 exports.cancleMyRequest = async (req, res) => {
     try {
-        // const userId = req.user.userId;
-        const { userId, friendId } = req.body;
+        const userId = req.user.userId;
+        const { friendId, email, token } = req.body;
         if (!userId || !friendId) {
             return res.status(200).json({
                 sucess: false,
                 message: "Please provide userId & friendId"
             })
         };
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+
+        };
+
 
 
         const fetchRequest = await FriendRequest.findOne({
@@ -1771,6 +1792,102 @@ exports.cancleMyRequest = async (req, res) => {
         })
     }
 }
+
+
+
+exports.fetchAllRecentUserAllFriends = async (req, res) => {
+    try {
+
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+
+        };
+
+
+        const Recent = await recent.find({
+            userId: userId,
+            status: "unfriend"
+        }).populate("recentId", "userName email profilePic");
+        return res.status(200).json({
+            sucess: true,
+            Recent,
+        })
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in fetchAllRecentUserAllFriends"
+        })
+    }
+}
+
+
+
+exports.fetchAllRecentCancleRequest = async (req, res) => {
+    try {
+
+        const userId = req.user.userId;
+
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const userEmail = await User.findById(userId).select("email");
+
+        // Compare provided token with authorized token
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided token does not match authorized token",
+
+            });
+        };
+
+        if (userEmail.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Provided email does not match authorized email",
+            });
+
+        };
+
+        const Recent = await recent.find({
+            userId: userId,
+            status: "cancleRequest"
+        }).populate("recentId", "userName email profilePic"); // specify fields you want from User
+
+        return res.status(200).json({
+            success: true,
+            Recent,
+        });
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server Error in fetchAllRecentCancleRequest"
+        });
+    }
+};
+
 
 
 
@@ -3498,45 +3615,20 @@ exports.getAuthorizedUserPhotoGraphy = async (req, res) => {
 
 exports.giveTedGoldToPost = async (req, res) => {
     try {
-        const giverId = req.user.userId;
-        //const { postId } = req.params;
-        const { email, token, postId } = req.body;
+        //const giverId = req.user.userId;
+        const { postId, giverId } = req.body;
 
-        if (!email || !token) {
-            return res.status(200).json({
-                sucess: false,
-                message: "Please provide Email And Token"
-            })
-        }
+        // if (!email || !token) {
+        //     return res.status(200).json({
+        //         success: false,
+        //         message: "Please provide email and token"
+        //     });
+        // }
 
-        const authHeader = req.headers.authorization;
-        const authorizedToken = authHeader.split(" ")[1];
-        const userEmail = await User.findById(giverId).select("email");
+        // const authHeader = req.headers.authorization;
+        // const authorizedToken = authHeader.split(" ")[1];
 
-
-        // Compare provided token with authorized token
-        if (token !== authorizedToken) {
-            return res.status(200).json({
-                success: false,
-                message: "Provided token does not match authorized token",
-            });
-        }
-
-        if (userEmail.email !== email) {
-            return res.status(200).json({
-                success: false,
-                message: "Provided email does not match authorized email",
-            });
-        }
-        if (!postId) {
-            return res.status(200).json({
-                success: false,
-                message: "Post ID is required",
-            });
-        }
-
-        //  Find the giver
-        const giver = await User.findById(giverId);
+        const giver = await User.findById(giverId).select("email userName profilePic points freeCredit");
         if (!giver) {
             return res.status(200).json({
                 success: false,
@@ -3544,7 +3636,28 @@ exports.giveTedGoldToPost = async (req, res) => {
             });
         }
 
-        const post = await Postcreate.findOne({ _id: postId });
+        // if (token !== authorizedToken) {
+        //     return res.status(200).json({
+        //         success: false,
+        //         message: "Provided token does not match authorized token"
+        //     });
+        // }
+
+        // if (giver.email !== email) {
+        //     return res.status(200).json({
+        //         success: false,
+        //         message: "Provided email does not match authorized email"
+        //     });
+        // }
+
+        if (!postId) {
+            return res.status(200).json({
+                success: false,
+                message: "Post ID is required"
+            });
+        }
+
+        const post = await Postcreate.findById(postId);
         if (!post) {
             return res.status(200).json({
                 success: false,
@@ -3552,92 +3665,103 @@ exports.giveTedGoldToPost = async (req, res) => {
             });
         }
 
-        if (
-            (post.tedGoldGivers?.includes(giverId))
-        ) {
+        const giverIdStr = giverId.toString();
+
+        // Check if already gave TedGold
+        if (post.tedGoldGivers?.map(String).includes(giverIdStr)) {
             return res.status(200).json({
                 success: false,
                 message: "You have already given a coin to this post"
             });
         }
 
-
-
-
-        const receiver = await User.findById(post.userId);
-        if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
-
-        // If already Gold, quit
-        if (post.tedGoldGivers?.includes(giverId))
-            return res.status(200).json({ success: false, message: "Already gave Gold" });
-
-
-        // if (giver.posts.length >= 10) {
-        //     giver.points = (giver.points || 0) + 5; // Increment points 
-        //     await giver.save();
-        // }
-
-        // if (giver.posts.length <= 10) {
-        //     giver.points = (giver.points || 0) + 5; // Increment points 
-        //     await giver.save();
-        // }
-
-        giver.points = (giver.points || 0) + 5; // Increment points 
-
-        const creditsEarned = Math.floor(giver.points / 500); // 1 credit per 500 points
-        if (creditsEarned > 0) {
-            giver.freeCredit += creditsEarned;
-            await giver.save();
-            // // Deduct points that were converted to credits
-            // giver.points = giver.points % 500;
+        const postOwner = await User.findById(post.userId);
+        if (!postOwner) {
+            return res.status(200).json({
+                success: false,
+                message: "Post owner not found"
+            });
         }
 
-        const giverIdStr = giverId.toString();
+        // Award points & credits to giver
+        giver.points = (giver.points || 0) + 5;
+        const creditsEarned = Math.floor(giver.points / 500);
+        if (creditsEarned > 0) {
+            giver.freeCredit += creditsEarned;
+        }
 
-        // ---------- remove from lower tiers if present ----------
+        // Remove giver from lower tiers if present
         const tiers = [
-            { arr: "tedSilverGivers", cnt: "tedSilverCount", wallet: "tedSilver" },
-            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
-            { arr: "tedBlackGivers", cnt: "tedBlackCount", wallet: "tedBlack" }
+            { field: "tedSilverGivers", countField: "tedSilverCount", walletField: "tedSilver" },
+            { field: "tedBronzeGivers", countField: "tedBronzeCount", walletField: "tedBronze" },
+            { field: "tedBlackGivers", countField: "tedBlackCount", walletField: "tedBlack" },
         ];
 
-        tiers.forEach(t => {
-            if (post[t.arr]?.includes(giverId)) {
-                post[t.arr] = post[t.arr].filter(id => id.toString() !== giverIdStr);
-                post[t.cnt] = Math.max((post[t.cnt] || 1) - 1, 0);
-                receiver.coinWallet[t.wallet] =
-                    Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
+        for (const tier of tiers) {
+            if (post[tier.field]?.map(String).includes(giverIdStr)) {
+                post[tier.field] = post[tier.field].filter(id => id.toString() !== giverIdStr);
+                post[tier.countField] = Math.max((post[tier.countField] || 0) - 1, 0);
+                postOwner.coinWallet[tier.walletField] = Math.max((postOwner.coinWallet[tier.walletField] || 0) - 1, 0);
             }
-        });
+        }
 
-        // ---------- add to Gold ----------
+        // Add to TedGold
         post.tedGoldGivers = post.tedGoldGivers || [];
         post.tedGoldGivers.push(giverId);
         post.tedGoldCount = (post.tedGoldCount || 0) + 1;
-        receiver.coinWallet.tedGold = (receiver.coinWallet.tedGold || 0) + 1;
 
-        // ---------- recalc totalTedCoin ----------
-        const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
-        const goldUnits = Math.floor(tedGold / 75);
-        const silverUnits = Math.floor(tedSilver / 50);
-        const bronzeUnits = Math.floor(tedBronze / 25);
-        receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+        // Recalculate total TedCoins for post owner
+        const allPosts = await Postcreate.find({ userId: postOwner._id });
+        postOwner.coinWallet = postOwner.coinWallet || {
+            tedGold: 0,
+            tedSilver: 0,
+            tedBronze: 0,
+            totalTedCoin: 0
+        };
 
-        await receiver.save();
+
+        let tedGoldCount = 0, tedSilverCount = 0, tedBronzeCount = 0;
+        allPosts.forEach(p => {
+            tedGoldCount += p.tedGoldCount || 0;
+            tedSilverCount += p.tedSilverCount || 0;
+            tedBronzeCount += p.tedBronzeCount || 0;
+        });
+
+        postOwner.coinWallet.tedSilver = tedSilverCount;
+        postOwner.coinWallet.tedBronze = tedBronzeCount;
+
+        const goldUnits = Math.floor(tedGoldCount / 75);
+        const silverUnits = Math.floor(tedSilverCount / 50);
+        const bronzeUnits = Math.floor(tedBronzeCount / 25);
+        postOwner.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+
+        await giver.save();
+        await postOwner.save();
         await post.save();
 
-        res.status(200).json({
+        const updatedOwner = await User.findById(postOwner._id);
+        console.log("Updated Wallet:", updatedOwner.coinWallet);
+
+
+        return res.status(200).json({
             success: true,
             message: "Switched to TedGold successfully",
-            counts: {
-                tedGold: post.tedGoldCount,
-                tedSilver: post.tedSilverCount,
-                tedBronze: post.tedBronzeCount,
-                tedBlack: post.tedBlackCount
+            postCoinCounts: {
+                tedGoldCount: post.tedGoldCount || 0,
+                tedSilverCount: post.tedSilverCount || 0,
+                tedBronzeCount: post.tedBronzeCount || 0
+            },
+            ownerWallet: {
+                tedGold: tedGoldCount,
+                tedSilver: tedSilverCount,
+                tedBronze: tedBronzeCount,
+                totalTedCoin: postOwner.coinWallet.totalTedCoin
             }
+
         });
+
     } catch (error) {
-        console.error("Error giving TedGold:", error);
+        console.error("Error giving TedGold:", error.message);
         return res.status(500).json({
             success: false,
             message: "Internal Server Error in giveTedGoldToPost"
@@ -3647,54 +3771,10 @@ exports.giveTedGoldToPost = async (req, res) => {
 
 
 
-exports.giveTedSilverPost = async (req, res) => {
+
+exports.TEST = async (req, res) => {
     try {
-        const giverId = req.user.userId;
-        // const { postId } = req.params;
-        const { email, token, postId } = req.body;
-
-        if (!email || !token) {
-            return res.status(200).json({
-                sucess: false,
-                message: "Please provide Email And Token"
-            })
-        }
-
-        const authHeader = req.headers.authorization;
-        const authorizedToken = authHeader.split(" ")[1];
-        const userEmail = await User.findById(giverId).select("email");
-
-
-        // Compare provided token with authorized token
-        if (token !== authorizedToken) {
-            return res.status(200).json({
-                success: false,
-                message: "Provided token does not match authorized token",
-            });
-        }
-
-        if (userEmail.email !== email) {
-            return res.status(200).json({
-                success: false,
-                message: "Provided email does not match authorized email",
-            });
-        }
-
-        if (!postId) {
-            return res.status(200).json({
-                success: false,
-                message: "Post ID is required",
-            });
-        }
-
-        //  Find the giver
-        const giver = await User.findById(giverId);
-        if (!giver) {
-            return res.status(200).json({
-                success: false,
-                message: "Giver not found"
-            });
-        }
+        const { postId, giverId } = req.body;
 
         const post = await Postcreate.findOne({ _id: postId });
         if (!post) {
@@ -3702,95 +3782,168 @@ exports.giveTedSilverPost = async (req, res) => {
                 success: false,
                 message: "Post not found"
             });
-        };
+        }
+
+        const allPosts = await Postcreate.find({
+            userId: post.userId
+        });
+
+        // Aggregate counts
+        let tedGoldCount = 0;
+        let tedSilverCount = 0;
+        let tedBronzeCount = 0;
+
+        allPosts.forEach(p => {
+            tedGoldCount += p.tedGoldCount || 0;
+            tedSilverCount += p.tedSilverCount || 0;
+            tedBronzeCount += p.tedBronzeCount || 0;
+        });
+
+        return res.status(200).json({
+            success: true,
+            length: allPosts.length,
+            tedGoldCount,
+            tedSilverCount,
+            tedBronzeCount
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "server error in TEST controller"
+        });
+    }
+}
 
 
-        if (
 
-            (post.tedSilverGivers?.includes(giverId))
 
-        ) {
+exports.giveTedSilverPost = async (req, res) => {
+    try {
+        const { postId, giverId } = req.body;
+
+        if (!postId || !giverId) {
             return res.status(200).json({
                 success: false,
-                message: "You have already given a Silvercoin to this post"
+                message: "Post ID and Giver ID are required"
             });
         }
 
-        const receiver = await User.findById(post.userId);
-        if (!receiver) return res.status(200).json({ success: false, message: "Post owner not found" });
-
-
-        // if (giver.posts.length >= 10) {
-        //     giver.points = (giver.points || 0) + 5; // Increment points
-        //     await giver.save();
-        // }
-
-        // if (giver.posts.length <= 10) {
-        //     giver.points = (giver.points || 0) + 5; // Increment points
-        //     await giver.save();
-        // }
-
-        giver.points = (giver.points || 0) + 5; // Increment points
-
-        const creditsEarned = Math.floor(giver.points / 500); // 1 credit per 500 points
-        if (creditsEarned > 0) {
-            giver.freeCredit += creditsEarned;
-            await giver.save();
+        const giver = await User.findById(giverId).select("email userName profilePic points freeCredit");
+        if (!giver) {
+            return res.status(200).json({
+                success: false,
+                message: "Giver not found"
+            });
         }
 
-        const giverStr = giverId.toString();
+        const post = await Postcreate.findById(postId);
+        if (!post) {
+            return res.status(200).json({
+                success: false,
+                message: "Post not found"
+            });
+        }
 
-        /* ---------- remove from Gold / Bronze tiers if present ---------- */
+        const giverIdStr = giverId.toString();
+        if (post.tedSilverGivers?.map(String).includes(giverIdStr)) {
+            return res.status(200).json({
+                success: false,
+                message: "You have already given a Silver coin to this post"
+            });
+        }
+
+        const postOwner = await User.findById(post.userId);
+        if (!postOwner) {
+            return res.status(200).json({
+                success: false,
+                message: "Post owner not found"
+            });
+        }
+
+        // Award points & credits to giver
+        giver.points = (giver.points || 0) + 5;
+        const creditsEarned = Math.floor(giver.points / 500);
+        if (creditsEarned > 0) {
+            giver.freeCredit += creditsEarned;
+        }
+
+        // Remove giver from other tiers
         const tiers = [
-            { arr: "tedGoldGivers", cnt: "tedGoldCount", wallet: "tedGold" },
-            { arr: "tedBronzeGivers", cnt: "tedBronzeCount", wallet: "tedBronze" },
-            { arr: "tedBlackGivers", cnt: "tedBlackCount", wallet: "tedBlack" }
+            { field: "tedGoldGivers", countField: "tedGoldCount", walletField: "tedGold" },
+            { field: "tedBronzeGivers", countField: "tedBronzeCount", walletField: "tedBronze" },
+            { field: "tedBlackGivers", countField: "tedBlackCount", walletField: "tedBlack" }
         ];
 
-        tiers.forEach(t => {
-            if (post[t.arr]?.includes(giverId)) {
-                post[t.arr] = post[t.arr].filter(id => id.toString() !== giverStr);
-                post[t.cnt] = Math.max((post[t.cnt] || 1) - 1, 0);
-                receiver.coinWallet[t.wallet] =
-                    Math.max((receiver.coinWallet[t.wallet] || 1) - 1, 0);
+        for (const tier of tiers) {
+            if (post[tier.field]?.map(String).includes(giverIdStr)) {
+                post[tier.field] = post[tier.field].filter(id => id.toString() !== giverIdStr);
+                post[tier.countField] = Math.max((post[tier.countField] || 0) - 1, 0);
+                postOwner.coinWallet[tier.walletField] =
+                    Math.max((postOwner.coinWallet[tier.walletField] || 0) - 1, 0);
             }
-        });
+        }
 
-        /* ---------- add to Silver tier ---------- */
+        // Add to TedSilver
         post.tedSilverGivers = post.tedSilverGivers || [];
         post.tedSilverGivers.push(giverId);
         post.tedSilverCount = (post.tedSilverCount || 0) + 1;
-        receiver.coinWallet.tedSilver = (receiver.coinWallet.tedSilver || 0) + 1;
 
-        /* ---------- recalc totalTedCoin ---------- */
-        const { tedGold = 0, tedSilver = 0, tedBronze = 0 } = receiver.coinWallet;
-        const goldUnits = Math.floor(tedGold / 75);
-        const silverUnits = Math.floor(tedSilver / 50);
-        const bronzeUnits = Math.floor(tedBronze / 25);
-        receiver.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+        // Recalculate post owner's full coinWallet
+        const allPosts = await Postcreate.find({ userId: postOwner._id });
+        postOwner.coinWallet = postOwner.coinWallet || {
+            tedGold: 0,
+            tedSilver: 0,
+            tedBronze: 0,
+        };
 
-        await receiver.save();
+        let tedGoldCount = 0, tedSilverCount = 0, tedBronzeCount = 0;
+        allPosts.forEach(p => {
+            tedGoldCount += p.tedGoldCount || 0;
+            tedSilverCount += p.tedSilverCount || 0;
+            tedBronzeCount += p.tedBronzeCount || 0;
+        });
+
+        postOwner.coinWallet.tedGold = tedGoldCount;
+        postOwner.coinWallet.tedBronze = tedBronzeCount;
+
+        const goldUnits = Math.floor(tedGoldCount / 75);
+        const silverUnits = Math.floor(tedSilverCount / 50);
+        const bronzeUnits = Math.floor(tedBronzeCount / 25);
+        postOwner.coinWallet.totalTedCoin = Math.min(goldUnits, silverUnits, bronzeUnits);
+
+        await giver.save();
+        await postOwner.save();
         await post.save();
+
+        const updatedOwner = await User.findById(postOwner._id);
+        console.log("Updated Wallet:", updatedOwner.coinWallet);
 
         return res.status(200).json({
             success: true,
             message: "TedSilver given successfully",
-            counts: {
-                tedGold: post.tedGoldCount,
-                tedSilver: post.tedSilverCount,
-                tedBronze: post.tedBronzeCount,
-                tedBlack: post.tedBlackCount
+            postCoinCounts: {
+                tedGoldCount: post.tedGoldCount || 0,
+                tedSilverCount: post.tedSilverCount || 0,
+                tedBronzeCount: post.tedBronzeCount || 0
             },
-            toUser: receiver._id
+            ownerWallet: {
+                tedGold: tedGoldCount,
+                tedSilver: tedSilverCount,
+                tedBronze: tedBronzeCount
+            }
         });
+
     } catch (error) {
-        console.log(error);
+        console.error("Error giving TedSilver:", error.message);
         return res.status(500).json({
-            sucess: false,
-            message: "error in giveTedSilverPost controller"
-        })
+            success: false,
+            message: "Internal Server Error in giveTedSilverPost"
+        });
     }
-}
+};
+
 
 
 

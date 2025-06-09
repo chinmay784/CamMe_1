@@ -60,7 +60,11 @@ const {
   unFriend,
   makeAfriend,
   getAll_Matches_OnBasisOf_Intrest_HashTag_Location,
-  getProfileBasedOnUserId
+  getProfileBasedOnUserId,
+  TEST,
+  cancleMyRequest,
+  fetchAllRecentUserAllFriends,
+  fetchAllRecentCancleRequest
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -2423,7 +2427,7 @@ router.post("/giveCommentToPost", authMiddelWere, giveCommentToPost)
  *                   type: string
  *                   example: Internal Server Error in giveTedGoldToPost
  */
-router.post("/giveTedGoldcoin", authMiddelWere, giveTedGoldToPost);
+router.post("/giveTedGoldcoin", giveTedGoldToPost);
 /**
  * @swagger
  * /user/giveTedSilvercoin:
@@ -2498,7 +2502,7 @@ router.post("/giveTedGoldcoin", authMiddelWere, giveTedGoldToPost);
  *                   type: string
  *                   example: error in giveTedSilverPost controller
  */
-router.post("/giveTedSilvercoin", authMiddelWere, giveTedSilverPost);
+router.post("/giveTedSilvercoin", giveTedSilverPost);
 /**
  * @swagger
  * /user/giveTedBronzeCoin:
@@ -2847,6 +2851,200 @@ router.post("/voteTedBlackCoin",authMiddelWere,voteTedBlackCoin)
  *                   example: Error in inviteAFriend Route
  */
 router.post("/inviteAFriend",authMiddelWere,sendFriendRequest);
+/**
+ * @swagger
+ * /user/cancleMyRequest:
+ *   post:
+ *     summary: Cancel a sent friend request with email and token verification
+ *     tags:
+ *       - Friends
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               friendId:
+ *                 type: string
+ *                 description: ID of the user to whom the friend request was sent
+ *               email:
+ *                 type: string
+ *                 description: Email of the user (used for verification)
+ *               token:
+ *                 type: string
+ *                 description: Token to be matched with authorization header
+ *             required:
+ *               - friendId
+ *               - email
+ *               - token
+ *     responses:
+ *       200:
+ *         description: Friend request canceled or error message if validation fails
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Server error while canceling request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+router.post("/cancleMyRequest",authMiddelWere,cancleMyRequest);
+/**
+ * @swagger
+ * /user/fetchAllRecentUserAllFriends:
+ *   post:
+ *     summary: Fetch all users the current user has recently unfriended
+ *     tags:
+ *       - Friends
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user for verification
+ *               token:
+ *                 type: string
+ *                 description: Token to match against the Authorization header
+ *             required:
+ *               - email
+ *               - token
+ *     responses:
+ *       200:
+ *         description: Successfully fetched recently unfriended users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                 Recent:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userId:
+ *                         type: string
+ *                       recentId:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             userName:
+ *                               type: string
+ *                             email:
+ *                               type: string
+ *                             profilePic:
+ *                               type: string
+ *                       status:
+ *                         type: string
+ *       500:
+ *         description: Server error while fetching recent unfriended users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+router.post("/fetchAllRecentUserAllFriends",authMiddelWere,fetchAllRecentUserAllFriends);
+/**
+ * @swagger
+ * /user/fetchAllRecentCancleRequest:
+ *   post:
+ *     summary: Fetch all recently canceled friend requests by the user
+ *     tags:
+ *       - Friends
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user for verification
+ *               token:
+ *                 type: string
+ *                 description: Token to match with the Authorization header
+ *             required:
+ *               - email
+ *               - token
+ *     responses:
+ *       200:
+ *         description: Successfully fetched recent canceled requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 Recent:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userId:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                       recentId:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             userName:
+ *                               type: string
+ *                             email:
+ *                               type: string
+ *                             profilePic:
+ *                               type: string
+ *       500:
+ *         description: Server error while fetching canceled friend requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+router.post("/fetchAllRecentCancleRequest",authMiddelWere,fetchAllRecentCancleRequest)
 /**
  * @swagger
  * user/acceptFriendRequest:
@@ -3621,5 +3819,7 @@ router.post("/getNotiFicationsOnBasisUserId",authMiddelWere,getNotiFicationsOnBa
  *         description: Server error while fetching profile
  */
 router.post("/getProfileBasedOnUserId",getProfileBasedOnUserId)
+
+router.post("/test",TEST)
 
 module.exports = router;                       
