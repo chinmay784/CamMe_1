@@ -85,19 +85,19 @@ const userSchema = new mongoose.Schema({
     coinWallet: {
         tedGold: {
             type: Number,
-            default: 0
+            default: 1
         },
         tedSilver: {
             type: Number,
-            default: 0
+            default: 1
         },
         tedBronze: {
             type: Number,
-            default: 0
+            default: 1
         },
         tedBlack: {
             type: Number,
-            default: 0
+            default: 1
         },
         totalTedCoin: {
             type: Number,
