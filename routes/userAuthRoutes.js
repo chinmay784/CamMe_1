@@ -651,11 +651,10 @@ router.post("/account-link/reject/:userId/:requesterId", rejectLinkAccount);
  * @swagger
  * /user/logout:
  *   post:
- *     summary: Logs out a user and blacklists their token
- *     description: 
- *       Logs out the user by blacklisting their JWT token and verifying their password before logout.
+ *     summary: Logout a user
+ *     description: Logs out a user by blacklisting their token and updating their session data.
  *     tags:
- *       - Authentication
+ *       - Auth
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -665,24 +664,20 @@ router.post("/account-link/reject/:userId/:requesterId", rejectLinkAccount);
  *           schema:
  *             type: object
  *             required:
- *               - password
+ *               - email
+ *               - token
  *             properties:
- *               password:
+ *               email:
  *                 type: string
- *                 example: yourPassword123
+ *                 format: email
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 description: JWT token provided by the user
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
  *     responses:
  *       200:
- *         description: Logout successful or token not provided
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: User logged out successfully.
- *       401:
- *         description: Unauthorized - password does not match
+ *         description: Successful logout
  *         content:
  *           application/json:
  *             schema:
@@ -690,10 +685,14 @@ router.post("/account-link/reject/:userId/:requesterId", rejectLinkAccount);
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: false
+ *                   example: true
  *                 message:
  *                   type: string
- *                   example: user Password and input password is not match
+ *                   example: User logged out successfully.
+ *       400:
+ *         description: Missing email or token
+ *       403:
+ *         description: Token or email mismatch
  *       500:
  *         description: Internal server error
  */
