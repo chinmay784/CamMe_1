@@ -18,7 +18,8 @@ const admin = require("../firebase")
 const TedBlackers = require("../models/TedBlackersModel")
 const cron = require('node-cron');
 const recent = require("../models/recentFriendSchema");
-
+const { v4: uuidv4 } = require('uuid'); // UUID generator
+const totalTedCoinLogicSchema = require('../models/totalTedCoinLogicSchema');
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -829,12 +830,12 @@ exports.logoutUser = async (req, res) => {
         const userId = req.user.userId;
 
         // const { password } = req.body;
-        const {email ,token } = req.body;
+        const { email, token } = req.body;
 
-        if(!email || !token){
+        if (!email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please Provide All Details"
+                sucess: false,
+                message: "Please Provide All Details"
             })
         }
 
@@ -848,7 +849,7 @@ exports.logoutUser = async (req, res) => {
         await blacklisted.save();
 
         // const user = await User.findById(userId);
-        
+
         // // if(user.password === )
         // const isMatch = await bcrypt.compare(user.password, password);
         const authHeader = req.headers.authorization;
@@ -3603,7 +3604,7 @@ exports.deleteAPost = async (req, res) => {
                 message: "Provided email does not match authorized email",
             });
         }
-        
+
         const { postId } = req.body;
 
         if (!userId || !postId) {
@@ -3824,6 +3825,8 @@ exports.giveTedGoldToPost = async (req, res) => {
             });
         }
 
+        const oldTotal = postOwner.coinWallet.totalTedCoin
+
         // Award points & credits to giver
         giver.points = (giver.points || 0) + 5;
         const creditsEarned = Math.floor(giver.points / 500);
@@ -3880,6 +3883,27 @@ exports.giveTedGoldToPost = async (req, res) => {
         await giver.save();
         await post.save();
 
+        const newTotal = Math.min(goldUnits, silverUnits, bronzeUnits);
+
+        const coinGenerated = newTotal - oldTotal;
+
+        if (coinGenerated > 0) {
+            const followersCount = Array.isArray(postOwner.followers) ? postOwner.followers.length : 0;
+
+            const logs = Array.from({ length: coinGenerated }, () => ({
+                userId: postOwner._id,
+                generatedBy: 'formula-based',
+                amount: 1,
+                followersCount: followersCount,
+                uniqueId: uuidv4(),
+            }))
+
+            await totalTedCoinLogicSchema.insertMany(logs);
+
+            postOwner.coinWallet.totalTedCoin = newTotal;
+            await postOwner.save();
+        }
+
         return res.status(200).json({
             success: true,
             message: "Switched to TedGold successfully",
@@ -3895,7 +3919,8 @@ exports.giveTedGoldToPost = async (req, res) => {
                 tedBronze: postOwner.coinWallet.tedBronze,
                 tedBlack: postOwner.coinWallet.tedBlack,  // Included in response
                 totalTedCoin: postOwner.coinWallet.totalTedCoin
-            }
+            },
+            totalTedCoin: newTotal,
         });
 
     } catch (error) {
@@ -4047,6 +4072,7 @@ exports.giveTedSilverPost = async (req, res) => {
                 message: "Post owner not found"
             });
         }
+        const oldTotal = postOwner.coinWallet.totalTedCoin
 
         // Award points & credits to giver
         giver.points = (giver.points || 0) + 5;
@@ -4102,6 +4128,28 @@ exports.giveTedSilverPost = async (req, res) => {
         await postOwner.save();
         await post.save();
 
+        const newTotal = Math.min(goldUnits, silverUnits, bronzeUnits);
+
+        const coinGenerated = newTotal - oldTotal;
+
+        if (coinGenerated > 0) {
+            const followersCount = Array.isArray(postOwner.followers) ? postOwner.followers.length : 0;
+
+            const logs = Array.from({ length: coinGenerated }, () => ({
+                userId: postOwner._id,
+                generatedBy: 'formula-based',
+                amount: 1,
+                followersCount: followersCount,
+                uniqueId: uuidv4(),
+            }))
+
+            await totalTedCoinLogicSchema.insertMany(logs);
+
+            postOwner.coinWallet.totalTedCoin = newTotal;
+            await postOwner.save();
+        }
+
+
         return res.status(200).json({
             success: true,
             message: "TedSilver given successfully",
@@ -4117,7 +4165,8 @@ exports.giveTedSilverPost = async (req, res) => {
                 tedBronze: tedBronzeCount,
                 tedBlack: tedBlackCount,
                 totalTedCoin: postOwner.coinWallet.totalTedCoin
-            }
+            },
+            totalTedCoin: newTotal,
         });
 
     } catch (error) {
@@ -4195,6 +4244,8 @@ exports.giveTedBronzePost = async (req, res) => {
             });
         }
 
+        const oldTotal = postOwner.coinWallet.totalTedCoin
+
         // Award points & credits to giver
         giver.points = (giver.points || 0) + 5;
         const creditsEarned = Math.floor(giver.points / 500);
@@ -4248,6 +4299,28 @@ exports.giveTedBronzePost = async (req, res) => {
         await giver.save();
         await postOwner.save();
         await post.save();
+
+        const newTotal = Math.min(goldUnits, silverUnits, bronzeUnits);
+
+        const coinGenerated = newTotal - oldTotal;
+
+        if (coinGenerated > 0) {
+            const followersCount = Array.isArray(postOwner.followers) ? postOwner.followers.length : 0;
+
+            const logs = Array.from({ length: coinGenerated }, () => ({
+                userId: postOwner._id,
+                generatedBy: 'formula-based',
+                amount: 1,
+                followersCount: followersCount,
+                uniqueId: uuidv4(),
+            }))
+
+            await totalTedCoinLogicSchema.insertMany(logs);
+
+            postOwner.coinWallet.totalTedCoin = newTotal;
+            await postOwner.save();
+        }
+
 
         return res.status(200).json({
             success: true,
