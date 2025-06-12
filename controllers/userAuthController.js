@@ -3888,7 +3888,7 @@ exports.giveTedGoldToPost = async (req, res) => {
         const coinGenerated = newTotal - oldTotal;
 
         if (coinGenerated > 0) {
-            const followersCount = Array.isArray(postOwner.followers) ? postOwner.followers.length : 0;
+            const followersCount = Array.isArray(postOwner.userAllFriends) ? postOwner.userAllFriends.length : 0;
 
             const logs = Array.from({ length: coinGenerated }, () => ({
                 userId: postOwner._id,
@@ -4133,7 +4133,7 @@ exports.giveTedSilverPost = async (req, res) => {
         const coinGenerated = newTotal - oldTotal;
 
         if (coinGenerated > 0) {
-            const followersCount = Array.isArray(postOwner.followers) ? postOwner.followers.length : 0;
+            const followersCount = Array.isArray(postOwner.userAllFriends) ? postOwner.userAllFriends.length : 0;
 
             const logs = Array.from({ length: coinGenerated }, () => ({
                 userId: postOwner._id,
@@ -4305,7 +4305,7 @@ exports.giveTedBronzePost = async (req, res) => {
         const coinGenerated = newTotal - oldTotal;
 
         if (coinGenerated > 0) {
-            const followersCount = Array.isArray(postOwner.followers) ? postOwner.followers.length : 0;
+            const followersCount = Array.isArray(postOwner.userAllFriends) ? postOwner.userAllFriends.length : 0;
 
             const logs = Array.from({ length: coinGenerated }, () => ({
                 userId: postOwner._id,
