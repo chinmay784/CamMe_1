@@ -65,7 +65,8 @@ const {
   cancleMyRequest,
   fetchAllRecentUserAllFriends,
   fetchAllRecentCancleRequest,
-  deleteAPost
+  deleteAPost,
+  fetchProfileLocations
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -3881,5 +3882,73 @@ router.post("/test",TEST)
  *         description: Server error.
  */
 router.post("/deleteAPost",authMiddelWere,deleteAPost)
+/**
+ * @swagger
+ * /user/fetchProfileLocations:
+ *   post:
+ *     summary: Fetch users within a specified distance from the current user's location
+ *     tags:
+ *       - Map
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "user@example.com"
+ *               token:
+ *                 type: string
+ *                 example: "abcdef123456"
+ *               distance:
+ *                 type: number
+ *                 example: 3
+ *     responses:
+ *       200:
+ *         description: List of users within the given distance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: number
+ *                   example: 2
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                       location:
+ *                         type: object
+ *                         properties:
+ *                           lattitude:
+ *                             type: number
+ *                           longitude:
+ *                             type: number
+ *       401:
+ *         description: Unauthorized - Invalid token or email
+ *       404:
+ *         description: Location not found for this user
+ *       500:
+ *         description: Server Error
+ */
+router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
 
 module.exports = router;                       

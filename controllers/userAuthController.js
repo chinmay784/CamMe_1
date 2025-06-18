@@ -2081,7 +2081,7 @@ exports.getAllFriends = async (req, res) => {
 
 
 
-
+// Share All User
 exports.sharePostWithFriend = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -2096,7 +2096,7 @@ exports.sharePostWithFriend = async (req, res) => {
             });
         }
 
-        // Step 2: Verify friendship
+        // Step 2: Verify friendship 
         const user = await User.findById(userId);
         const isFriend = user.userAllFriends.includes(friendId);
         if (!isFriend) {
@@ -5654,4 +5654,96 @@ exports.sendNoti = async (req, res) => {
         })
 
     }
-}     
+}
+
+
+
+// Utility: Haversine distance calculation
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+exports.fetchProfileLocations = async (req, res) => {
+    try {
+        const userId = req.user.userId
+        const {  distance } = req.body;
+        const { token, email } = req.body;
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+        const user = await User.findById(userId).select("email");
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid email"
+            });
+        }
+
+
+        const connections = await ConnectionFilter.find({ userId });
+
+        if (!connections.length || !connections[0].location) {
+            return res.status(404).json({
+                success: false,
+                message: "Location not found for this user."
+            });
+        }
+
+
+        const userLat = connections[0].location.lattitude;
+        const userLon = connections[0].location.longitude;
+
+
+        // Get all other users’ locations
+        const allConnections = await ConnectionFilter.find({
+            userId: { $ne: userId }, // Exclude the current user
+            location: { $exists: true }
+        }).populate('userId', 'profilePic'); // <-- Only populate profilePic
+
+
+        // Filter those within the distance
+        const nearbyUsers = allConnections.filter(conn => {
+            const loc = conn.location;
+            if (!loc || loc.lattitude == null || loc.longitude == null) return false;
+
+            const dist = getDistanceFromLatLonInKm(
+                userLat,
+                userLon,
+                loc.lattitude,
+                loc.longitude
+            );
+            return dist <= distance;
+        });
+
+
+        return res.status(200).json({
+            success: true,
+            count: nearbyUsers.length,
+            users: nearbyUsers
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in FetchProfileLocations"
+        })
+    }
+}
