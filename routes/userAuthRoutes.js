@@ -66,7 +66,8 @@ const {
   fetchAllRecentUserAllFriends,
   fetchAllRecentCancleRequest,
   deleteAPost,
-  fetchProfileLocations
+  fetchProfileLocations,
+  apporachModeToAUser
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -3950,5 +3951,57 @@ router.post("/deleteAPost",authMiddelWere,deleteAPost)
  *         description: Server Error
  */
 router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
+/**
+ * @swagger
+ * /user/apporachModeToAUser:
+ *   post:
+ *     summary: Send an approach request to another user
+ *     description: Authenticated user sends an approach request to another user. A notification is created and sent via FCM to the target user.
+ *     tags:
+ *       - Approach
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - apporachId
+ *               - email
+ *               - token
+ *             properties:
+ *               apporachId:
+ *                 type: string
+ *                 description: The ID of the user being approached.
+ *               email:
+ *                 type: string
+ *                 description: Email of the requesting user for additional validation.
+ *               token:
+ *                 type: string
+ *                 description: Token for double-check validation (should match authorization header).
+ *     responses:
+ *       200:
+ *         description: Approach request sent successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Bad request, missing apporachId.
+ *       401:
+ *         description: Unauthorized due to invalid token or email.
+ *       404:
+ *         description: Approach user not found.
+ *       500:
+ *         description: Internal server error.
+ */
+router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
 
 module.exports = router;                       

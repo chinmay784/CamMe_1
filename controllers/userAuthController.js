@@ -438,7 +438,7 @@ exports.login = async (req, res) => {
         // })
 
         return res.status(200).json({
-            sucess: true,
+            success: true,
             message: "OTP sent to your email and phone number",
         })
 
@@ -5677,7 +5677,7 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 exports.fetchProfileLocations = async (req, res) => {
     try {
         const userId = req.user.userId
-        const {  distance } = req.body;
+        const { distance } = req.body;
         const { token, email } = req.body;
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader && authHeader.split(" ")[1];
@@ -5744,6 +5744,137 @@ exports.fetchProfileLocations = async (req, res) => {
         return res.status(500).json({
             sucess: false,
             message: "Server Error in FetchProfileLocations"
+        })
+    }
+}
+
+
+
+exports.apporachModeToAUser = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { apporachId, email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+        const user = await User.findById(userId)
+
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid email"
+            });
+        }
+
+        if (!apporachId) {
+            return res.status(400).json({
+                sucess: false,
+                message: "Please provide apporachId"
+            });
+        }
+
+        await Notification.create({
+            userId: apporachId,
+            type: "Approval",
+            message: `User ${user.userName} has sent an approach request.`,
+        });
+
+        const apporachUser = await User.findById(apporachId)
+
+        if (!apporachUser) {
+            return res.status(404).json({
+                sucess: false,
+                message: "Approach user not found"
+            });
+        }
+
+        // Send FCM notification to the apporach user
+        if (apporachUser.fcmToken) {
+            await admin.messaging().send({
+                token: apporachUser.fcmToken,
+                notification: {
+                    title: "New Approach Request",
+                    body: `User ${user.userName} has sent you an approach request.`,
+                },
+                data: {
+                    actionType: "Approval",
+                    giverId: userId.toString(),
+                    giverName: user.userName,
+                    giverProfilePic: user.profilePic || "",
+                    // Button data for Flutter to handle
+                    hasButtons: "true",
+                    buttonType: "agree_disagree",
+                    buttons: JSON.stringify([
+                        {
+                            id: "agree",
+                            text: "✅ Agree",
+                            action: "agree_vote",
+                            color: "#4CAF50"
+                        },
+                        {
+                            id: "disagree",
+                            text: "❌ Disagree",
+                            action: "disagree_vote",
+                            color: "#F44336"
+                        }
+                    ]),
+                    // Add click action for Android
+                    click_action: "FLUTTER_NOTIFICATION_CLICK"
+                },
+                // Android specific configuration
+                android: {
+                    notification: {
+                        title: "New Approach Request",
+                        body: `User ${user.userName} has sent you an approach request.`,
+                        priority: "high",
+                        defaultSound: true,
+                        defaultVibrateTimings: true,
+                        clickAction: "FLUTTER_NOTIFICATION_CLICK"
+                    },
+                    data: {
+                        actionType: "Approval",
+                        giverId: userId.toString(),
+                        giverName: user.userName,
+                        giverProfilePic: user.profilePic || "",
+                        hasButtons: "true",
+                        buttonType: "agree_disagree"
+                    }
+                },
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Approach request sent successfully",
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server In Apporach Mode "
+        })
+    }
+}
+
+
+
+
+exports.handelApporachVote = async (req, res) => {
+    try {
+        
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message:"Server Error in Handling Approach Vote"
         })
     }
 }
