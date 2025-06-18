@@ -67,7 +67,8 @@ const {
   fetchAllRecentCancleRequest,
   deleteAPost,
   fetchProfileLocations,
-  apporachModeToAUser
+  apporachModeToAUser,
+  handelApporachVote
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -4003,5 +4004,67 @@ router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
  *         description: Internal server error.
  */
 router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
+/**
+ * @swagger
+ * /user/handelApporachVote:
+ *   post:
+ *     summary: Handle user's vote (agree_vote/disagree_vote) for Approach Mode
+ *     tags:
+ *       - Approach Mode
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - action
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: your-auth-token
+ *               action:
+ *                 type: string
+ *                 enum: [agree_vote, disagree_vote]
+ *                 description: User action on approach mode
+ *                 example: agree_vote
+ *     responses:
+ *       200:
+ *         description: Vote handled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User agreed with the ApporachMode
+ *                 userLat:
+ *                   type: number
+ *                   example: 17.385044
+ *                 userLon:
+ *                   type: number
+ *                   example: 78.486671
+ *                 user:
+ *                   type: object
+ *                   description: Populated user data including posts
+ *       401:
+ *         description: Invalid token or email
+ *       404:
+ *         description: Location not found for this user
+ *       500:
+ *         description: Server Error in Handling Approach Vote
+ */
+router.post("/handelApporachVote",authMiddelWere,handelApporachVote)
 
 module.exports = router;                       

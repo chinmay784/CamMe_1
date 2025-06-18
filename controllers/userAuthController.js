@@ -5869,12 +5869,78 @@ exports.apporachModeToAUser = async (req, res) => {
 
 exports.handelApporachVote = async (req, res) => {
     try {
-        
+        const userId = req.user.userId
+        const { email, token, action } = req.body;
+        console.log(userId);
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+        const user = await User.findById(userId)
+
+        if (!userId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please provide userId"
+            })
+        };
+
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid token"
+            });
+        };
+
+        if (user.email !== email) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid email"
+            });
+        };
+
+        const connections = await ConnectionFilter.find({ userId });
+
+        if (!connections.length || !connections[0].location) {
+            return res.status(404).json({
+                success: false,
+                message: "Location not found for this user."
+            });
+        };
+
+        const userLat = connections[0].location.lattitude;
+        const userLon = connections[0].location.longitude;
+
+        if (action === "agree_vote") {
+            // Handle agree logic
+            console.log("User agreed with the ApporachMode");
+
+            // Fetch Users Data
+            const user = await User.findById(userId).populate("posts");
+
+
+            return res.status(200).json({
+                sucess: true,
+                message: "User agreed with the ApporachMode",
+                userLat,
+                userLon,
+                user,
+            })
+
+        } else if (action === "disagree_vote") {
+            // Handle disagree logic
+            console.log("User disagreed with the ApporachMode");
+
+
+            return res.status(200).json({
+                sucess: true,
+                message: "User disagreed with the ApporachMode"
+            })
+        };
     } catch (error) {
         console.log(error, error.message);
         return res.status(500).json({
             sucess: false,
-            message:"Server Error in Handling Approach Vote"
+            message: "Server Error in Handling Approach Vote"
         })
     }
 }
