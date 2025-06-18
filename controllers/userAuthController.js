@@ -20,6 +20,7 @@ const cron = require('node-cron');
 const recent = require("../models/recentFriendSchema");
 const { v4: uuidv4 } = require('uuid'); // UUID generator
 const totalTedCoinLogicSchema = require('../models/totalTedCoinLogicSchema');
+const mapSetting = require("../models/mapSettingSchema")
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -5678,7 +5679,7 @@ exports.fetchProfileLocations = async (req, res) => {
     try {
         const userId = req.user.userId
         const { distance } = req.body;
-        const { token, email } = req.body;
+        const { token, email, profileDisplay } = req.body;
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader && authHeader.split(" ")[1];
         const user = await User.findById(userId).select("email");
@@ -5696,6 +5697,11 @@ exports.fetchProfileLocations = async (req, res) => {
             });
         }
 
+        await mapSetting.findOneAndUpdate(
+            { userId },
+            { profileDisplay },
+            { upsert: true, new: true }
+        );
 
         const connections = await ConnectionFilter.find({ userId });
 
@@ -5710,34 +5716,41 @@ exports.fetchProfileLocations = async (req, res) => {
         const userLat = connections[0].location.lattitude;
         const userLon = connections[0].location.longitude;
 
+        if (profileDisplay === true) {
 
-        // Get all other users’ locations
-        const allConnections = await ConnectionFilter.find({
-            userId: { $ne: userId }, // Exclude the current user
-            location: { $exists: true }
-        }).populate('userId', 'profilePic'); // <-- Only populate profilePic
+            // Get all other users’ locations
+            const allConnections = await ConnectionFilter.find({
+                userId: { $ne: userId }, // Exclude the current user
+                location: { $exists: true }
+            }).populate('userId', 'profilePic'); // <-- Only populate profilePic
 
 
-        // Filter those within the distance
-        const nearbyUsers = allConnections.filter(conn => {
-            const loc = conn.location;
-            if (!loc || loc.lattitude == null || loc.longitude == null) return false;
+            // Filter those within the distance
+            const nearbyUsers = allConnections.filter(conn => {
+                const loc = conn.location;
+                if (!loc || loc.lattitude == null || loc.longitude == null) return false;
 
-            const dist = getDistanceFromLatLonInKm(
-                userLat,
-                userLon,
-                loc.lattitude,
-                loc.longitude
-            );
-            return dist <= distance;
-        });
+                const dist = getDistanceFromLatLonInKm(
+                    userLat,
+                    userLon,
+                    loc.lattitude,
+                    loc.longitude
+                );
+                return dist <= distance;
+            });
 
+
+            return res.status(200).json({
+                success: true,
+                count: nearbyUsers.length,
+                users: nearbyUsers
+            });
+        }
 
         return res.status(200).json({
-            success: true,
-            count: nearbyUsers.length,
-            users: nearbyUsers
-        });
+            sucess: true,
+            message: "You Have To Enabled The profileDisplay"
+        })
 
     } catch (error) {
         console.log(error, error.message);
@@ -5753,7 +5766,7 @@ exports.fetchProfileLocations = async (req, res) => {
 exports.apporachModeToAUser = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { apporachId, email, token } = req.body;
+        const { apporachId, email, token, profileDisplay, apporachMode } = req.body;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader && authHeader.split(" ")[1];
@@ -5780,80 +5793,95 @@ exports.apporachModeToAUser = async (req, res) => {
             });
         }
 
-        await Notification.create({
-            userId: apporachId,
-            type: "Approval",
-            message: `User ${user.userName} has sent an approach request.`,
-        });
 
-        const apporachUser = await User.findById(apporachId)
+        await mapSetting.findOneAndUpdate(
+            { userId },
+            { profileDisplay, apporachMode },
+            { upsert: true, new: true }
+        );
+        
 
-        if (!apporachUser) {
-            return res.status(404).json({
-                sucess: false,
-                message: "Approach user not found"
+        if (profileDisplay === true && apporachMode === true) {
+            await Notification.create({
+                userId: apporachId,
+                type: "Approval",
+                message: `User ${user.userName} has sent an approach request.`,
             });
-        }
 
-        // Send FCM notification to the apporach user
-        if (apporachUser.fcmToken) {
-            await admin.messaging().send({
-                token: apporachUser.fcmToken,
-                notification: {
-                    title: "New Approach Request",
-                    body: `User ${user.userName} has sent you an approach request.`,
-                },
-                data: {
-                    actionType: "Approval",
-                    giverId: userId.toString(),
-                    giverName: user.userName,
-                    giverProfilePic: user.profilePic || "",
-                    // Button data for Flutter to handle
-                    hasButtons: "true",
-                    buttonType: "agree_disagree",
-                    buttons: JSON.stringify([
-                        {
-                            id: "agree",
-                            text: "✅ Agree",
-                            action: "agree_vote",
-                            color: "#4CAF50"
-                        },
-                        {
-                            id: "disagree",
-                            text: "❌ Disagree",
-                            action: "disagree_vote",
-                            color: "#F44336"
-                        }
-                    ]),
-                    // Add click action for Android
-                    click_action: "FLUTTER_NOTIFICATION_CLICK"
-                },
-                // Android specific configuration
-                android: {
+            const apporachUser = await User.findById(apporachId)
+
+            if (!apporachUser) {
+                return res.status(404).json({
+                    sucess: false,
+                    message: "Approach user not found"
+                });
+            }
+
+            // Send FCM notification to the apporach user
+            if (apporachUser.fcmToken) {
+                await admin.messaging().send({
+                    token: apporachUser.fcmToken,
                     notification: {
                         title: "New Approach Request",
                         body: `User ${user.userName} has sent you an approach request.`,
-                        priority: "high",
-                        defaultSound: true,
-                        defaultVibrateTimings: true,
-                        clickAction: "FLUTTER_NOTIFICATION_CLICK"
                     },
                     data: {
                         actionType: "Approval",
                         giverId: userId.toString(),
                         giverName: user.userName,
                         giverProfilePic: user.profilePic || "",
+                        // Button data for Flutter to handle
                         hasButtons: "true",
-                        buttonType: "agree_disagree"
-                    }
-                },
+                        buttonType: "agree_disagree",
+                        buttons: JSON.stringify([
+                            {
+                                id: "agree",
+                                text: "✅ Agree",
+                                action: "agree_vote",
+                                color: "#4CAF50"
+                            },
+                            {
+                                id: "disagree",
+                                text: "❌ Disagree",
+                                action: "disagree_vote",
+                                color: "#F44336"
+                            }
+                        ]),
+                        // Add click action for Android
+                        click_action: "FLUTTER_NOTIFICATION_CLICK"
+                    },
+                    // Android specific configuration
+                    android: {
+                        notification: {
+                            title: "New Approach Request",
+                            body: `User ${user.userName} has sent you an approach request.`,
+                            priority: "high",
+                            defaultSound: true,
+                            defaultVibrateTimings: true,
+                            clickAction: "FLUTTER_NOTIFICATION_CLICK"
+                        },
+                        data: {
+                            actionType: "Approval",
+                            giverId: userId.toString(),
+                            giverName: user.userName,
+                            giverProfilePic: user.profilePic || "",
+                            hasButtons: "true",
+                            buttonType: "agree_disagree"
+                        }
+                    },
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Approach request sent successfully",
             });
         }
 
         return res.status(200).json({
-            success: true,
-            message: "Approach request sent successfully",
-        });
+            sucess: true,
+            message: "Please Enabled profileDisplay and apporachMode"
+        })
 
     } catch (error) {
         console.log(error, error.message);

@@ -3888,9 +3888,9 @@ router.post("/deleteAPost",authMiddelWere,deleteAPost)
  * @swagger
  * /user/fetchProfileLocations:
  *   post:
- *     summary: Fetch users within a specified distance from the current user's location
+ *     summary: Fetch nearby user profile locations within a given distance.
  *     tags:
- *       - Map
+ *       - Map & Location
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -3899,19 +3899,30 @@ router.post("/deleteAPost",authMiddelWere,deleteAPost)
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - distance
+ *               - email
+ *               - token
+ *               - profileDisplay
  *             properties:
- *               email:
- *                 type: string
- *                 example: "user@example.com"
- *               token:
- *                 type: string
- *                 example: "abcdef123456"
  *               distance:
  *                 type: number
- *                 example: 3
+ *                 description: Distance in kilometers to filter nearby users
+ *                 example: 5
+ *               email:
+ *                 type: string
+ *                 description: Email of the user for verification
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 description: Bearer token from Authorization header
+ *               profileDisplay:
+ *                 type: boolean
+ *                 description: Whether profile visibility is enabled or not
+ *                 example: true
  *     responses:
  *       200:
- *         description: List of users within the given distance
+ *         description: Successfully fetched nearby users or profileDisplay is disabled
  *         content:
  *           application/json:
  *             schema:
@@ -3919,47 +3930,31 @@ router.post("/deleteAPost",authMiddelWere,deleteAPost)
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
  *                 count:
  *                   type: number
- *                   example: 2
+ *                   description: Number of nearby users
  *                 users:
  *                   type: array
+ *                   description: Array of nearby users with profilePic
  *                   items:
  *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                       userId:
- *                         type: object
- *                         properties:
- *                           _id:
- *                             type: string
- *                           profilePic:
- *                             type: string
- *                       location:
- *                         type: object
- *                         properties:
- *                           lattitude:
- *                             type: number
- *                           longitude:
- *                             type: number
+ *                 message:
+ *                   type: string
  *       401:
- *         description: Unauthorized - Invalid token or email
+ *         description: Invalid token or email
  *       404:
  *         description: Location not found for this user
  *       500:
- *         description: Server Error
+ *         description: Server Error in FetchProfileLocations
  */
 router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
 /**
  * @swagger
  * /user/apporachModeToAUser:
  *   post:
- *     summary: Send an approach request to another user
- *     description: Authenticated user sends an approach request to another user. A notification is created and sent via FCM to the target user.
+ *     summary: Send an approach request to another user with optional push notification.
  *     tags:
- *       - Approach
+ *       - Map & Location
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -3972,19 +3967,30 @@ router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
  *               - apporachId
  *               - email
  *               - token
+ *               - profileDisplay
+ *               - apporachMode
  *             properties:
  *               apporachId:
  *                 type: string
- *                 description: The ID of the user being approached.
+ *                 description: ID of the user to whom the approach request is sent
  *               email:
  *                 type: string
- *                 description: Email of the requesting user for additional validation.
+ *                 description: Email of the sender user (used for validation)
+ *                 example: user@example.com
  *               token:
  *                 type: string
- *                 description: Token for double-check validation (should match authorization header).
+ *                 description: Bearer token for authentication
+ *               profileDisplay:
+ *                 type: boolean
+ *                 description: Whether the profile is visible to others
+ *                 example: true
+ *               apporachMode:
+ *                 type: boolean
+ *                 description: Whether the user has enabled approach mode
+ *                 example: true
  *     responses:
  *       200:
- *         description: Approach request sent successfully.
+ *         description: Approach request sent successfully or required settings are disabled
  *         content:
  *           application/json:
  *             schema:
@@ -3995,13 +4001,13 @@ router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
  *                 message:
  *                   type: string
  *       400:
- *         description: Bad request, missing apporachId.
+ *         description: Missing apporachId
  *       401:
- *         description: Unauthorized due to invalid token or email.
+ *         description: Invalid token or email
  *       404:
- *         description: Approach user not found.
+ *         description: Target user not found
  *       500:
- *         description: Internal server error.
+ *         description: Server error in handling approach mode
  */
 router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
 /**
@@ -4010,7 +4016,7 @@ router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
  *   post:
  *     summary: Handle user's vote (agree_vote/disagree_vote) for Approach Mode
  *     tags:
- *       - Approach Mode
+ *       - Map & Location
  *     security:
  *       - bearerAuth: []
  *     requestBody:
