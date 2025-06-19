@@ -5719,10 +5719,23 @@ exports.fetchProfileLocations = async (req, res) => {
         if (profileDisplay === true) {
 
             // Get all other users’ locations
+            // const allConnections = await ConnectionFilter.find({
+            //     userId: { $ne: userId }, // Exclude the current user
+            //     location: { $exists: true }
+            // }).populate('userId', 'profilePic posts fullName userName'); // <-- Only populate profilePic
+
             const allConnections = await ConnectionFilter.find({
-                userId: { $ne: userId }, // Exclude the current user
+                userId: { $ne: userId },
                 location: { $exists: true }
-            }).populate('userId', 'profilePic posts fullName userName'); // <-- Only populate profilePic
+            }).populate({
+                path: 'userId',
+                select: 'profilePic posts fullName userName',
+                populate: {
+                    path: 'posts',
+                    model: 'Postcreate', // Replace if your Post model has a different name
+                    //select: 'caption image createdAt' // Optional: Limit fields you want from each post
+                }
+            });
 
 
             // Filter those within the distance
@@ -5799,7 +5812,7 @@ exports.apporachModeToAUser = async (req, res) => {
             { profileDisplay, apporachMode },
             { upsert: true, new: true }
         );
-        
+
 
         if (profileDisplay === true && apporachMode === true) {
             await Notification.create({
