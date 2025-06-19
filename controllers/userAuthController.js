@@ -5722,7 +5722,7 @@ exports.fetchProfileLocations = async (req, res) => {
             const allConnections = await ConnectionFilter.find({
                 userId: { $ne: userId }, // Exclude the current user
                 location: { $exists: true }
-            }).populate('userId', 'profilePic'); // <-- Only populate profilePic
+            }).populate('userId', 'profilePic posts fullName userName'); // <-- Only populate profilePic
 
 
             // Filter those within the distance
