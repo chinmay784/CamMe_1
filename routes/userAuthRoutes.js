@@ -72,7 +72,9 @@ const {
   sendReqinApporach,
   acceptReqApporach,
   rejectReqApporach,
-  ReqApporachShow
+  ReqApporachShow,
+  fetchFriendsApporachController,
+  apporachModeProtectorOn
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -4175,6 +4177,131 @@ router.post("/rejectReqApporach",authMiddelWere,rejectReqApporach);
  *         description: Server error while retrieving requests
  */
 router.post("/ReqApporachShow",authMiddelWere,ReqApporachShow)
+/**
+ * @swagger
+ * /user/fetchFriendsApporachController:
+ *   post:
+ *     summary: Fetch user's friends list with basic info.
+ *     description: Retrieves the list of friends (userAllFriends) for the authenticated user, including their userName, fullName, email, and profilePic.
+ *     tags:
+ *       - Approach Mode
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: your_jwt_token_here
+ *     responses:
+ *       200:
+ *         description: List of user's friends or error message.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 friend_List:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 60f7cbb96f354826d8e9a9a3
+ *                       userName:
+ *                         type: string
+ *                         example: john_doe
+ *                       fullName:
+ *                         type: string
+ *                         example: John Doe
+ *                       email:
+ *                         type: string
+ *                         example: john@example.com
+ *                       profilePic:
+ *                         type: string
+ *                         example: https://example.com/image.jpg
+ *       401:
+ *         description: Unauthorized – Invalid token or email.
+ *       500:
+ *         description: Server error.
+ */
+router.post("/fetchFriendsApporachController",authMiddelWere,fetchFriendsApporachController);
+/**
+ * @swagger
+ * /user/apporachModeProtectorOn:
+ *   post:
+ *     summary: Enable Approach Mode Protector and fetch locations of user's friends.
+ *     description: This endpoint enables the approach mode protector and returns the locations of all friends if the mode is on.
+ *     tags:
+ *       - Approach Mode
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - apporachMode
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: your_jwt_token_here
+ *               apporachMode:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Success or failure message with friend locations if applicable.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Inside in Apporach Mode
+ *                 Location:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       lattitude:
+ *                         type: number
+ *                         example: 28.6139
+ *                       longitude:
+ *                         type: number
+ *                         example: 77.2090
+ *       401:
+ *         description: Unauthorized (Invalid token or email).
+ *       500:
+ *         description: Server error.
+ */
+router.post("/apporachModeProtectorOn",authMiddelWere,apporachModeProtectorOn)
+
 
 // /**
 //  * @swagger

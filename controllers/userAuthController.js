@@ -6300,3 +6300,110 @@ exports.ReqApporachShow = async (req, res) => {
         })
     }
 }
+
+
+
+exports.fetchFriendsApporachController = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+        if (!email || !token || userId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please Provide email or token or userId"
+            })
+        }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId).populate("userAllFriends", "userName fullName email profilePic");
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        // fetch all user_Friends_List
+        const friend_List = user.userAllFriends
+        return res.status(200).json({
+            sucess: true,
+            friend_List,
+        })
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in FetchFriendsApporach"
+        })
+    }
+}
+
+
+exports.apporachModeProtectorOn = async (req, res) => {
+    try {
+        const userId  = req.user.userId;
+        const { email, token, apporachMode } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId).populate("userAllFriends", "userName fullName email profilePic");
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        if (apporachMode === true || apporachMode === "true") {
+
+            // fetch friends Locations and send 
+            const allfriends = user.userAllFriends
+
+            let Location = await Promise.all(
+                allfriends.map(async (frnd) => {
+                    const frndLocation = await ConnectionFilter.find({ userId: frnd._id });
+                    return {
+                        lattitude: frndLocation[0].location.lattitude,
+                        longitude: frndLocation[0].location.longitude
+                    };
+                })
+            );
+
+            return res.status(200).json({
+                sucess: true,
+                message: "Inside in Apporach Mode",
+                Location
+            })
+        } else {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please turn on apporach Mode"
+            })
+        }
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in apporach Mode On "
+        })
+    }
+}
