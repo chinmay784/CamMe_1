@@ -68,7 +68,11 @@ const {
   deleteAPost,
   fetchProfileLocations,
   apporachModeToAUser,
-  handelApporachVote
+  handelApporachVote,
+  sendReqinApporach,
+  acceptReqApporach,
+  rejectReqApporach,
+  ReqApporachShow
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -3950,11 +3954,12 @@ router.post("/deleteAPost",authMiddelWere,deleteAPost)
 router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
 /**
  * @swagger
- * /user/apporachModeToAUser:
+ * /user/sendReqinApporach:
  *   post:
- *     summary: Send an approach request to another user with optional push notification.
+ *     summary: Send an approach request to another user.
+ *     description: Sends an approach request from the logged-in user to another user if approach mode is enabled.
  *     tags:
- *       - Map & Location
+ *       - Approach Mode
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -3964,59 +3969,53 @@ router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
  *           schema:
  *             type: object
  *             required:
- *               - apporachId
  *               - email
  *               - token
- *               - profileDisplay
+ *               - requestId
  *               - apporachMode
  *             properties:
- *               apporachId:
- *                 type: string
- *                 description: ID of the user to whom the approach request is sent
  *               email:
  *                 type: string
- *                 description: Email of the sender user (used for validation)
  *                 example: user@example.com
  *               token:
  *                 type: string
- *                 description: Bearer token for authentication
- *               profileDisplay:
- *                 type: boolean
- *                 description: Whether the profile is visible to others
- *                 example: true
+ *                 description: JWT token from Authorization header
+ *                 example: eyJhbGciOiJIUzI1NiIsInR...
+ *               requestId:
+ *                 type: string
+ *                 description: ID of the user to whom the request is being sent
+ *                 example: 665f390c3b2376aaf92e80e0
  *               apporachMode:
  *                 type: boolean
- *                 description: Whether the user has enabled approach mode
  *                 example: true
  *     responses:
  *       200:
- *         description: Approach request sent successfully or required settings are disabled
+ *         description: Response message about request status
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 success:
+ *                 sucess:
  *                   type: boolean
+ *                   example: true
  *                 message:
  *                   type: string
- *       400:
- *         description: Missing apporachId
+ *                   example: "Req Approach Send"
  *       401:
- *         description: Invalid token or email
- *       404:
- *         description: Target user not found
+ *         description: Unauthorized or invalid email/token
  *       500:
- *         description: Server error in handling approach mode
+ *         description: Server Error in make Request
  */
-router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
+router.post("/sendReqinApporach",authMiddelWere,sendReqinApporach)
 /**
  * @swagger
- * /user/handelApporachVote:
+ * /user/acceptReqApporach:
  *   post:
- *     summary: Handle user's vote (agree_vote/disagree_vote) for Approach Mode
+ *     summary: Accept an approach request from another user.
+ *     description: Logged-in user accepts an incoming approach request and notifies the sender with current location.
  *     tags:
- *       - Map & Location
+ *       - Approach Mode
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -4028,22 +4027,77 @@ router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
  *             required:
  *               - email
  *               - token
- *               - action
+ *               - requestId
  *             properties:
  *               email:
  *                 type: string
  *                 example: user@example.com
  *               token:
  *                 type: string
- *                 example: your-auth-token
- *               action:
+ *                 description: JWT token from Authorization header
+ *                 example: eyJhbGciOiJIUzI1NiIsInR...
+ *               requestId:
  *                 type: string
- *                 enum: [agree_vote, disagree_vote]
- *                 description: User action on approach mode
- *                 example: agree_vote
+ *                 description: ID of the user who sent the approach request
+ *                 example: 665f390c3b2376aaf92e80e0
  *     responses:
  *       200:
- *         description: Vote handled successfully
+ *         description: Approach request accepted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Approach Accepted"
+ *       401:
+ *         description: Invalid token or email
+ *       404:
+ *         description: Location not found
+ *       500:
+ *         description: Server Error in Accept Request apporach
+ */
+router.post("/acceptReqApporach",authMiddelWere,acceptReqApporach)
+/**
+ * @swagger
+ * /user/rejectReqApporach:
+ *   post:
+ *     summary: Reject an incoming approach request
+ *     description: Allows the logged-in user to reject a pending approach request. A notification will be sent to the requester.
+ *     tags:
+ *       - Approach Mode
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - requestId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email of the logged-in user
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 description: JWT token of the user (must match Authorization header)
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+ *               requestId:
+ *                 type: string
+ *                 description: ID of the user who sent the approach request
+ *                 example: 665f390c3b2376aaf92e80e0
+ *     responses:
+ *       200:
+ *         description: Approach request rejected successfully
  *         content:
  *           application/json:
  *             schema:
@@ -4054,23 +4108,197 @@ router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: User agreed with the ApporachMode
- *                 userLat:
- *                   type: number
- *                   example: 17.385044
- *                 userLon:
- *                   type: number
- *                   example: 78.486671
- *                 user:
- *                   type: object
- *                   description: Populated user data including posts
+ *                   example: Approach Rejected
+ *       400:
+ *         description: Missing required fields like userId or requestId
  *       401:
  *         description: Invalid token or email
  *       404:
- *         description: Location not found for this user
+ *         description: No approach request found
  *       500:
- *         description: Server Error in Handling Approach Vote
+ *         description: Server error while rejecting the request
  */
-router.post("/handelApporachVote",authMiddelWere,handelApporachVote)
+router.post("/rejectReqApporach",authMiddelWere,rejectReqApporach);
+/**
+ * @swagger
+ * /user/ReqApporachShow:
+ *   post:
+ *     summary: Show all pending approach requests
+ *     description: Returns a list of all users who have sent a pending approach request to the logged-in user.
+ *     tags:
+ *       - Approach Mode
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Logged-in user's email for verification
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 description: JWT token of the user (must match Authorization header)
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+ *     responses:
+ *       200:
+ *         description: List of pending approach requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 ReqApporach:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       sender:
+ *                         type: object
+ *                         description: The user who sent the request
+ *                       status:
+ *                         type: string
+ *                         example: pending
+ *       401:
+ *         description: Invalid token or email
+ *       500:
+ *         description: Server error while retrieving requests
+ */
+router.post("/ReqApporachShow",authMiddelWere,ReqApporachShow)
+
+// /**
+//  * @swagger
+//  * /user/apporachModeToAUser:
+//  *   post:
+//  *     summary: Send an approach request to another user with optional push notification.
+//  *     tags:
+//  *       - Map & Location
+//  *     security:
+//  *       - bearerAuth: []
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         application/json:
+//  *           schema:
+//  *             type: object
+//  *             required:
+//  *               - apporachId
+//  *               - email
+//  *               - token
+//  *               - profileDisplay
+//  *               - apporachMode
+//  *             properties:
+//  *               apporachId:
+//  *                 type: string
+//  *                 description: ID of the user to whom the approach request is sent
+//  *               email:
+//  *                 type: string
+//  *                 description: Email of the sender user (used for validation)
+//  *                 example: user@example.com
+//  *               token:
+//  *                 type: string
+//  *                 description: Bearer token for authentication
+//  *               profileDisplay:
+//  *                 type: boolean
+//  *                 description: Whether the profile is visible to others
+//  *                 example: true
+//  *               apporachMode:
+//  *                 type: boolean
+//  *                 description: Whether the user has enabled approach mode
+//  *                 example: true
+//  *     responses:
+//  *       200:
+//  *         description: Approach request sent successfully or required settings are disabled
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                 message:
+//  *                   type: string
+//  *       400:
+//  *         description: Missing apporachId
+//  *       401:
+//  *         description: Invalid token or email
+//  *       404:
+//  *         description: Target user not found
+//  *       500:
+//  *         description: Server error in handling approach mode
+//  */
+// router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
+// /**
+//  * @swagger
+//  * /user/handelApporachVote:
+//  *   post:
+//  *     summary: Handle user's vote (agree_vote/disagree_vote) for Approach Mode
+//  *     tags:
+//  *       - Map & Location
+//  *     security:
+//  *       - bearerAuth: []
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         application/json:
+//  *           schema:
+//  *             type: object
+//  *             required:
+//  *               - email
+//  *               - token
+//  *               - action
+//  *             properties:
+//  *               email:
+//  *                 type: string
+//  *                 example: user@example.com
+//  *               token:
+//  *                 type: string
+//  *                 example: your-auth-token
+//  *               action:
+//  *                 type: string
+//  *                 enum: [agree_vote, disagree_vote]
+//  *                 description: User action on approach mode
+//  *                 example: agree_vote
+//  *     responses:
+//  *       200:
+//  *         description: Vote handled successfully
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: true
+//  *                 message:
+//  *                   type: string
+//  *                   example: User agreed with the ApporachMode
+//  *                 userLat:
+//  *                   type: number
+//  *                   example: 17.385044
+//  *                 userLon:
+//  *                   type: number
+//  *                   example: 78.486671
+//  *                 user:
+//  *                   type: object
+//  *                   description: Populated user data including posts
+//  *       401:
+//  *         description: Invalid token or email
+//  *       404:
+//  *         description: Location not found for this user
+//  *       500:
+//  *         description: Server Error in Handling Approach Vote
+//  */
+// router.post("/handelApporachVote",authMiddelWere,handelApporachVote)
 
 module.exports = router;                       

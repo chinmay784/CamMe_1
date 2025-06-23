@@ -21,6 +21,7 @@ const recent = require("../models/recentFriendSchema");
 const { v4: uuidv4 } = require('uuid'); // UUID generator
 const totalTedCoinLogicSchema = require('../models/totalTedCoinLogicSchema');
 const mapSetting = require("../models/mapSettingSchema")
+const ApporachMode = require("../models/ApporachRequestSchema")
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -5982,6 +5983,320 @@ exports.handelApporachVote = async (req, res) => {
         return res.status(500).json({
             sucess: false,
             message: "Server Error in Handling Approach Vote"
+        })
+    }
+}
+
+
+
+exports.sendReqinApporach = async (req, res) => {
+    try {
+        const { email, token, requestId, apporachMode } = req.body;
+        const userId = req.user.userId
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+        const user = await User.findById(userId);
+        const reqUser = await User.findById(requestId);
+
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid email"
+            });
+        }
+
+        if (!userId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please provide userId"
+            })
+        }
+
+        if (!requestId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please provide requestId"
+            })
+        }
+
+        if (apporachMode === true || apporachMode === "true") {
+            const isExistingApporachRequest = await ApporachMode.findOne({
+                sender: userId,
+                receiver: requestId,
+                status: "pending"
+            })
+
+            if (isExistingApporachRequest) {
+                return res.status(200).json({
+                    sucess: false,
+                    message: "Approach Request Already Send"
+                })
+            }
+
+            await ApporachMode.create({
+                sender: userId,
+                receiver: requestId,
+                status: "pending",
+            });
+
+
+            await Notification.create({
+                userId: requestId,
+                type: "Approach",
+                message: `${user.userName} has sent you a Approach .`,
+            });
+
+            if (reqUser.fcmToken) {
+                await admin.messaging().send({
+                    token: reqUser.fcmToken,
+                    notification: {
+                        title: "Approach mode",
+                        body: `${user.userName} has sent you a Approach .`,
+                    },
+                    data: {
+                        actionType: "Approach",
+                        senderId: user._id.toString(),
+                        reciverId: reqUser.toString(),
+                        senderName: String(user.userName), // in case it's not a string
+                        senderProfilePic: String(user.profilePic || ""),
+                    },
+                });
+
+                return res.status(200).json({
+                    sucess: true,
+                    message: "Req Approach Send"
+                })
+            }
+        } else {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please Turn on the apporachMode"
+            })
+        }
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in make Requist"
+        })
+    }
+}
+
+
+
+exports.acceptReqApporach = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token, requestId } = req.body;
+        //const { requestId, user } = req.body;
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId);
+        const reqUser = await User.findById(requestId);
+
+        if (!userId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide userId"
+            });
+        };
+
+        if (!requestId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide requestId"
+            });
+        };
+
+        const ReqApporach = await ApporachMode.findOne({ sender: requestId, receiver: userId });
+        ReqApporach.status = "accepted";
+        await ReqApporach.save();
+
+
+        const connections = await ConnectionFilter.find({ userId });
+
+        if (!connections.length || !connections[0].location) {
+            return res.status(200).json({
+                success: false,
+                message: "Location not found for this user."
+            });
+        };
+
+        const userLat = connections[0].location.lattitude;
+        const userLon = connections[0].location.longitude;
+
+        if (reqUser.fcmToken) {
+            await admin.messaging().send({
+                token: reqUser.fcmToken,
+                notification: {
+                    title: "Approach Accepted",
+                    body: `${user.userName} has accepted your approach request.`,
+                },
+                data: {
+                    actionType: "Approach",
+                    senderId: user._id.toString(),
+                    receiverId: reqUser._id.toString(),
+                    senderName: String(user.userName),
+                    senderProfilePic: String(user.profilePic || ""),
+                    userLat: userLat.toString(),
+                    userLon: userLon.toString(),
+                    click_action: "FLUTTER_NOTIFICATION_CLICK"
+                },
+                android: {
+                    notification: {
+                        title: "Approach Accepted",
+                        body: `${user.userName} has accepted your approach request.`,
+                        priority: "high",
+                        defaultSound: true,
+                        defaultVibrateTimings: true,
+                        clickAction: "FLUTTER_NOTIFICATION_CLICK"
+                    }
+                }
+            });
+        }
+
+        return res.status(200).json({
+            sucess: true,
+            message: "Approach Accepted",
+        })
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in Accept Request apporach"
+        })
+    }
+}
+
+
+
+exports.rejectReqApporach = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token, requestId } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+
+        const user = await User.findById(userId);
+        const reqUser = await User.findById(requestId);
+
+        if (!userId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide userId"
+            });
+        }
+
+        if (!requestId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide requestId"
+            });
+        }
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        const ReqApporach = await ApporachMode.findOne({ sender: requestId, receiver: userId });
+        if (!ReqApporach) {
+            return res.status(200).json({
+                success: false,
+                message: "No approach request found"
+            });
+        }
+
+        ReqApporach.status = "rejected";
+        await ReqApporach.save();
+
+        // Send FCM notification to request user only
+        if (reqUser.fcmToken) {
+            await admin.messaging().send({
+                token: reqUser.fcmToken,
+                notification: {
+                    title: "Approach Rejected",
+                    body: `${user.userName} has rejected your approach request.`,
+                },
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Approach Rejected"
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server Error in rejectReqApporach"
+        });
+    }
+};
+
+
+
+exports.ReqApporachShow = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId);
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        const ReqApporach = await ApporachMode.find({ receiver: userId, status: "pending" }).populate("sender")
+        if (!ReqApporach) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Apporach Not Found",
+            })
+        }
+
+        return res.status(200).json({
+            sucess: true,
+            ReqApporach,
+        })
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in ReqApporachShow"
         })
     }
 }
