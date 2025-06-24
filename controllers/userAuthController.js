@@ -855,7 +855,8 @@ exports.logoutUser = async (req, res) => {
 
         const expiresAt = new Date(decoded.exp * 1000); // Safe to use now
 
-        const blacklisted = new BlacklistedToken({ Token: rawToken, expiresAt });
+        const blacklisted = new BlacklistedToken({ token: rawToken, expiresAt });
+
         await blacklisted.save();
 
 
