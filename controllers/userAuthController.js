@@ -842,13 +842,22 @@ exports.logoutUser = async (req, res) => {
         }
 
         const Token = req.header("Authorization"); // Bearer <token>
-        if (!Token) return res.status(200).json({ message: "Token not provided." });
+        if (!Token) {
+            return res.status(401).json({ message: "Token not provided." });
+        }
 
-        const decoded = jwt.decode(Token);
-        const expiresAt = new Date(decoded.exp * 1000); // JWT exp is in seconds
+        const rawToken = Token.split(" ")[1];
+        const decoded = jwt.decode(rawToken);
 
-        const blacklisted = new BlacklistedToken({ Token, expiresAt });
+        if (!decoded || !decoded.exp) {
+            return res.status(400).json({ message: "Invalid or expired token." });
+        }
+
+        const expiresAt = new Date(decoded.exp * 1000); // Safe to use now
+
+        const blacklisted = new BlacklistedToken({ Token: rawToken, expiresAt });
         await blacklisted.save();
+
 
         // const user = await User.findById(userId);
 
