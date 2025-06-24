@@ -856,7 +856,7 @@ exports.logoutUser = async (req, res) => {
         // const isMatch = await bcrypt.compare(user.password, password);
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
-        const userEmail = await User.findById(userId).select("email");
+        const userEmail = await User.findById(userId)
 
         // Compare provided token with authorized token
         if (token !== authorizedToken) {
@@ -883,11 +883,11 @@ exports.logoutUser = async (req, res) => {
 
         const now = new Date();
 
-        const sessionDuration = Math.floor((now - user.loginStartTime) / 1000);
+        const sessionDuration = Math.floor((now - userEmail.loginStartTime) / 1000);
 
-        user.totalSessionTime += sessionDuration;
-        user.loginStartTime = null; // stop the session timer
-        user.hasExceededLimit = false; // reset for next login
+        userEmail.totalSessionTime += sessionDuration;
+        userEmail.loginStartTime = null; // stop the session timer
+        userEmail.hasExceededLimit = false; // reset for next login
 
         return res.status(200).json({ message: "User logged out successfully." });
 
