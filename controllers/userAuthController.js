@@ -6128,8 +6128,17 @@ exports.acceptReqApporach = async (req, res) => {
         };
 
         const ReqApporach = await ApporachMode.findOne({ sender: requestId, receiver: userId });
+
+        if (!ReqApporach) {
+            return res.status(200).json({
+                success: false,
+                message: "Approach request not found."
+            });
+        }
+
         ReqApporach.status = "accepted";
         await ReqApporach.save();
+
 
 
         const connections = await ConnectionFilter.find({ userId });
