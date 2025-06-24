@@ -6348,10 +6348,10 @@ exports.fetchFriendsApporachController = async (req, res) => {
     }
 }
 
-
+// This is not Need for API
 exports.apporachModeProtectorOn = async (req, res) => {
     try {
-        const userId  = req.user.userId;
+        const userId = req.user.userId;
         const { email, token, apporachMode } = req.body;
 
         const authHeader = req.headers.authorization;
@@ -6407,3 +6407,132 @@ exports.apporachModeProtectorOn = async (req, res) => {
         })
     }
 }
+
+
+
+
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+    const toRad = angle => (Math.PI / 180) * angle;
+    const R = 6371; // Radius of Earth in kilometers
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+};
+
+exports.sendLiveLocationWithInyourFriends = async (req, res) => {
+    try {
+        const userId = req.user.userId
+        const { email, token, data } = req.body;
+
+        if (!email || !token || !data) {
+            return res.status(200).json({
+                success: false,
+                message: `Please Provide all Fields`
+            });
+        }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId)
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        if (!userId || !Array.isArray(data) || data.length === 0) {
+            return res.status(200).json({
+                success: false,
+                message: "User ID and data (array of friend IDs) are required"
+            });
+        }
+
+        const sender = await User.findById(userId);
+        const senderLocation = await ConnectionFilter.findOne({ userId });
+
+        if (!senderLocation?.location) {
+            return res.status(200).json({
+                success: false,
+                message: "Sender location not found"
+            });
+        }
+
+        const senderLat = senderLocation.location.lattitude;
+        const senderLon = senderLocation.location.longitude;
+
+        let notifiedCount = 0;
+        let notifiedUsers = [];
+
+        for (const friendId of data) {
+            const friendLocationDoc = await ConnectionFilter.findOne({ userId: friendId });
+            if (!friendLocationDoc?.location) continue;
+
+            const friendLat = friendLocationDoc.location.lattitude;
+            const friendLon = friendLocationDoc.location.longitude;
+
+            const distance = haversineDistance(senderLat, senderLon, friendLat, friendLon);
+
+            if (distance <= 5) {
+                const friend = await User.findById(friendId);
+                if (friend?.fcmToken) {
+                    await admin.messaging().send({
+                        token: friend.fcmToken,
+                        notification: {
+                            title: "Live Location Shared",
+                            body: `${sender.userName} shared their live location with you.`,
+                        },
+                        data: {
+                            actionType: "LiveLocation",
+                            senderId: sender._id.toString(),
+                            senderName: sender.userName,
+                            lat: senderLat.toString(),
+                            lon: senderLon.toString(),
+                            click_action: "FLUTTER_NOTIFICATION_CLICK"
+                        },
+                        android: {
+                            notification: {
+                                priority: "high",
+                                defaultSound: true,
+                                defaultVibrateTimings: true,
+                            }
+                        }
+                    });
+                    notifiedCount++;
+                    notifiedUsers.push({ friendId, friendName: friend.userName, distance: distance.toFixed(2) });
+                    console.log("Execute This Block")
+                }
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Live location sent to ${notifiedCount} friend(s) within 5km`,
+            notifiedUsers
+        });
+
+    } catch (error) {
+        console.log("Error:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server Error in sendLiveLocationWithInyourFriends"
+        });
+    }
+};
+

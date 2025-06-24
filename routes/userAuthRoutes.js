@@ -74,7 +74,8 @@ const {
   rejectReqApporach,
   ReqApporachShow,
   fetchFriendsApporachController,
-  apporachModeProtectorOn
+  apporachModeProtectorOn,
+  sendLiveLocationWithInyourFriends
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -4240,12 +4241,72 @@ router.post("/ReqApporachShow",authMiddelWere,ReqApporachShow)
  *         description: Server error.
  */
 router.post("/fetchFriendsApporachController",authMiddelWere,fetchFriendsApporachController);
+// /**
+//  * @swagger
+//  * /user/apporachModeProtectorOn:
+//  *   post:
+//  *     summary: Enable Approach Mode Protector and fetch locations of user's friends.
+//  *     description: This endpoint enables the approach mode protector and returns the locations of all friends if the mode is on.
+//  *     tags:
+//  *       - Approach Mode
+//  *     security:
+//  *       - bearerAuth: []
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         application/json:
+//  *           schema:
+//  *             type: object
+//  *             required:
+//  *               - email
+//  *               - token
+//  *               - apporachMode
+//  *             properties:
+//  *               email:
+//  *                 type: string
+//  *                 example: user@example.com
+//  *               token:
+//  *                 type: string
+//  *                 example: your_jwt_token_here
+//  *               apporachMode:
+//  *                 type: boolean
+//  *                 example: true
+//  *     responses:
+//  *       200:
+//  *         description: Success or failure message with friend locations if applicable.
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 sucess:
+//  *                   type: boolean
+//  *                   example: true
+//  *                 message:
+//  *                   type: string
+//  *                   example: Inside in Apporach Mode
+//  *                 Location:
+//  *                   type: array
+//  *                   items:
+//  *                     type: object
+//  *                     properties:
+//  *                       lattitude:
+//  *                         type: number
+//  *                         example: 28.6139
+//  *                       longitude:
+//  *                         type: number
+//  *                         example: 77.2090
+//  *       401:
+//  *         description: Unauthorized (Invalid token or email).
+//  *       500:
+//  *         description: Server error.
+//  */
+router.post("/apporachModeProtectorOn",authMiddelWere,apporachModeProtectorOn)
 /**
  * @swagger
- * /user/apporachModeProtectorOn:
+ * /user/sendLiveLocationWithInyourFriends:
  *   post:
- *     summary: Enable Approach Mode Protector and fetch locations of user's friends.
- *     description: This endpoint enables the approach mode protector and returns the locations of all friends if the mode is on.
+ *     summary: Share live location with friends within 5 km
  *     tags:
  *       - Approach Mode
  *     security:
@@ -4259,48 +4320,57 @@ router.post("/fetchFriendsApporachController",authMiddelWere,fetchFriendsApporac
  *             required:
  *               - email
  *               - token
- *               - apporachMode
+ *               - data
  *             properties:
  *               email:
  *                 type: string
- *                 example: user@example.com
+ *                 example: "user@example.com"
  *               token:
  *                 type: string
- *                 example: your_jwt_token_here
- *               apporachMode:
- *                 type: boolean
- *                 example: true
+ *                 description: Should match the Bearer token in Authorization header
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+ *               data:
+ *                 type: array
+ *                 description: Array of friend user IDs
+ *                 items:
+ *                   type: string
+ *                 example: ["665f3b1e5fd021e3b04e3e4d", "6648f10bd4015c8890d95e72"]
  *     responses:
  *       200:
- *         description: Success or failure message with friend locations if applicable.
+ *         description: Live location sent successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 sucess:
+ *                 success:
  *                   type: boolean
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Inside in Apporach Mode
- *                 Location:
+ *                   example: "Live location sent to 2 friend(s) within 5km"
+ *                 notifiedUsers:
  *                   type: array
  *                   items:
  *                     type: object
  *                     properties:
- *                       lattitude:
- *                         type: number
- *                         example: 28.6139
- *                       longitude:
- *                         type: number
- *                         example: 77.2090
+ *                       friendId:
+ *                         type: string
+ *                         example: "665f3b1e5fd021e3b04e3e4d"
+ *                       friendName:
+ *                         type: string
+ *                         example: "JohnDoe"
+ *                       distance:
+ *                         type: string
+ *                         example: "2.31"
+ *       400:
+ *         description: Missing or invalid input data
  *       401:
- *         description: Unauthorized (Invalid token or email).
+ *         description: Unauthorized (invalid token or email)
  *       500:
- *         description: Server error.
+ *         description: Internal server error
  */
-router.post("/apporachModeProtectorOn",authMiddelWere,apporachModeProtectorOn)
+router.post("/sendLiveLocationWithInyourFriends",authMiddelWere,sendLiveLocationWithInyourFriends)
 
 
 // /**
