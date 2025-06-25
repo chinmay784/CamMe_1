@@ -6002,26 +6002,26 @@ exports.handelApporachVote = async (req, res) => {
 exports.sendReqinApporach = async (req, res) => {
     try {
         const { email, token, requestId, apporachMode } = req.body;
-        const userId = req.user.userId
-
-        const authHeader = req.headers.authorization;
-        const authorizedToken = authHeader && authHeader.split(" ")[1];
+        // const userId = req.user.userId
+        const { userId } = req.body
+        // const authHeader = req.headers.authorization;
+        // const authorizedToken = authHeader && authHeader.split(" ")[1];
         const user = await User.findById(userId);
         const reqUser = await User.findById(requestId);
 
-        if (token !== authorizedToken) {
-            return res.status(401).json({
-                sucess: false,
-                message: "Invalid token"
-            });
-        }
+        // if (token !== authorizedToken) {
+        //     return res.status(401).json({
+        //         sucess: false,
+        //         message: "Invalid token"
+        //     });
+        // }
 
-        if (user.email !== email) {
-            return res.status(401).json({
-                sucess: false,
-                message: "Invalid email"
-            });
-        }
+        // if (user.email !== email) {
+        //     return res.status(401).json({
+        //         sucess: false,
+        //         message: "Invalid email"
+        //     });
+        // }
 
         if (!userId) {
             return res.status(200).json({
@@ -6136,8 +6136,8 @@ exports.acceptReqApporach = async (req, res) => {
             });
         }
 
-        ReqApporach.status = "accepted";
-        await ReqApporach.save();
+        // ReqApporach.status = "accepted";
+        // await ReqApporach.save();
 
 
 
@@ -6182,7 +6182,8 @@ exports.acceptReqApporach = async (req, res) => {
                 }
             });
         }
-
+        ReqApporach.status = "accepted";
+        await ReqApporach.save();
         return res.status(200).json({
             sucess: true,
             message: "Approach Accepted",
@@ -6326,7 +6327,7 @@ exports.fetchFriendsApporachController = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { email, token } = req.body;
-        if (!email || !token || userId) {
+        if (!email || !token || !userId) {
             return res.status(200).json({
                 sucess: false,
                 message: "Please Provide email or token or userId"

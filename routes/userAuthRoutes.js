@@ -4010,7 +4010,7 @@ router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
  *       500:
  *         description: Server Error in make Request
  */
-router.post("/sendReqinApporach",authMiddelWere,sendReqinApporach)
+router.post("/sendReqinApporach",sendReqinApporach)
 /**
  * @swagger
  * /user/acceptReqApporach:
