@@ -6002,26 +6002,26 @@ exports.handelApporachVote = async (req, res) => {
 exports.sendReqinApporach = async (req, res) => {
     try {
         const { email, token, requestId, apporachMode } = req.body;
-        // const userId = req.user.userId
-        const { userId } = req.body
-        // const authHeader = req.headers.authorization;
-        // const authorizedToken = authHeader && authHeader.split(" ")[1];
+         const userId = req.user.userId
+        // const { userId } = req.body
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
         const user = await User.findById(userId);
         const reqUser = await User.findById(requestId);
 
-        // if (token !== authorizedToken) {
-        //     return res.status(401).json({
-        //         sucess: false,
-        //         message: "Invalid token"
-        //     });
-        // }
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid token"
+            });
+        }
 
-        // if (user.email !== email) {
-        //     return res.status(401).json({
-        //         sucess: false,
-        //         message: "Invalid email"
-        //     });
-        // }
+        if (user.email !== email) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid email"
+            });
+        }
 
         if (!userId) {
             return res.status(200).json({
