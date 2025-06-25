@@ -75,7 +75,8 @@ const {
   ReqApporachShow,
   fetchFriendsApporachController,
   apporachModeProtectorOn,
-  sendLiveLocationWithInyourFriends
+  sendLiveLocationWithInyourFriends,
+  fetchMapSetting
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -3955,6 +3956,52 @@ router.post("/deleteAPost",authMiddelWere,deleteAPost)
  *         description: Server Error in FetchProfileLocations
  */
 router.post("/fetchProfileLocations",authMiddelWere,fetchProfileLocations)
+/**
+ * @swagger
+ * /user/fetchMapSetting:
+ *   post:
+ *     summary: Fetch map settings for the authenticated user
+ *     description: Retrieves map settings stored for a specific user based on their ID. Requires a valid token and matching email.
+ *     tags:
+ *       - Map Settings
+ *     security:
+ *       - bearerAuth: []  # Token should be sent in the Authorization header as Bearer token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: your_jwt_token_here
+ *     responses:
+ *       200:
+ *         description: Successfully fetched map setting
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 mapSettingOnAnUserId:
+ *                   type: object
+ *                   description: User-specific map setting object
+ *       401:
+ *         description: Unauthorized - Invalid token or email
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post("/fetchMapSetting",authMiddelWere,fetchMapSetting)
 /**
  * @swagger
  * /user/sendReqinApporach:

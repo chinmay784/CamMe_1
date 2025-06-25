@@ -5999,10 +5999,58 @@ exports.handelApporachVote = async (req, res) => {
 
 
 
+exports.fetchMapSetting = async (req, res) => {
+    try {
+        const userId = req.user.userId
+        const { email, token } = req.body;
+
+        if(!userId || !email || !token){
+            return res.status(200).json({
+                sucess:false,
+                message:"Please Provide userId and email and token"
+            })
+        }
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+        const user = await User.findById(userId)
+
+        if (token !== authorizedToken) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid token"
+            });
+        }
+        if (user.email !== email) {
+            return res.status(401).json({
+                sucess: false,
+                message: "Invalid email"
+            });
+        }
+        // Fetch Map Setting on Basis of UserId
+        const mapSettingOnAnUserId = await mapSetting.findOne({
+            userId
+        });
+
+        return res.status(200).json({
+            sucess: true,
+            mapSettingOnAnUserId,
+        })
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in Fetching Map Setting"
+        })
+    }
+}
+
+
 exports.sendReqinApporach = async (req, res) => {
     try {
         const { email, token, requestId, apporachMode } = req.body;
-         const userId = req.user.userId
+        const userId = req.user.userId
         // const { userId } = req.body
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader && authHeader.split(" ")[1];
@@ -6036,6 +6084,12 @@ exports.sendReqinApporach = async (req, res) => {
                 message: "Please provide requestId"
             })
         }
+
+        await mapSetting.findOneAndUpdate(
+            { userId },
+            { apporachMode },
+            { upsert: true, new: true }
+        );
 
         if (apporachMode === true || apporachMode === "true") {
             const isExistingApporachRequest = await ApporachMode.findOne({
