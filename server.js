@@ -8,6 +8,7 @@ const authRoutes = require("./routes/userAuthRoutes");
 const { dbConnect } = require('./dataBase/db');
 const mongoose = require('mongoose');
 const swaggerSetup = require('./swagger');
+const Message = require("./models/messageModel")
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -23,27 +24,53 @@ const io = new Server(server, {
   }
 });
 
-
-global.io = io;
-global.onlineUsers = new Map();
-
+const users = new Map();
 
 io.on("connection", (socket) => {
-  console.log("User Connected:", socket.id);
+  console.log("🔌 New user connected:", socket.id);
 
-  socket.on("User_Connected", (userId) => {
-    global.onlineUsers.set(userId, socket.id);
-    console.log("Online Users:", global.onlineUsers);
+  // Handle user joining
+  socket.on("join", (userId) => {
+    users.set(userId, socket.id);
+    console.log("✅ User joined:", userId);
   });
 
+  // Handle sending messages
+  socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+    const newMessage = await Message.create({ senderId, receiverId, message });
+
+    // Emit to sender
+    socket.emit("messageSent", newMessage);
+
+    // Emit to receiver if online
+    const receiverSocket = users.get(receiverId);
+    if (receiverSocket) {
+      io.to(receiverSocket).emit("newMessage", newMessage);
+    }
+  });
+
+  // Handle typing indicator
+  socket.on("typing", ({ senderId, receiverId }) => {
+    const receiverSocket = users.get(receiverId);
+    if (receiverSocket) {
+      io.to(receiverSocket).emit("typing", { from: senderId });
+    }
+  });
+
+  // Message read (seen) event
+  socket.on("markAsRead", async ({ messageId }) => {
+    await Message.findByIdAndUpdate(messageId, { isRead: true });
+  });
+
+  // Handle user disconnect
   socket.on("disconnect", () => {
-    for (let [userId, socketId] of global.onlineUsers.entries()) {
+    for (const [userId, socketId] of users.entries()) {
       if (socketId === socket.id) {
-        global.onlineUsers.delete(userId);
+        users.delete(userId);
         break;
       }
     }
-    console.log("User disconnected:", socket.id);
+    console.log("❌ User disconnected:", socket.id);
   });
 });
 

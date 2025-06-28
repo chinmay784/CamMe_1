@@ -76,7 +76,9 @@ const {
   fetchFriendsApporachController,
   apporachModeProtectorOn,
   sendLiveLocationWithInyourFriends,
-  fetchMapSetting
+  fetchMapSetting,
+  sendMessage,
+  getMessages,
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -4418,6 +4420,8 @@ router.post("/apporachModeProtectorOn",authMiddelWere,apporachModeProtectorOn)
  *         description: Internal server error
  */
 router.post("/sendLiveLocationWithInyourFriends",authMiddelWere,sendLiveLocationWithInyourFriends)
+
+router.post("/getMessages",getMessages)
 
 
 // /**

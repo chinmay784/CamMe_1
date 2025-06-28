@@ -6004,10 +6004,10 @@ exports.fetchMapSetting = async (req, res) => {
         const userId = req.user.userId
         const { email, token } = req.body;
 
-        if(!userId || !email || !token){
+        if (!userId || !email || !token) {
             return res.status(200).json({
-                sucess:false,
-                message:"Please Provide userId and email and token"
+                sucess: false,
+                message: "Please Provide userId and email and token"
             })
         }
 
@@ -6610,3 +6610,41 @@ exports.sendLiveLocationWithInyourFriends = async (req, res) => {
     }
 };
 
+
+const Message = require("../models/messageModel")
+// exports.sendMessage = async (req, res) => {
+//     try {
+//         // for testing purpose
+//         const { senderId, receiverId, message } = req.body;
+
+//         if (!senderId || !receiverId || !message) {
+//             return res.status(400).json({ success: false, message: "Missing fields" });
+//         }
+
+//         const newMessage = await Message.create({ senderId, receiverId, message });
+
+//         return res.status(200).json({ success: true, message: newMessage });
+//     } catch (err) {
+//         console.error("Send Message Error:", err);
+//         return res.status(500).json({ success: false, message: "Internal server error" });
+//     }
+// };
+
+
+// Fetch messages between two users
+exports.getMessages = async (req, res) => {
+    try {
+        const { senderId, receiverId } = req.body;
+        const messages = await Message.find({
+            $or: [
+                { senderId, receiverId },
+                { senderId: receiverId, receiverId: senderId }
+            ]
+        }).sort('timestamp');
+
+        res.json({ messages });
+    } catch (err) {
+        console.error("Get Messages Error:", err);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
