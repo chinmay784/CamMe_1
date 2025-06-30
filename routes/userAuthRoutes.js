@@ -4421,7 +4421,42 @@ router.post("/apporachModeProtectorOn",authMiddelWere,apporachModeProtectorOn)
  *         description: Internal server error
  */
 router.post("/sendLiveLocationWithInyourFriends",authMiddelWere,sendLiveLocationWithInyourFriends)
-
+/**
+ * @swagger
+ * /user/getMessages:
+ *   post:
+ *     summary: Fetch all messages between the authenticated user and a specific receiver
+ *     tags:
+ *       - Chat
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - receiverId
+ *             properties:
+ *               receiverId:
+ *                 type: string
+ *                 example: "60a7a1f2e13e2b001c8b4567"
+ *     responses:
+ *       200:
+ *         description: Returns all messages between sender and receiver
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 messages:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Message'
+ *       500:
+ *         description: Internal server error
+ */
 router.post("/getMessages",authMiddelWere,getMessages)
 
 router.post("/FetchPhotoGraphyForHome",authMiddelWere,FetchPhotoGraphyForHome)
