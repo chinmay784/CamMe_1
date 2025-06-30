@@ -79,6 +79,7 @@ const {
   fetchMapSetting,
   sendMessage,
   getMessages,
+  FetchPhotoGraphyForHome,
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -4421,7 +4422,9 @@ router.post("/apporachModeProtectorOn",authMiddelWere,apporachModeProtectorOn)
  */
 router.post("/sendLiveLocationWithInyourFriends",authMiddelWere,sendLiveLocationWithInyourFriends)
 
-router.post("/getMessages",getMessages)
+router.post("/getMessages",authMiddelWere,getMessages)
+
+router.post("/FetchPhotoGraphyForHome",authMiddelWere,FetchPhotoGraphyForHome)
 
 
 // /**

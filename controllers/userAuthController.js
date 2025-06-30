@@ -6634,7 +6634,8 @@ const Message = require("../models/messageModel")
 // Fetch messages between two users
 exports.getMessages = async (req, res) => {
     try {
-        const { senderId, receiverId } = req.body;
+        const senderId = req.user.userId;
+        const {  receiverId } = req.body;
         const messages = await Message.find({
             $or: [
                 { senderId, receiverId },
@@ -6648,3 +6649,53 @@ exports.getMessages = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
+
+
+exports.FetchPhotoGraphyForHome = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId)
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        if (!userId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please Provide userId"
+            });
+        };
+
+        const allPhotoGraphy = await Postcreate.find({
+            userId: { $ne: userId }, // exclude given userId
+            is_photography: true
+        });
+
+        res.status(200).json({
+            success: true,
+            count: allPhotoGraphy.length,
+            allPhotoGraphy
+        });
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server error in Fetch PhotoGraphy for Home "
+        })
+    }
+}
