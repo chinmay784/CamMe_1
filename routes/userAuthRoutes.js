@@ -80,6 +80,8 @@ const {
   sendMessage,
   getMessages,
   FetchPhotoGraphyForHome,
+  friendsInMessingIfOnline,
+  markMsgAsRead,
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -4457,7 +4459,14 @@ router.post("/sendLiveLocationWithInyourFriends",authMiddelWere,sendLiveLocation
  *       500:
  *         description: Internal server error
  */
-router.post("/getMessages",authMiddelWere,getMessages)
+
+// router.post("/getMessages",authMiddelWere,getMessages)
+
+router.post("/friendsInMessingIfOnline",authMiddelWere,friendsInMessingIfOnline);
+
+router.post("/getMessages",authMiddelWere,getMessages);
+
+router.post("/markMsgAsRead",authMiddelWere,markMsgAsRead)
 
 router.post("/FetchPhotoGraphyForHome",authMiddelWere,FetchPhotoGraphyForHome)
 

@@ -489,6 +489,8 @@ exports.loginOtpverify = async (req, res) => {
         user.fcmToken = fcmToken;
         user.loginStartTime = new Date();
         user.hasExceededLimit = false; // reset on login
+        // Update online status
+        user.isOnline = true;
         await user.save()
         console.log(fcmToken)
         console.log(user.fcmToken)
@@ -6611,44 +6613,172 @@ exports.sendLiveLocationWithInyourFriends = async (req, res) => {
 };
 
 
-const Message = require("../models/messageModel")
-// exports.sendMessage = async (req, res) => {
-//     try {
-//         // for testing purpose
-//         const { senderId, receiverId, message } = req.body;
+const Message = require("../models/messageSchema ")
 
-//         if (!senderId || !receiverId || !message) {
-//             return res.status(400).json({ success: false, message: "Missing fields" });
-//         }
-
-//         const newMessage = await Message.create({ senderId, receiverId, message });
-
-//         return res.status(200).json({ success: true, message: newMessage });
-//     } catch (err) {
-//         console.error("Send Message Error:", err);
-//         return res.status(500).json({ success: false, message: "Internal server error" });
-//     }
-// };
-
-
-// Fetch messages between two users
-exports.getMessages = async (req, res) => {
+// New Controller Not ImpleMent Route
+exports.friendsInMessingIfOnline = async (req, res) => {
     try {
-        const senderId = req.user.userId;
-        const {  receiverId } = req.body;
-        const messages = await Message.find({
-            $or: [
-                { senderId, receiverId },
-                { senderId: receiverId, receiverId: senderId }
-            ]
-        }).sort('timestamp');
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+        if (!email || !token || !userId) {
+            return res.status(200).json({
+                sucess: false,
+                message: "Please Provide email or token or userId"
+            })
+        }
 
-        res.json({ messages });
-    } catch (err) {
-        console.error("Get Messages Error:", err);
-        return res.status(500).json({ success: false, message: "Internal server error" });
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId).populate("userAllFriends", "userName fullName email profilePic").sort({ isOnline: -1, lastSeen: -1 });
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        // fetch all user_Friends_List
+        const friend_List = user.userAllFriends
+        return res.status(200).json({
+            sucess: true,
+            friend_List,
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in FetchOnline Friends  "
+        })
     }
 };
+
+
+// Get messages between two users
+// route will be not implemented
+exports.getMessages = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token, reciverId } = req.body;
+        const { page = 1, limit = 50 } = req.query;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId);
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        const messages = await Message.find({
+            $or: [
+                { senderId: userId, receiverId: reciverId },
+                { senderId: reciverId, receiverId: userId }
+            ]
+        }).populate('senderId', 'userName profilePic')
+            .populate('receiverId', 'userName profilePic')
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+
+        return res.status(200).json({
+            sucess: true,
+            msg: messages.reverse(),
+        })
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in Fetching Messages"
+        })
+    }
+}
+
+// app.get('/api/messages/:userId', authenticateToken, async (req, res) => {
+//     try {
+//         const { userId } = req.params;
+//         const { page = 1, limit = 50 } = req.query;
+
+//         const messages = await Message.find({
+//             $or: [
+//                 { senderId: req.user.userId, receiverId: userId },
+//                 { senderId: userId, receiverId: req.user.userId }
+//             ]
+//         })
+//             .populate('senderId', 'username avatar')
+//             .populate('receiverId', 'username avatar')
+//             .sort({ createdAt: -1 })
+//             .limit(limit * 1)
+//             .skip((page - 1) * limit);
+
+//         res.json(messages.reverse());
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server error', error: error.message });
+//     }
+// });
+
+
+// route will be not implemented
+exports.markMsgAsRead = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token, reciverId } = req.body;
+
+        await Message.updateMany(
+            { senderId: reciverId, receiverId: userId, isRead: false },
+            { isRead: true, readAt: new Date() }
+        );
+
+        return res.status(200).json({
+            sucess: true,
+            message: 'Messages marked as read'
+        })
+
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error In Message Read "
+        })
+    }
+}
+
+// Mark messages as read
+// app.put('/api/messages/read/:userId', authenticateToken, async (req, res) => {
+//     try {
+//         const { userId } = req.params;
+
+//         await Message.updateMany(
+//             { senderId: userId, receiverId: req.user.userId, isRead: false },
+//             { isRead: true, readAt: new Date() }
+//         );
+
+//         res.json({ message: 'Messages marked as read' });
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server error', error: error.message });
+//     }
+// });
 
 
 

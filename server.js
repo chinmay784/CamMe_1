@@ -8,7 +8,8 @@ const authRoutes = require("./routes/userAuthRoutes");
 const { dbConnect } = require('./dataBase/db');
 const mongoose = require('mongoose');
 const swaggerSetup = require('./swagger');
-const Message = require("./models/messageModel")
+const Message = require("./models/messageSchema ")
+const User = require("./models/userModel")
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -24,53 +25,146 @@ const io = new Server(server, {
   }
 });
 
-const users = new Map();
+// Socket.io connection handling
+const connectedUsers = new Map();
+const typingUsers = new Map();
 
-io.on("connection", (socket) => {
-  console.log("🔌 New user connected:", socket.id);
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
 
-  // Handle user joining
-  socket.on("join", (userId) => {
-    users.set(userId, socket.id);
-    console.log("✅ User joined:", userId);
-  });
+  // User joins
+  socket.on('join', async (userId) => {
+    try {
+      socket.userId = userId;
+      connectedUsers.set(userId, socket.id);
 
-  // Handle sending messages
-  socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
-    const newMessage = await Message.create({ senderId, receiverId, message });
+      // Update user online status
+      await User.findByIdAndUpdate(userId, {
+        isOnline: true,
+        lastSeen: new Date()
+      });
 
-    // Emit to sender
-    socket.emit("messageSent", newMessage);
+      // Notify others about online status
+      socket.broadcast.emit('userOnline', userId);
 
-    // Emit to receiver if online
-    const receiverSocket = users.get(receiverId);
-    if (receiverSocket) {
-      io.to(receiverSocket).emit("newMessage", newMessage);
+      // Send online users list
+      const onlineUsers = Array.from(connectedUsers.keys());
+      socket.emit('onlineUsers', onlineUsers);
+
+    } catch (error) {
+      console.error('Error in join:', error);
     }
   });
 
-  // Handle typing indicator
-  socket.on("typing", ({ senderId, receiverId }) => {
-    const receiverSocket = users.get(receiverId);
-    if (receiverSocket) {
-      io.to(receiverSocket).emit("typing", { from: senderId });
+  // Send message
+  socket.on('sendMessage', async (data) => {
+    try {
+      const { receiverId, message, messageType = 'text' } = data;
+
+      // Save message to database
+      const newMessage = new Message({
+        senderId: socket.userId,
+        receiverId,
+        message,
+        messageType
+      });
+
+      await newMessage.save();
+
+      // Populate sender info
+      await newMessage.populate('senderId', 'userName profilePic');
+      await newMessage.populate('receiverId', 'userName profilePic');
+
+      // Send to receiver if online
+      const receiverSocketId = connectedUsers.get(receiverId);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('receiveMessage', newMessage);
+      }
+
+      // Send back to sender for confirmation
+      socket.emit('messageDelivered', newMessage);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      socket.emit('messageError', { error: 'Failed to send message' });
     }
   });
 
-  // Message read (seen) event
-  socket.on("markAsRead", async ({ messageId }) => {
-    await Message.findByIdAndUpdate(messageId, { isRead: true });
-  });
+  // Typing indicator
+  socket.on('typing', (data) => {
+    const { receiverId, isTyping } = data;
+    const receiverSocketId = connectedUsers.get(receiverId);
 
-  // Handle user disconnect
-  socket.on("disconnect", () => {
-    for (const [userId, socketId] of users.entries()) {
-      if (socketId === socket.id) {
-        users.delete(userId);
-        break;
+    if (receiverSocketId) {
+      if (isTyping) {
+        typingUsers.set(`${socket.userId}-${receiverId}`, true);
+        io.to(receiverSocketId).emit('userTyping', {
+          userId: socket.userId,
+          isTyping: true
+        });
+      } else {
+        typingUsers.delete(`${socket.userId}-${receiverId}`);
+        io.to(receiverSocketId).emit('userTyping', {
+          userId: socket.userId,
+          isTyping: false
+        });
       }
     }
-    console.log("❌ User disconnected:", socket.id);
+  });
+
+  // Message read receipt
+  socket.on('messageRead', async (data) => {
+    try {
+      const { messageId, senderId } = data;
+
+      // Update message as read
+      await Message.findByIdAndUpdate(messageId, {
+        isRead: true,
+        readAt: new Date()
+      });
+
+      // Notify sender
+      const senderSocketId = connectedUsers.get(senderId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit('messageReadConfirmation', {
+          messageId,
+          readBy: socket.userId,
+          readAt: new Date()
+        });
+      }
+
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+  });
+
+  // Disconnect
+  socket.on('disconnect', async () => {
+    try {
+      if (socket.userId) {
+        connectedUsers.delete(socket.userId);
+
+        // Update user offline status
+        await User.findByIdAndUpdate(socket.userId, {
+          isOnline: false,
+          lastSeen: new Date()
+        });
+
+        // Clear typing indicators
+        for (const [key] of typingUsers) {
+          if (key.startsWith(socket.userId)) {
+            typingUsers.delete(key);
+          }
+        }
+
+        // Notify others about offline status
+        socket.broadcast.emit('userOffline', socket.userId);
+      }
+
+      console.log('User disconnected:', socket.id);
+    } catch (error) {
+      console.error('Error in disconnect:', error);
+    }
   });
 });
 
@@ -82,8 +176,8 @@ swaggerSetup(app);
 
 dbConnect();
 
-
-app.use("/api/v1/user", authRoutes);
+// r
+//app.use("/api/v1/user", authRoutes);
 require("./timerService");
 
 app.get("/", (req, res) => {
