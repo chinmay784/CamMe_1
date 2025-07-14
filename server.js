@@ -176,8 +176,8 @@ swaggerSetup(app);
 
 dbConnect();
 
-// r
-//app.use("/api/v1/user", authRoutes);
+
+app.use("/api/v1/user", authRoutes);
 require("./timerService");
 
 app.get("/", (req, res) => {
