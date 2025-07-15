@@ -57,38 +57,60 @@ io.on('connection', (socket) => {
   });
 
   // Send message
-  socket.on('sendMessage', async (data) => {
+  // socket.on('sendMessage', async (data) => {
+  //   try {
+  //     const { receiverId, message, messageType = 'text' } = data;
+
+  //     // Save message to database
+  //     const newMessage = new Message({
+  //       senderId: socket.userId,
+  //       receiverId,
+  //       message,
+  //       messageType
+  //     });
+
+  //     await newMessage.save();
+
+  //     // Populate sender info
+  //     await newMessage.populate('senderId', 'userName profilePic');
+  //     await newMessage.populate('receiverId', 'userName profilePic');
+
+  //     // Send to receiver if online
+  //     const receiverSocketId = connectedUsers.get(receiverId);
+  //     if (receiverSocketId) {
+  //       io.to(receiverSocketId).emit('receiveMessage', newMessage);
+  //     }
+
+  //     // Send back to sender for confirmation
+  //     socket.emit('messageDelivered', newMessage);
+
+  //   } catch (error) {
+  //     console.error('Error sending message:', error);
+  //     socket.emit('messageError', { error: 'Failed to send message' });
+  //   }
+  // });
+
+  socket.on('sendMessage', async (data, callback) => {
     try {
       const { receiverId, message, messageType = 'text' } = data;
-
-      // Save message to database
-      const newMessage = new Message({
-        senderId: socket.userId,
-        receiverId,
-        message,
-        messageType
-      });
-
+      const newMessage = new Message({ senderId: socket.userId, receiverId, message, messageType });
       await newMessage.save();
-
-      // Populate sender info
       await newMessage.populate('senderId', 'userName profilePic');
       await newMessage.populate('receiverId', 'userName profilePic');
 
-      // Send to receiver if online
       const receiverSocketId = connectedUsers.get(receiverId);
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('receiveMessage', newMessage);
       }
 
-      // Send back to sender for confirmation
       socket.emit('messageDelivered', newMessage);
-
+      callback?.({ success: true, message: newMessage });
     } catch (error) {
       console.error('Error sending message:', error);
-      socket.emit('messageError', { error: 'Failed to send message' });
+      callback?.({ success: false, error: 'Failed to send message' });
     }
   });
+
 
   // Typing indicator
   socket.on('typing', (data) => {
