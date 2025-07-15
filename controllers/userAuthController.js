@@ -6649,6 +6649,7 @@ exports.friendsInMessingIfOnline = async (req, res) => {
         const friend_List = user.userAllFriends
         return res.status(200).json({
             sucess: true,
+            message:"Online Friends are Fetched",
             friend_List,
         });
 

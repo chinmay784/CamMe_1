@@ -4423,13 +4423,14 @@ router.post("/apporachModeProtectorOn",authMiddelWere,apporachModeProtectorOn)
  *         description: Internal server error
  */
 router.post("/sendLiveLocationWithInyourFriends",authMiddelWere,sendLiveLocationWithInyourFriends)
+
 /**
  * @swagger
- * /user/getMessages:
+ * /user/friendsInMessingIfOnline:
  *   post:
- *     summary: Fetch all messages between the authenticated user and a specific receiver
+ *     summary: Get the list of friends who are online (sorted by online status and last seen)
  *     tags:
- *       - Chat
+ *       - Chat & Messaging
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -4439,161 +4440,262 @@ router.post("/sendLiveLocationWithInyourFriends",authMiddelWere,sendLiveLocation
  *           schema:
  *             type: object
  *             required:
- *               - receiverId
+ *               - email
+ *               - token
  *             properties:
- *               receiverId:
+ *               email:
  *                 type: string
- *                 example: "60a7a1f2e13e2b001c8b4567"
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     responses:
  *       200:
- *         description: Returns all messages between sender and receiver
+ *         description: Successfully fetched online friends
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 messages:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Online Friends are Fetched
+ *                 friend_List:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Message'
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 64f8cabc1234567890abcdef
+ *                       userName:
+ *                         type: string
+ *                         example: johndoe
+ *                       fullName:
+ *                         type: string
+ *                         example: John Doe
+ *                       email:
+ *                         type: string
+ *                         example: johndoe@example.com
+ *                       profilePic:
+ *                         type: string
+ *                         example: https://example.com/images/johndoe.jpg
+ *       401:
+ *         description: Unauthorized (token or email invalid)
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
-
-// router.post("/getMessages",authMiddelWere,getMessages)
-
 router.post("/friendsInMessingIfOnline",authMiddelWere,friendsInMessingIfOnline);
-
+/**
+ * @swagger
+ * /user/getMessages:
+ *   post:
+ *     summary: Fetch chat messages between the current user and a receiver
+ *     tags:
+ *       - Chat & Messaging
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of messages per page
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - reciverId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *               reciverId:
+ *                 type: string
+ *                 example: 64f8cabc1234567890abcdef
+ *     responses:
+ *       200:
+ *         description: Successfully fetched messages
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 msg:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       senderId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                       receiverId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                       message:
+ *                         type: string
+ *                         example: Hello, how are you?
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       401:
+ *         description: Unauthorized (Invalid token or email)
+ *       500:
+ *         description: Server error during message fetch
+ */
 router.post("/getMessages",authMiddelWere,getMessages);
-
+/**
+ * @swagger
+ * /user/markMsgAsRead:
+ *   post:
+ *     summary: Mark all unread messages from a specific sender as read
+ *     tags:
+ *       - Chat & Messaging
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - reciverId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *               reciverId:
+ *                 type: string
+ *                 example: 64f8cabc1234567890abcdef
+ *     responses:
+ *       200:
+ *         description: Messages successfully marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucess:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Messages marked as read
+ *       401:
+ *         description: Unauthorized (Invalid token or email)
+ *       500:
+ *         description: Server error while marking messages as read
+ */
 router.post("/markMsgAsRead",authMiddelWere,markMsgAsRead)
-
+/**
+ * @swagger
+ * /user/FetchPhotoGraphyForHome:
+ *   post:
+ *     summary: Fetch all photography posts for the home feed (excluding the current user)
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     responses:
+ *       200:
+ *         description: Successfully fetched photography posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 5
+ *                 allPhotoGraphy:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 64f8cabc1234567890abcdef
+ *                       title:
+ *                         type: string
+ *                         example: Sunset Over Hills
+ *                       imageUrl:
+ *                         type: string
+ *                         example: https://example.com/images/sunset.jpg
+ *                       description:
+ *                         type: string
+ *                         example: A beautiful sunset captured during a hike.
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       userId:
+ *                         type: string
+ *                         example: 64f8aabb2233445566778899
+ *       401:
+ *         description: Unauthorized (Invalid token or email)
+ *       500:
+ *         description: Server error while fetching photography posts
+ */
 router.post("/FetchPhotoGraphyForHome",authMiddelWere,FetchPhotoGraphyForHome)
 
-
-// /**
-//  * @swagger
-//  * /user/apporachModeToAUser:
-//  *   post:
-//  *     summary: Send an approach request to another user with optional push notification.
-//  *     tags:
-//  *       - Map & Location
-//  *     security:
-//  *       - bearerAuth: []
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         application/json:
-//  *           schema:
-//  *             type: object
-//  *             required:
-//  *               - apporachId
-//  *               - email
-//  *               - token
-//  *               - profileDisplay
-//  *               - apporachMode
-//  *             properties:
-//  *               apporachId:
-//  *                 type: string
-//  *                 description: ID of the user to whom the approach request is sent
-//  *               email:
-//  *                 type: string
-//  *                 description: Email of the sender user (used for validation)
-//  *                 example: user@example.com
-//  *               token:
-//  *                 type: string
-//  *                 description: Bearer token for authentication
-//  *               profileDisplay:
-//  *                 type: boolean
-//  *                 description: Whether the profile is visible to others
-//  *                 example: true
-//  *               apporachMode:
-//  *                 type: boolean
-//  *                 description: Whether the user has enabled approach mode
-//  *                 example: true
-//  *     responses:
-//  *       200:
-//  *         description: Approach request sent successfully or required settings are disabled
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 success:
-//  *                   type: boolean
-//  *                 message:
-//  *                   type: string
-//  *       400:
-//  *         description: Missing apporachId
-//  *       401:
-//  *         description: Invalid token or email
-//  *       404:
-//  *         description: Target user not found
-//  *       500:
-//  *         description: Server error in handling approach mode
-//  */
-// router.post("/apporachModeToAUser",authMiddelWere,apporachModeToAUser)
-// /**
-//  * @swagger
-//  * /user/handelApporachVote:
-//  *   post:
-//  *     summary: Handle user's vote (agree_vote/disagree_vote) for Approach Mode
-//  *     tags:
-//  *       - Map & Location
-//  *     security:
-//  *       - bearerAuth: []
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         application/json:
-//  *           schema:
-//  *             type: object
-//  *             required:
-//  *               - email
-//  *               - token
-//  *               - action
-//  *             properties:
-//  *               email:
-//  *                 type: string
-//  *                 example: user@example.com
-//  *               token:
-//  *                 type: string
-//  *                 example: your-auth-token
-//  *               action:
-//  *                 type: string
-//  *                 enum: [agree_vote, disagree_vote]
-//  *                 description: User action on approach mode
-//  *                 example: agree_vote
-//  *     responses:
-//  *       200:
-//  *         description: Vote handled successfully
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 success:
-//  *                   type: boolean
-//  *                   example: true
-//  *                 message:
-//  *                   type: string
-//  *                   example: User agreed with the ApporachMode
-//  *                 userLat:
-//  *                   type: number
-//  *                   example: 17.385044
-//  *                 userLon:
-//  *                   type: number
-//  *                   example: 78.486671
-//  *                 user:
-//  *                   type: object
-//  *                   description: Populated user data including posts
-//  *       401:
-//  *         description: Invalid token or email
-//  *       404:
-//  *         description: Location not found for this user
-//  *       500:
-//  *         description: Server Error in Handling Approach Vote
-//  */
-// router.post("/handelApporachVote",authMiddelWere,handelApporachVote)
 
 module.exports = router;                       
