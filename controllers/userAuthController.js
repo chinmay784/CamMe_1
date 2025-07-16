@@ -22,6 +22,7 @@ const { v4: uuidv4 } = require('uuid'); // UUID generator
 const totalTedCoinLogicSchema = require('../models/totalTedCoinLogicSchema');
 const mapSetting = require("../models/mapSettingSchema")
 const ApporachMode = require("../models/ApporachRequestSchema")
+const Group = require("../models/groupModel")
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -6897,6 +6898,171 @@ exports.FetchPhotoGraphyForHome = async (req, res) => {
         return res.status(500).json({
             sucess: false,
             message: "Server error in Fetch PhotoGraphy for Home "
+        })
+    }
+}
+
+
+exports.createGroup = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const { email, token } = req.body;
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+        if (!userId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide userId"
+            });
+        }
+        if (!email) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide email"
+            });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(200).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        // const user = await User.findById(userId).populate("userAllFriends", "_id userName");
+
+        // const friendIds = user.userAllFriends.map(friend => friend._id);
+        // const allMembers = [...new Set([...friendIds, userId])]; // Add self if needed
+
+        const groupName = `Group by ${user.userName}`;
+
+        const newGroup = new Group({
+            groupName,
+            // members: allMembers,
+            createdBy: userId,
+        });
+
+        await newGroup.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Group created Sucessfully",
+            group: newGroup
+        });
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in Create Group"
+        })
+    }
+}
+
+
+
+exports.addMembersToGroup = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { groupId, friendIds } = req.body;
+
+        const { email, token } = req.body;
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (!userId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide userId"
+            });
+        }
+
+        if (!email) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide email"
+            });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(200).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+
+        if (!groupId || !friendIds || !Array.isArray(friendIds)) {
+            return res.status(200).json({
+                success: false,
+                message: "groupId and friendIds[] are required"
+            });
+        }
+
+        // Validate group
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(200).json({
+                success: false,
+                message: "Group not found"
+            });
+        }
+
+        // Only creator can add members (optional check)
+        if (group.createdBy.toString() !== userId) {
+            return res.status(200).json({
+                success: false,
+                message: "Only group creator can add members"
+            });
+        }
+
+        // Add only new friends (avoid duplicates)
+        const uniqueNewFriends = friendIds.filter(
+            friendId => !group.members.includes(friendId)
+        );
+
+        group.members.push(...uniqueNewFriends);
+        await group.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Members added successfully",
+            group
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            sucess: false,
+            message: "Server Error in Add Members to Group"
         })
     }
 }

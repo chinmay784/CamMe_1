@@ -82,6 +82,8 @@ const {
   FetchPhotoGraphyForHome,
   friendsInMessingIfOnline,
   markMsgAsRead,
+  createGroup,
+  addMembersToGroup,
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -4696,6 +4698,142 @@ router.post("/markMsgAsRead",authMiddelWere,markMsgAsRead)
  *         description: Server error while fetching photography posts
  */
 router.post("/FetchPhotoGraphyForHome",authMiddelWere,FetchPhotoGraphyForHome)
+/**
+ * @swagger
+ * /user/createGroup:
+ *   post:
+ *     summary: Create a new group for the authenticated user
+ *     tags:
+ *       - Group Chat
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 description: Token from frontend for verification
+ *     responses:
+ *       200:
+ *         description: Group creation success or failure message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Group created Sucessfully
+ *                 group:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "64f4d5..."
+ *                     groupName:
+ *                       type: string
+ *                       example: Group by JohnDoe
+ *                     createdBy:
+ *                       type: string
+ *                       example: "64f4a9..."
+ *       500:
+ *         description: Server error during group creation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Server Error in Create Group
+ */
+router.post("/createGroup",authMiddelWere,createGroup)
+/**
+ * @swagger
+ * /user/addMembersToGroup:
+ *   post:
+ *     summary: Add members (friends) to an existing group
+ *     tags:
+ *       - Group Chat
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - groupId
+ *               - friendIds
+ *               - email
+ *               - token
+ *             properties:
+ *               groupId:
+ *                 type: string
+ *                 description: The ID of the group to add members to
+ *                 example: "64f4a9d1b34dca0015f3aa11"
+ *               friendIds:
+ *                 type: array
+ *                 description: Array of user IDs to be added to the group
+ *                 items:
+ *                   type: string
+ *                 example: ["64f4d1bfb34dca0015f3aa55", "64f4d1d4b34dca0015f3aa66"]
+ *               email:
+ *                 type: string
+ *                 description: Email of the logged-in user (for verification)
+ *                 example: user@example.com
+ *               token:
+ *                 type: string
+ *                 description: Token from the frontend for double verification
+ *     responses:
+ *       200:
+ *         description: Members added successfully or an error occurred
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Members added successfully
+ *                 group:
+ *                   type: object
+ *                   description: Updated group object with new members
+ *       500:
+ *         description: Server error while adding members
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Server Error in Add Members to Group
+ */
+router.post("/addMembersToGroup",authMiddelWere,addMembersToGroup)
 
 
 module.exports = router;                       
