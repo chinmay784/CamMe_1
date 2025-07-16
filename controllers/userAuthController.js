@@ -6616,20 +6616,68 @@ exports.sendLiveLocationWithInyourFriends = async (req, res) => {
 const Message = require("../models/messageSchema ")
 
 // New Controller Not ImpleMent Route
+// exports.friendsInMessingIfOnline = async (req, res) => {
+//     try {
+//         const userId = req.user.userId;
+//         const { email, token } = req.body;
+//         if (!email || !token || !userId) {
+//             return res.status(200).json({
+//                 sucess: false,
+//                 message: "Please Provide email or token or userId"
+//             })
+//         }
+
+//         const authHeader = req.headers.authorization;
+//         const authorizedToken = authHeader.split(" ")[1];
+//         const user = await User.findById(userId).populate("userAllFriends", "userName fullName email profilePic").sort({ isOnline: -1, lastSeen: -1 });
+
+//         if (token !== authorizedToken) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Invalid token"
+//             });
+//         }
+
+//         if (user.email !== email) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Invalid email"
+//             });
+//         }
+
+//         // fetch all user_Friends_List
+//         const friend_List = user.userAllFriends
+//         return res.status(200).json({
+//             sucess: true,
+//             message: "Online Friends are Fetched",
+//             friend_List,
+//         });
+
+//     } catch (error) {
+//         console.log(error, error.message);
+//         return res.status(500).json({
+//             sucess: false,
+//             message: "Server Error in FetchOnline Friends  "
+//         })
+//     }
+// };
+
 exports.friendsInMessingIfOnline = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { email, token } = req.body;
+
         if (!email || !token || !userId) {
             return res.status(200).json({
-                sucess: false,
-                message: "Please Provide email or token or userId"
-            })
+                success: false,
+                message: "Please provide email, token, and userId"
+            });
         }
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
-        const user = await User.findById(userId).populate("userAllFriends", "userName fullName email profilePic").sort({ isOnline: -1, lastSeen: -1 });
+
+        const user = await User.findById(userId).populate("userAllFriends", "userName fullName email profilePic isOnline lastSeen");
 
         if (token !== authorizedToken) {
             return res.status(200).json({
@@ -6645,20 +6693,42 @@ exports.friendsInMessingIfOnline = async (req, res) => {
             });
         }
 
-        // fetch all user_Friends_List
-        const friend_List = user.userAllFriends
+        let friendList = user.userAllFriends;
+
+        // Step 1: Fetch last message time for each friend
+        const messages = await Promise.all(friendList.map(async (friend) => {
+            const lastMessage = await Message.findOne({
+                $or: [
+                    { senderId: userId, receiverId: friend._id },
+                    { senderId: friend._id, receiverId: userId },
+                ]
+            }).sort({ createdAt: -1 });
+
+            return {
+                ...friend.toObject(),
+                lastMessageTime: lastMessage ? lastMessage.createdAt : friend.lastSeen,
+            };
+        }));
+
+        // Step 2: Sort by isOnline and then by lastMessageTime
+        messages.sort((a, b) => {
+            if (a.isOnline && !b.isOnline) return -1;
+            if (!a.isOnline && b.isOnline) return 1;
+            return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
+        });
+
         return res.status(200).json({
-            sucess: true,
-            message:"Online Friends are Fetched",
-            friend_List,
+            success: true,
+            message: "Friends sorted by recent activity and online status",
+            friend_List: messages,
         });
 
     } catch (error) {
         console.log(error, error.message);
         return res.status(500).json({
-            sucess: false,
-            message: "Server Error in FetchOnline Friends  "
-        })
+            success: false,
+            message: "Server error while fetching online friends"
+        });
     }
 };
 
