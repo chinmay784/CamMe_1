@@ -84,6 +84,8 @@ const {
   markMsgAsRead,
   createGroup,
   addMembersToGroup,
+  fetchMyGroups,
+  fetchGroupMessages,
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -4834,6 +4836,181 @@ router.post("/createGroup",authMiddelWere,createGroup)
  *                   example: Server Error in Add Members to Group
  */
 router.post("/addMembersToGroup",authMiddelWere,addMembersToGroup)
+/**
+ * @swagger
+ * /user/fetchMyGroups:
+ *   post:
+ *     summary: Fetch groups where the user is a member
+ *     tags:
+ *       - Group Chat
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: johndoe@example.com
+ *               token:
+ *                 type: string
+ *                 description: Token passed in request body (for validation)
+ *     responses:
+ *       200:
+ *         description: Successfully fetched groups
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 groups:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       groupName:
+ *                         type: string
+ *                       createdBy:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           fullName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                       members:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             _id:
+ *                               type: string
+ *                             userName:
+ *                               type: string
+ *                             fullName:
+ *                               type: string
+ *                             profilePic:
+ *                               type: string
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Unauthorized or invalid token
+ *       500:
+ *         description: Server error
+ */
+router.post("/fetchMyGroups",authMiddelWere,fetchMyGroups)
+/**
+ * @swagger
+ * /user/fetchGroupMessages:
+ *   post:
+ *     summary: Fetch messages for a specific group
+ *     tags:
+ *       - Group Chat
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of messages per page
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - groupId
+ *               - email
+ *               - token
+ *             properties:
+ *               groupId:
+ *                 type: string
+ *                 description: ID of the group
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: johndoe@example.com
+ *               token:
+ *                 type: string
+ *                 description: JWT token (should match Authorization header)
+ *     responses:
+ *       200:
+ *         description: Successfully fetched messages
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Messages fetched successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       senderId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           userName:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                       receiverId:
+ *                         type: string
+ *                       receiverType:
+ *                         type: string
+ *                         enum: [Group]
+ *                       message:
+ *                         type: string
+ *                       messageType:
+ *                         type: string
+ *                         example: text
+ *                       isRead:
+ *                         type: boolean
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Unauthorized or invalid token
+ *       500:
+ *         description: Server error while fetching group messages
+ */
+router.post("/fetchGroupMessages",authMiddelWere,fetchGroupMessages)
 
 
 module.exports = router;                       

@@ -23,6 +23,8 @@ const totalTedCoinLogicSchema = require('../models/totalTedCoinLogicSchema');
 const mapSetting = require("../models/mapSettingSchema")
 const ApporachMode = require("../models/ApporachRequestSchema")
 const Group = require("../models/groupModel")
+const GroupMessage = require("../models/GroupMessageSchema")
+const Message = require("../models/messageSchema ")
 
 const transPorter = nodeMailer.createTransport({
     service: "gmail",
@@ -6614,7 +6616,7 @@ exports.sendLiveLocationWithInyourFriends = async (req, res) => {
 };
 
 
-const Message = require("../models/messageSchema ")
+
 
 // New Controller Not ImpleMent Route
 // exports.friendsInMessingIfOnline = async (req, res) => {
@@ -6735,7 +6737,7 @@ exports.friendsInMessingIfOnline = async (req, res) => {
 
 
 // Get messages between two users
-// route will be not implemented
+
 exports.getMessages = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -6810,7 +6812,7 @@ exports.getMessages = async (req, res) => {
 // });
 
 
-// route will be not implemented
+
 exports.markMsgAsRead = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -6952,7 +6954,7 @@ exports.createGroup = async (req, res) => {
 
         const newGroup = new Group({
             groupName,
-            // members: allMembers,
+            members: [userId], // ✅ Add creator as initial member
             createdBy: userId,
         });
 
@@ -7064,5 +7066,142 @@ exports.addMembersToGroup = async (req, res) => {
             sucess: false,
             message: "Server Error in Add Members to Group"
         })
+    }
+}
+
+
+
+exports.fetchMyGroups = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+        const user = await User.findById(userId);
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+        if (!userId) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide userId"
+            });
+        }
+
+        const groups = await Group.find({ members: userId })
+            .populate('members', 'userName fullName profilePic')
+            .populate('createdBy', 'userName fullName profilePic');
+
+        res.status(200).json({
+            success: true,
+            message: "Fetched groups successfully",
+            groups
+        });
+    } catch (error) {
+        console.error("Error fetching groups:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Server error while fetching groups"
+        });
+    }
+}
+
+
+
+exports.fetchGroupMessages = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { groupId, email, token } = req.body;
+        const { page = 1, limit = 50 } = req.query;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader && authHeader.split(" ")[1];
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (!email) {
+            return res.status(200).json({
+                success: false,
+                message: "Please provide email"
+            });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(200).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+
+        if (!groupId) {
+            return res.status(200).json({
+                success: false,
+                message: "Group ID is required",
+            });
+        }
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(200).json({
+                success: false,
+                message: "Group not found",
+            });
+        }
+
+        // Check membership
+        const isMember = group.members.includes(userId);
+        if (!isMember) {
+            return res.status(200).json({
+                success: false,
+                message: "You are not a member of this group",
+            });
+        }
+
+        const messages = await GroupMessage.find({
+            receiverId: groupId,
+            receiverType: "Group",
+        })
+            .populate("senderId", "userName profilePic")
+            .sort({ createdAt: -1 }) // latest first
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        return res.status(200).json({
+            success: true,
+            message: "Messages fetched successfully",
+            data: messages.reverse(), // reverse so it's oldest to latest
+        });
+
+    } catch (error) {
+        console.log(error, error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while fetching group messages",
+        });
     }
 }

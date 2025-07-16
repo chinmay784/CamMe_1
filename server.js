@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const swaggerSetup = require('./swagger');
 const Message = require("./models/messageSchema ")
 const User = require("./models/userModel")
+const Group = require("./models/groupModel")
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -108,6 +109,57 @@ io.on('connection', (socket) => {
     } catch (error) {
       console.error('Error sending message:', error);
       callback?.({ success: false, error: 'Failed to send message' });
+    }
+  });
+
+
+
+  // Send group message
+  socket.on("sendGroupMessage", async (data, callback) => {
+    try {
+      const { groupId, message, messageType = "text" } = data;
+      const senderId = socket.userId;
+
+      // Validate group
+      const group = await Group.findById(groupId).populate("members", "_id");
+
+      if (!group) {
+        return callback?.({ success: false, error: "Group not found" });
+      }
+
+      // Check if sender is a group member
+      const isMember = group.members.some(member => member._id.toString() === senderId);
+      if (!isMember) {
+        return callback?.({ success: false, error: "You are not a member of this group" });
+      }
+
+      // Save message to DB
+      const newMessage = new Message({
+        senderId,
+        receiverId: groupId,
+        receiverType: "Group",
+        message,
+        messageType,
+      });
+
+      await newMessage.save();
+      await newMessage.populate("senderId", "userName profilePic");
+
+      // Emit message to all group members (if online)
+      group.members.forEach(member => {
+        const socketId = connectedUsers.get(member._id.toString());
+        if (socketId && member._id.toString() !== senderId) {
+          io.to(socketId).emit("receiveGroupMessage", newMessage);
+        }
+      });
+
+      // Confirm message to sender
+      socket.emit("groupMessageDelivered", newMessage);
+      callback?.({ success: true, message: newMessage });
+
+    } catch (err) {
+      console.error("sendGroupMessage error:", err.message);
+      callback?.({ success: false, error: "Failed to send group message" });
     }
   });
 
