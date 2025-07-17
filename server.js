@@ -11,6 +11,7 @@ const swaggerSetup = require('./swagger');
 const Message = require("./models/messageSchema ")
 const User = require("./models/userModel")
 const Group = require("./models/groupModel")
+const GroupMessage = require("./models/GroupMessageSchema")
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -134,7 +135,7 @@ io.on('connection', (socket) => {
       }
 
       // Save message to DB
-      const newMessage = new Message({
+      const newMessage = new GroupMessage({
         senderId,
         receiverId: groupId,
         receiverType: "Group",
