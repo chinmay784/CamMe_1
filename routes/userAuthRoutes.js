@@ -4704,7 +4704,7 @@ router.post("/FetchPhotoGraphyForHome",authMiddelWere,FetchPhotoGraphyForHome)
  * @swagger
  * /user/createGroup:
  *   post:
- *     summary: Create a new group for the authenticated user
+ *     summary: Create a new group with a custom group name
  *     tags:
  *       - Group Chat
  *     security:
@@ -4718,16 +4718,23 @@ router.post("/FetchPhotoGraphyForHome",authMiddelWere,FetchPhotoGraphyForHome)
  *             required:
  *               - email
  *               - token
+ *               - groupName
  *             properties:
  *               email:
  *                 type: string
+ *                 description: Email of the authenticated user
  *                 example: user@example.com
  *               token:
  *                 type: string
- *                 description: Token from frontend for verification
+ *                 description: Token from frontend for double verification
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *               groupName:
+ *                 type: string
+ *                 description: Desired name of the group
+ *                 example: "Weekend Hiking Buddies"
  *     responses:
  *       200:
- *         description: Group creation success or failure message
+ *         description: Group created successfully or error response
  *         content:
  *           application/json:
  *             schema:
@@ -4741,16 +4748,22 @@ router.post("/FetchPhotoGraphyForHome",authMiddelWere,FetchPhotoGraphyForHome)
  *                   example: Group created Sucessfully
  *                 group:
  *                   type: object
+ *                   description: The created group object
  *                   properties:
  *                     _id:
  *                       type: string
- *                       example: "64f4d5..."
+ *                       example: "64f5b0d7b34dca0015f3bb21"
  *                     groupName:
  *                       type: string
- *                       example: Group by JohnDoe
+ *                       example: "Weekend Hiking Buddies"
+ *                     members:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["64f4a9d1b34dca0015f3aa11"]
  *                     createdBy:
  *                       type: string
- *                       example: "64f4a9..."
+ *                       example: "64f4a9d1b34dca0015f3aa11"
  *       500:
  *         description: Server error during group creation
  *         content:

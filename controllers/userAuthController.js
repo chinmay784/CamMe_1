@@ -6909,7 +6909,7 @@ exports.createGroup = async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const { email, token } = req.body;
+        const { email, token , groupName } = req.body;
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader && authHeader.split(" ")[1];
 
@@ -6950,10 +6950,10 @@ exports.createGroup = async (req, res) => {
         // const friendIds = user.userAllFriends.map(friend => friend._id);
         // const allMembers = [...new Set([...friendIds, userId])]; // Add self if needed
 
-        const groupName = `Group by ${user.userName}`;
+        // const groupName = `Group by ${user.userName}`;
 
         const newGroup = new Group({
-            groupName,
+            groupName:groupName,
             members: [userId], // ✅ Add creator as initial member
             createdBy: userId,
         });
