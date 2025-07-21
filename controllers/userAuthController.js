@@ -6793,7 +6793,7 @@ exports.getMessages = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { email, token, reciverId } = req.body;
-        const { page = 1, limit = 50 } = req.query;
+       // const { page = 1, limit = 50 } = req.query;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader.split(" ")[1];
@@ -6822,8 +6822,8 @@ exports.getMessages = async (req, res) => {
             .populate('senderId', 'userName profilePic')
             .populate('receiverId', 'userName profilePic')
             .sort({ createdAt: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
+            // .limit(limit * 1)
+            // .skip((page - 1) * limit);
 
         // 📌 Filter deleted messages
         const filteredMessages = messages
@@ -7195,7 +7195,7 @@ exports.fetchGroupMessages = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { groupId, email, token } = req.body;
-        const { page = 1, limit = 50 } = req.query;
+        //const { page = 1, limit = 50 } = req.query;
 
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader && authHeader.split(" ")[1];
@@ -7260,8 +7260,8 @@ exports.fetchGroupMessages = async (req, res) => {
         })
             .populate("senderId", "userName profilePic")
             .sort({ createdAt: -1 }) // latest first
-            .skip((page - 1) * limit)
-            .limit(limit);
+            // .skip((page - 1) * limit)
+            // .limit(limit);
 
         return res.status(200).json({
             success: true,
