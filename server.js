@@ -39,6 +39,7 @@ io.on('connection', (socket) => {
     try {
       socket.userId = userId;
       connectedUsers.set(userId, socket.id);
+      console.log('✅ User joined:', userId, 'Socket:', socket.id);
 
       // Update user online status
       await User.findByIdAndUpdate(userId, {
@@ -54,7 +55,7 @@ io.on('connection', (socket) => {
       socket.emit('onlineUsers', onlineUsers);
 
     } catch (error) {
-      console.error('Error in join:', error);
+      console.error('Error in join:', error.message);
     }
   });
 
@@ -121,20 +122,23 @@ io.on('connection', (socket) => {
       const { groupId, message, messageType = "text" } = data;
       const senderId = socket.userId;
 
-      // Validate group
-      const group = await Group.findById(groupId).populate("members", "_id");
+      console.log('📤 sendGroupMessage:', data);
+      console.log('👤 senderId from socket:', senderId);
 
+      if (!senderId) {
+        return callback?.({ success: false, error: "Sender not identified (join missing?)" });
+      }
+
+      const group = await Group.findById(groupId).populate("members", "_id");
       if (!group) {
         return callback?.({ success: false, error: "Group not found" });
       }
 
-      // Check if sender is a group member
       const isMember = group.members.some(member => member._id.toString() === senderId);
       if (!isMember) {
         return callback?.({ success: false, error: "You are not a member of this group" });
       }
 
-      // Save message to DB
       const newMessage = new GroupMessage({
         senderId,
         receiverId: groupId,
@@ -146,7 +150,6 @@ io.on('connection', (socket) => {
       await newMessage.save();
       await newMessage.populate("senderId", "userName profilePic");
 
-      // Emit message to all group members (if online)
       group.members.forEach(member => {
         const socketId = connectedUsers.get(member._id.toString());
         if (socketId && member._id.toString() !== senderId) {
@@ -154,15 +157,15 @@ io.on('connection', (socket) => {
         }
       });
 
-      // Confirm message to sender
       socket.emit("groupMessageDelivered", newMessage);
       callback?.({ success: true, message: newMessage });
 
     } catch (err) {
-      console.error("sendGroupMessage error:", err.message);
+      console.error("❌ sendGroupMessage error:", err.message);
       callback?.({ success: false, error: "Failed to send group message" });
     }
   });
+
 
 
   // Typing indicator
