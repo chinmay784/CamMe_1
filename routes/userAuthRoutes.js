@@ -86,6 +86,8 @@ const {
   addMembersToGroup,
   fetchMyGroups,
   fetchGroupMessages,
+  deleteMessageForMe,
+  deleteMessageForEveryone,
 } = require("../controllers/userAuthController")
 const { authMiddelWere } = require('../middelwere/authMiddelWere');
 const { uploadd } = require("../middelwere/multer");
@@ -5024,6 +5026,112 @@ router.post("/fetchMyGroups",authMiddelWere,fetchMyGroups)
  *         description: Server error while fetching group messages
  */
 router.post("/fetchGroupMessages",authMiddelWere,fetchGroupMessages)
+/**
+ * @swagger
+ * /user/deleteMessageForMe:
+ *   post:
+ *     summary: Delete a message for the sender only (like WhatsApp "Delete for me")
+ *     tags:
+ *       - Chat & Messaging
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - messageId
+ *               - email
+ *               - token
+ *             properties:
+ *               messageId:
+ *                 type: string
+ *                 description: The ID of the message to delete for the sender.
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user.
+ *               token:
+ *                 type: string
+ *                 description: Token to validate against the Authorization header.
+ *     responses:
+ *       200:
+ *         description: Message successfully deleted for sender.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Message hidden for you only
+ *       400:
+ *         description: Bad request or validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post("/deleteMessageForMe",authMiddelWere,deleteMessageForMe)
+/**
+ * @swagger
+ * /user/deleteMessageForEveryone:
+ *   post:
+ *     summary: Delete a message for both sender and receiver (like WhatsApp "Delete for everyone")
+ *     tags:
+ *       - Chat & Messaging
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - messageId
+ *               - email
+ *               - token
+ *             properties:
+ *               messageId:
+ *                 type: string
+ *                 description: ID of the message to delete.
+ *               email:
+ *                 type: string
+ *                 description: Email of the authenticated user.
+ *               token:
+ *                 type: string
+ *                 description: Token to validate against the authorization header.
+ *     responses:
+ *       200:
+ *         description: Message successfully deleted for everyone.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Message deleted for everyone
+ *       400:
+ *         description: Bad request or missing required fields.
+ *       401:
+ *         description: Unauthorized or invalid token.
+ *       403:
+ *         description: Not authorized to delete the message.
+ *       404:
+ *         description: Message not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post("/deleteMessageForEveryone",authMiddelWere,deleteMessageForEveryone)
 
 
 module.exports = router;                       

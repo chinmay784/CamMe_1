@@ -27,7 +27,12 @@ const messageSchema = new mongoose.Schema({
     type: String,
     enum: ['text', 'image', 'file'],
     default: 'text'
-  }
+  },
+
+  // 👇 Add this
+  // New fields
+  deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  isDeletedForEveryone: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model("Message", messageSchema);

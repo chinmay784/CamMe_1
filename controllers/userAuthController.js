@@ -6737,6 +6737,57 @@ exports.friendsInMessingIfOnline = async (req, res) => {
 
 
 // Get messages between two users
+// This Comment out if Bellow one not Working okk
+// exports.getMessages = async (req, res) => {
+//     try {
+//         const userId = req.user.userId;
+//         const { email, token, reciverId } = req.body;
+//         const { page = 1, limit = 50 } = req.query;
+
+//         const authHeader = req.headers.authorization;
+//         const authorizedToken = authHeader.split(" ")[1];
+//         const user = await User.findById(userId);
+
+//         if (token !== authorizedToken) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Invalid token"
+//             });
+//         }
+
+//         if (user.email !== email) {
+//             return res.status(200).json({
+//                 success: false,
+//                 message: "Invalid email"
+//             });
+//         }
+
+//         const messages = await Message.find({
+//             $or: [
+//                 { senderId: userId, receiverId: reciverId },
+//                 { senderId: reciverId, receiverId: userId }
+//             ]
+//         }).populate('senderId', 'userName profilePic')
+//             .populate('receiverId', 'userName profilePic')
+//             .sort({ createdAt: -1 })
+//             .limit(limit * 1)
+//             .skip((page - 1) * limit);
+
+
+//         return res.status(200).json({
+//             sucess: true,
+//             msg: messages.reverse(),
+//         })
+
+//     } catch (error) {
+//         console.log(error, error.message);
+//         return res.status(500).json({
+//             sucess: false,
+//             message: "Server Error in Fetching Messages"
+//         })
+//     }
+// }
+
 
 exports.getMessages = async (req, res) => {
     try {
@@ -6767,26 +6818,47 @@ exports.getMessages = async (req, res) => {
                 { senderId: userId, receiverId: reciverId },
                 { senderId: reciverId, receiverId: userId }
             ]
-        }).populate('senderId', 'userName profilePic')
+        })
+            .populate('senderId', 'userName profilePic')
             .populate('receiverId', 'userName profilePic')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
 
+        // 📌 Filter deleted messages
+        const filteredMessages = messages
+            .map(msg => {
+                if (msg.isDeletedForEveryone) {
+                    return {
+                        ...msg.toObject(),
+                        message: "This message was deleted",
+                        messageType: "text",
+                    };
+                }
+
+                if (msg.deletedFor?.includes(userId)) {
+                    return null; // Hide from this user
+                }
+
+                return msg;
+            })
+            .filter(Boolean) // Remove nulls
+            .reverse(); // Make oldest to newest
 
         return res.status(200).json({
-            sucess: true,
-            msg: messages.reverse(),
-        })
+            success: true,
+            msg: filteredMessages,
+        });
 
     } catch (error) {
         console.log(error, error.message);
         return res.status(500).json({
-            sucess: false,
+            success: false,
             message: "Server Error in Fetching Messages"
-        })
+        });
     }
 }
+
 
 // app.get('/api/messages/:userId', authenticateToken, async (req, res) => {
 //     try {
@@ -6909,7 +6981,7 @@ exports.createGroup = async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const { email, token , groupName } = req.body;
+        const { email, token, groupName } = req.body;
         const authHeader = req.headers.authorization;
         const authorizedToken = authHeader && authHeader.split(" ")[1];
 
@@ -6953,7 +7025,7 @@ exports.createGroup = async (req, res) => {
         // const groupName = `Group by ${user.userName}`;
 
         const newGroup = new Group({
-            groupName:groupName,
+            groupName: groupName,
             members: [userId], // ✅ Add creator as initial member
             createdBy: userId,
         });
@@ -7205,3 +7277,123 @@ exports.fetchGroupMessages = async (req, res) => {
         });
     }
 }
+
+
+
+
+exports.deleteMessageForMe = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { messageId, email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId);
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(200).json({ success: false, message: "Message not found" });
+        }
+
+        // Only sender can delete for themselves
+        if (message.senderId.toString() !== userId) {
+            return res.status(200).json({ success: false, message: "Only sender can delete their message" });
+        }
+
+        // Add user to deletedFor if not already added
+        if (!message.deletedFor.includes(userId)) {
+            message.deletedFor.push(userId);
+            await message.save();
+        }
+
+        return res.status(200).json({ success: true, message: "Message hidden for you only" });
+    } catch (error) {
+        console.error("Error deleting message:", error.message);
+        return res.status(500).json({ success: false, message: "Server error in DeleteMessageForMe" });
+    }
+};
+
+
+
+
+exports.deleteMessageForEveryone = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { messageId, email, token } = req.body;
+
+        const authHeader = req.headers.authorization;
+        const authorizedToken = authHeader.split(" ")[1];
+        const user = await User.findById(userId);
+
+        if (token !== authorizedToken) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid token"
+            });
+        }
+
+        if (user.email !== email) {
+            return res.status(200).json({
+                success: false,
+                message: "Invalid email"
+            });
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(200).json({ success: false, message: "Message not found" });
+        }
+
+        // Only sender can delete for everyone
+        if (message.senderId.toString() !== userId) {
+            return res.status(200).json({ success: false, message: "Not authorized" });
+        }
+
+        // Mark message as deleted for everyone
+        message.isDeletedForEveryone = true;
+        // message.message = "This message was deleted";
+        // message.messageType = "text"; // Set type to text
+        await message.save();
+
+        // Send socket event to receiver (if online)
+        const receiverSocketId = connectedUsers.get(message.receiverId.toString());
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("messageDeletedForEveryone", {
+                messageId,
+                deletedBy: userId,
+            });
+        }
+
+        // Also notify sender to update UI
+        const senderSocketId = connectedUsers.get(userId);
+        if (senderSocketId) {
+            io.to(senderSocketId).emit("messageDeletedForEveryone", {
+                messageId,
+                deletedBy: userId,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Message deleted for everyone",
+        });
+
+    } catch (error) {
+        console.error("deleteMessageForEveryone error:", error.message);
+        return res.status(500).json({ success: false, message: "Server error in DeleteMessageEveryOne" });
+    }
+};
