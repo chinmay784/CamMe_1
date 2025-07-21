@@ -4499,24 +4499,11 @@ router.post("/friendsInMessingIfOnline",authMiddelWere,friendsInMessingIfOnline)
  * @swagger
  * /user/getMessages:
  *   post:
- *     summary: Fetch chat messages between the current user and a receiver
+ *     summary: Get all chat messages between the logged-in user and another user
  *     tags:
  *       - Chat & Messaging
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Page number for pagination
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *         description: Number of messages per page
  *     requestBody:
  *       required: true
  *       content:
@@ -4530,26 +4517,27 @@ router.post("/friendsInMessingIfOnline",authMiddelWere,friendsInMessingIfOnline)
  *             properties:
  *               email:
  *                 type: string
- *                 example: user@example.com
+ *                 description: Email of the authenticated user
  *               token:
  *                 type: string
- *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 description: Must match the bearer token
  *               reciverId:
  *                 type: string
- *                 example: 64f8cabc1234567890abcdef
+ *                 description: The ID of the user you are chatting with
  *     responses:
  *       200:
- *         description: Successfully fetched messages
+ *         description: Messages retrieved successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 sucess:
+ *                 success:
  *                   type: boolean
  *                   example: true
  *                 msg:
  *                   type: array
+ *                   description: List of filtered messages
  *                   items:
  *                     type: object
  *                     properties:
@@ -4575,14 +4563,21 @@ router.post("/friendsInMessingIfOnline",authMiddelWere,friendsInMessingIfOnline)
  *                             type: string
  *                       message:
  *                         type: string
- *                         example: Hello, how are you?
+ *                       messageType:
+ *                         type: string
+ *                         enum: [text, image, file]
+ *                       isRead:
+ *                         type: boolean
+ *                       readAt:
+ *                         type: string
+ *                         format: date-time
  *                       createdAt:
  *                         type: string
  *                         format: date-time
  *       401:
- *         description: Unauthorized (Invalid token or email)
+ *         description: Invalid or unauthorized token
  *       500:
- *         description: Server error during message fetch
+ *         description: Server error
  */
 router.post("/getMessages",authMiddelWere,getMessages);
 /**
